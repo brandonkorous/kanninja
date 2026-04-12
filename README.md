@@ -2,7 +2,7 @@
 
 > Turn chaos into kata. An AI-powered Kanban platform for solo founders, freelancers, and small teams who take their craft seriously.
 
-**Status:** early development · **License:** [FSL-1.1-Apache-2.0](./LICENSE) · **Hosted:** [kanninja.app](https://kanninja.app) _(soon)_
+**Status:** early development · **License:** [FSL-1.1-Apache-2.0](./LICENSE) · **Hosted:** [kanninja.app](https://kanninja.com)
 
 ---
 
