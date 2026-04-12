@@ -72,7 +72,7 @@ fly deploy --config fly.frontend.toml \
 
 ```bash
 fly certs add kanninja.app        --app kanninja-frontend
-fly certs add api.kanninja.app    --app kanninja-backend
+fly certs add api.kanninja.com    --app kanninja-backend
 ```
 
 Add the DNS records Fly prints. Once the cert is issued, update `FRONTEND_URL` on the backend and redeploy.
@@ -81,10 +81,10 @@ Add the DNS records Fly prints. Once the cert is issued, update `FRONTEND_URL` o
 
 Point the following webhooks at your deployed backend:
 
-| Service | URL                                                   |
-| ------- | ----------------------------------------------------- |
-| Clerk   | `https://api.kanninja.app/api/webhooks/clerk`         |
-| Stripe  | `https://api.kanninja.app/api/webhooks/stripe`        |
+| Service | URL                                            |
+| ------- | ---------------------------------------------- |
+| Clerk   | `https://api.kanninja.com/api/webhooks/clerk`  |
+| Stripe  | `https://api.kanninja.com/api/webhooks/stripe` |
 
 Integration provider webhooks (GitHub, Slack, etc.) use `/api/integrations/webhooks/:provider`.
 

@@ -29,7 +29,7 @@ export default function ContactPage() {
                         Email
                     </p>
                     <a
-                        href="mailto:hello@kanninja.app"
+                        href="mailto:hello@kanninja.com"
                         className="mt-4 inline-flex items-center gap-3 font-display text-2xl md:text-3xl font-medium tracking-tight text-base-content hover:text-primary transition-colors focus-visible:shadow-focus rounded-sm"
                     >
                         <FontAwesomeIcon
@@ -37,7 +37,7 @@ export default function ContactPage() {
                             aria-hidden="true"
                             className="text-primary"
                         />
-                        hello@kanninja.app
+                        hello@kanninja.com
                     </a>
                     <p className="mt-6 text-sm text-base-content/60">
                         We read every message. Most get a reply within a day.
