@@ -45,7 +45,7 @@ export async function myWorkRoutes(fastify: FastifyInstance) {
           id: row.cardId,
           title: row.cardTitle,
           priority: row.cardPriority,
-          dueDate: row.dueDate,
+          dueDate: row.cardDueDate,
           isCompleted: row.cardIsCompleted,
           progress: row.cardProgress,
           list: { id: row.listId, title: row.listTitle },

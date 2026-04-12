@@ -45,7 +45,7 @@ export function CreateApiKeyModal({ open, onClose }: CreateApiKeyModalProps) {
   const handleClose = () => {
     setName('');
     setFullKey(null);
-    setCopied(false);
+    setCopied(null);
     onClose();
   };
 
