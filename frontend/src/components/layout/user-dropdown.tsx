@@ -1,0 +1,186 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useUser, useClerk } from '@clerk/nextjs';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faUser,
+  faGear,
+  faCreditCard,
+  faRightFromBracket,
+  faChevronUp,
+} from '@fortawesome/free-solid-svg-icons';
+
+export function UserDropdown({ compact = false }: { compact?: boolean }) {
+  const { user, isLoaded } = useUser();
+  const { signOut } = useClerk();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // Close on outside click and Escape — proper dismissal, not CSS :focus-within.
+  useEffect(() => {
+    if (!open) return;
+    function onPointer(e: MouseEvent) {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false);
+    }
+    document.addEventListener('mousedown', onPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  if (!isLoaded || !user) {
+    return (
+      <div
+        className={
+          compact
+            ? 'skeleton h-12 w-12 rounded-full'
+            : 'skeleton h-14 w-full rounded-md'
+        }
+      />
+    );
+  }
+
+  const fullName =
+    [user.firstName, user.lastName].filter(Boolean).join(' ') || 'Account';
+  const email = user.primaryEmailAddress?.emailAddress ?? '';
+  const initials =
+    [user.firstName?.[0], user.lastName?.[0]]
+      .filter(Boolean)
+      .join('')
+      .toUpperCase() || 'U';
+
+  const handleSignOut = async () => {
+    setOpen(false);
+    await signOut();
+    router.push('/sign-in');
+  };
+
+  return (
+    <div ref={rootRef} className={compact ? 'relative' : 'relative w-full'}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="true"
+        aria-expanded={open}
+        aria-controls="user-menu-panel"
+        aria-label={compact ? fullName : undefined}
+        title={compact ? fullName : undefined}
+        className={
+          compact
+            ? 'btn btn-ghost btn-square w-12 h-12 p-0'
+            : 'w-full flex items-center gap-3 rounded-md p-3 hover:bg-base-200 transition-colors text-left'
+        }
+      >
+        <div className={`avatar ${user.imageUrl ? '' : 'placeholder'}`}>
+          <div className="bg-base-300 text-base-content rounded-full w-10 h-10">
+            {user.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.imageUrl}
+                alt=""
+                width={40}
+                height={40}
+                className="rounded-full"
+              />
+            ) : (
+              <span className="text-sm font-medium">{initials}</span>
+            )}
+          </div>
+        </div>
+        {!compact && (
+          <>
+            <div className="flex-1 min-w-0">
+              <p
+                className="text-sm font-medium truncate text-base-content"
+                title={fullName}
+              >
+                {fullName}
+              </p>
+              {email && (
+                <p
+                  className="text-xs text-base-content/70 truncate"
+                  title={email}
+                >
+                  {email}
+                </p>
+              )}
+            </div>
+            <FontAwesomeIcon
+              icon={faChevronUp}
+              aria-hidden="true"
+              className={`text-xs text-base-content/60 transition-transform ${
+                open ? '' : 'rotate-180'
+              }`}
+            />
+          </>
+        )}
+      </button>
+
+      {open && (
+        <div
+          id="user-menu-panel"
+          className={
+            compact
+              ? 'absolute bottom-full left-0 mb-2 min-w-56 bg-base-100 border border-base-300 rounded-lg shadow-e3 overflow-hidden z-50'
+              : 'absolute bottom-full left-0 right-0 mb-2 bg-base-100 border border-base-300 rounded-lg shadow-e3 overflow-hidden z-50'
+          }
+        >
+          <ul className="menu p-2 w-full">
+            <li>
+              <Link href="/profile" onClick={() => setOpen(false)}>
+                <FontAwesomeIcon
+                  icon={faUser}
+                  aria-hidden="true"
+                  className="text-base-content/60"
+                />
+                Profile
+              </Link>
+            </li>
+            <li>
+              <Link href="/settings" onClick={() => setOpen(false)}>
+                <FontAwesomeIcon
+                  icon={faGear}
+                  aria-hidden="true"
+                  className="text-base-content/60"
+                />
+                Settings
+              </Link>
+            </li>
+            <li>
+              <Link href="/settings#subscription" onClick={() => setOpen(false)}>
+                <FontAwesomeIcon
+                  icon={faCreditCard}
+                  aria-hidden="true"
+                  className="text-base-content/60"
+                />
+                Billing
+              </Link>
+            </li>
+            <li role="separator" className="border-t border-base-300 my-2" />
+            <li>
+              <button type="button" onClick={handleSignOut}>
+                <FontAwesomeIcon
+                  icon={faRightFromBracket}
+                  aria-hidden="true"
+                  className="text-base-content/60"
+                />
+                Sign out
+              </button>
+            </li>
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}

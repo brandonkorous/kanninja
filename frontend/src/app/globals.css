@@ -1,0 +1,249 @@
+@import 'tailwindcss';
+@import '../styles/tokens.css';
+@plugin "daisyui" {
+  themes: hanko --default;
+}
+
+@import '../styles/themes/hanko.css';
+
+/* App-level base styles ------------------------------------------------------
+ * Hanko uses Washi (base-200) as the cream paper page background. DaisyUI
+ * defaults the body to base-100, so we override here. base-100 (Snow) is
+ * reserved for elevated surfaces — cards, dropdowns, popovers. */
+@layer base {
+  body {
+    background-color: var(--color-base-200);
+  }
+
+  /* Vermillion focus ring on every keyboard-focused interactive element.
+   * Eases in instead of snapping — feels honed, not jarring. Restraint. */
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus);
+    transition: box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+/* Form control polish --------------------------------------------------------
+ * Small overrides to DaisyUI's default form controls so they feel Hanko
+ * instead of generic. All rules use the DaisyUI class selectors directly so
+ * the changes flow to every input/textarea/select/checkbox in the app —
+ * including ones that haven't adopted the Field/Input primitives yet. */
+@layer components {
+  /* Inputs, textareas, selects:
+   *   - Border color lightened from base-content to base-300 for quieter rest state
+   *   - Focus ring handled by our .focus-visible rule above; remove DaisyUI's
+   *     default focus outline to prevent the double-ring look
+   *   - Textarea gets a comfortable min-height so empty state doesn't collapse
+   *   - Input + select + textarea share the same border transition easing */
+  .input,
+  .textarea,
+  .select {
+    border-color: var(--color-base-300);
+    transition:
+      border-color 200ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .input:hover:not(:disabled),
+  .textarea:hover:not(:disabled),
+  .select:hover:not(:disabled) {
+    border-color: color-mix(in oklch, var(--color-base-content) 20%, transparent);
+  }
+
+  .input:focus,
+  .textarea:focus,
+  .select:focus,
+  .input:focus-visible,
+  .textarea:focus-visible,
+  .select:focus-visible {
+    outline: none;
+    border-color: var(--color-primary);
+  }
+
+  .textarea {
+    min-height: 6rem;
+    padding: 0.75rem 1rem;
+    line-height: 1.6;
+  }
+
+  /* Disabled inputs read as ink-on-paper but faint — not the dark-gray
+   * mud DaisyUI defaults to. */
+  .input:disabled,
+  .textarea:disabled,
+  .select:disabled {
+    background-color: var(--color-base-200);
+    color: color-mix(in oklch, var(--color-base-content) 50%, transparent);
+    cursor: not-allowed;
+  }
+
+  /* Checkbox:
+   *   - Slightly rounder corners to match the radius scale
+   *   - Unchecked state uses base-300 border instead of near-black
+   *   - Hover darkens the border to signal interactivity */
+  .checkbox {
+    border-radius: var(--radius-sm);
+    border-color: var(--color-base-300);
+  }
+  .checkbox:hover:not(:disabled) {
+    border-color: color-mix(in oklch, var(--color-base-content) 30%, transparent);
+  }
+  .checkbox:focus-visible {
+    outline: none;
+  }
+}
+
+/* Hanko motion ---------------------------------------------------------------
+ * CSS-only entrance animations. No JavaScript. Brushstroke-like, intentional,
+ * restrained. Every animation collapses under prefers-reduced-motion.
+ *
+ * Easing curves used:
+ *   ease-rise   cubic-bezier(0.16, 1, 0.3, 1)    refined ease-out (iOS-like)
+ *   ease-stamp  cubic-bezier(0.34, 1.56, 0.64, 1) overshoot (ink press)
+ *   ease-brush  cubic-bezier(0.65, 0, 0.35, 1)   sweep (calligraphy stroke)
+ * --------------------------------------------------------------------------*/
+
+.hanko-rise {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: hanko-rise 800ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.hanko-rise-1 { animation-delay: 120ms; }
+.hanko-rise-2 { animation-delay: 240ms; }
+.hanko-rise-3 { animation-delay: 360ms; }
+.hanko-rise-4 { animation-delay: 480ms; }
+
+/* Tight rise — same easing, shorter travel, quicker sweep. For small
+ * elements where a 20px lift would overshoot their container (presence
+ * avatars, compact badges, inline eyebrows). */
+.hanko-rise-tight {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: hanko-rise 500ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes hanko-rise {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Brushstroke — clip-path reveals the element left-to-right like one
+ * calligraphy stroke. Reserved for the signature italic vermillion accent. */
+.hanko-brush {
+  display: inline-block;
+  clip-path: inset(-0.1em 100% -0.2em 0);
+  animation: hanko-brush 900ms cubic-bezier(0.65, 0, 0.35, 1) 600ms forwards;
+}
+@keyframes hanko-brush {
+  to { clip-path: inset(-0.1em -0.05em -0.2em 0); }
+}
+
+/* Stamp — the vermillion CTA presses in like an ink seal, slight overshoot. */
+.hanko-stamp {
+  opacity: 0;
+  transform: scale(0.92);
+  animation: hanko-stamp 500ms cubic-bezier(0.34, 1.56, 0.64, 1) 760ms forwards;
+}
+@keyframes hanko-stamp {
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Eyebrow rule — thin vermillion line draws from the left of the label. */
+.hanko-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.hanko-eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 1.5rem;
+  height: 1px;
+  background: var(--color-primary);
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: hanko-rule 700ms cubic-bezier(0.16, 1, 0.3, 1) 200ms forwards;
+}
+@keyframes hanko-rule {
+  to { transform: scaleX(1); }
+}
+
+/* Scroll-triggered rise for sections below the fold. Uses native CSS
+ * scroll-driven animations where supported (Chromium) and falls back to
+ * immediate visibility everywhere else. Zero JS. */
+.hanko-scroll-rise {
+  opacity: 1;
+  transform: none;
+}
+@supports (animation-timeline: view()) {
+  .hanko-scroll-rise {
+    opacity: 0;
+    transform: translateY(28px);
+    animation: hanko-scroll-rise linear both;
+    animation-timeline: view();
+    animation-range: entry 10% entry 60%;
+  }
+  @keyframes hanko-scroll-rise {
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* Scroll-triggered brushstroke — same calligraphy wipe as .hanko-brush
+ * but driven by scroll position so it fires when the editorial intermezzo
+ * enters view rather than on page load. Used for the recurring italic
+ * vermillion accent below the fold. */
+.hanko-brush-scroll {
+  display: inline-block;
+}
+@supports (animation-timeline: view()) {
+  .hanko-brush-scroll {
+    clip-path: inset(-0.1em 100% -0.2em 0);
+    animation: hanko-brush-scroll linear both;
+    animation-timeline: view();
+    /* Fire when the line is well into the viewport (60% through entry)
+     * and finish 30% into the cover phase — when the user is actually
+     * looking at the centered text. Earlier ranges complete before the
+     * eye gets there. */
+    animation-range: entry 60% cover 30%;
+  }
+  @keyframes hanko-brush-scroll {
+    to { clip-path: inset(-0.1em -0.05em -0.2em 0); }
+  }
+}
+
+/* Soft hover lift — pair with shadow-e1 → shadow-e2 utility transition. */
+.hanko-lift {
+  transition:
+    transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hanko-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* Reduced motion — collapse every entrance animation to instant. */
+@media (prefers-reduced-motion: reduce) {
+  .hanko-rise,
+  .hanko-rise-tight,
+  .hanko-stamp,
+  .hanko-scroll-rise {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  .hanko-brush,
+  .hanko-brush-scroll {
+    clip-path: none;
+    animation: none;
+  }
+  .hanko-eyebrow::before {
+    transform: scaleX(1);
+    animation: none;
+  }
+  .hanko-lift,
+  :focus-visible {
+    transition: none;
+  }
+  .hanko-lift:hover {
+    transform: none;
+  }
+}

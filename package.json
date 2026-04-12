@@ -1,0 +1,25 @@
+{
+  "name": "kanninja",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter !@kanninja/mcp run dev",
+    "dev:backend": "pnpm --filter @kanninja/backend run dev",
+    "dev:frontend": "pnpm --filter @kanninja/frontend run dev",
+    "dev:mcp": "pnpm --filter @kanninja/mcp run dev",
+    "build": "pnpm --filter @kanninja/shared run build && pnpm -r --parallel run build --filter !@kanninja/shared",
+    "build:shared": "pnpm --filter @kanninja/shared run build",
+    "lint": "pnpm -r run lint",
+    "test": "pnpm -r run test",
+    "typecheck": "pnpm -r run typecheck",
+    "clean": "pnpm -r run clean"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "typescript-eslint": "^8.58.1"
+  }
+}

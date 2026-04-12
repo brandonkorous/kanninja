@@ -1,0 +1,191 @@
+/* ============================================================================
+ * Hanko — kanNINJA brand theme for DaisyUI 5
+ * ----------------------------------------------------------------------------
+ * Two themes: `hanko` (default, light) and `hanko-night` (dark).
+ * Every color is a literal hex from the brand guide — no approximations.
+ * The vermillion seal stays constant across both themes.
+ *
+ * Brand reference: see kanNINJA Brand Guide — Hanko v1 (Paper canvas)
+ *
+ * To activate, import this file from globals.css AFTER the daisyui plugin:
+ *
+ *   @import 'tailwindcss';
+ *   @plugin "daisyui";
+ *   @import '../styles/themes/hanko.css';
+ *
+ * Then set <html data-theme="hanko"> (or "hanko-night") in app/layout.tsx.
+ * ========================================================================== */
+
+
+/* ----------------------------------------------------------------------------
+ * Hanko · Light · default
+ * Cream paper, sumi ink, vermillion seal.
+ * -------------------------------------------------------------------------- */
+
+@plugin "daisyui/theme" {
+  name: "hanko";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+
+  /* --- Surfaces ----------------------------------------------------------
+   * base-100 is the brightest surface (cards, dropdowns, popovers).
+   * base-200 is the cream paper page background — set body bg to this.
+   * base-300 is for borders, dividers, and insets.
+   * base-content is the deepest ink — primary text color.
+   * --------------------------------------------------------------------- */
+  --color-base-100: #FBFAF6;     /* Snow  · brightest cream */
+  --color-base-200: #F8F4EC;     /* Washi · cream paper page bg */
+  --color-base-300: #EFEAE0;     /* Mist  · borders, separators */
+  --color-base-content: #0E0F12; /* Sumi  · ink */
+
+  /* --- Primary · The Stamp -----------------------------------------------
+   * Vermillion is the seal. Used sparingly, never decoratively.
+   * Reserve for the single most important action on screen.
+   * --------------------------------------------------------------------- */
+  --color-primary: #E0432F;          /* Vermillion */
+  --color-primary-content: #FBFAF6;  /* Snow on red */
+
+  /* --- Secondary · Ink button --------------------------------------------
+   * Sumi-on-Snow, the second-most-emphatic action. Use when Primary is
+   * already taken or the action is non-destructive but high-confidence.
+   * --------------------------------------------------------------------- */
+  --color-secondary: #0E0F12;         /* Sumi */
+  --color-secondary-content: #FBFAF6; /* Snow on ink */
+
+  /* --- Accent · Soft vermillion ------------------------------------------
+   * Coral (Vermillion light) — for highlights, decorative pulls, soft tags.
+   * Lives in the same hue family as primary so the brand stays cohesive.
+   * Foreground uses Sumi-red, the pressed-state vermillion, so the accent
+   * pair belongs to the same color family.
+   * --------------------------------------------------------------------- */
+  --color-accent: #F19684;          /* Coral */
+  --color-accent-content: #B5301F;  /* Sumi-red on coral */
+
+  /* --- Neutral · Inverted surface ----------------------------------------
+   * For dark sidebars, footers, toasts, and any inverted UI. Onyx is the
+   * darkest neutral that still feels like part of the cream paper family.
+   * --------------------------------------------------------------------- */
+  --color-neutral: #2A2B33;         /* Onyx */
+  --color-neutral-content: #FBFAF6; /* Snow on onyx */
+
+  /* --- Semantic · Status colors ------------------------------------------
+   * Each is a "natural pigment" — never browser-default neon. Pair with
+   * tinted background variants in component code (e.g. #E7F3EB for success
+   * surface, #FBF2DC for warning, #F8E1DF for error, #E4EAF3 for info).
+   * --------------------------------------------------------------------- */
+  --color-info: #3D5C8A;            /* Indigo */
+  --color-info-content: #FBFAF6;
+
+  --color-success: #3F8F5C;         /* Bamboo */
+  --color-success-content: #FBFAF6;
+
+  --color-warning: #D89B2B;         /* Honey */
+  --color-warning-content: #0E0F12; /* Ink on honey — gold needs dark text */
+
+  --color-error: #C8302A;           /* Crimson */
+  --color-error-content: #FBFAF6;
+
+  /* --- Shape · Generous radii, soft corners ------------------------------
+   * Hanko stays rounder than feels safe — soft corners read warm.
+   * selector = chips/badges/avatars (pill)
+   * field    = inputs/buttons/selects (md, 10px)
+   * box      = cards/modals/alerts    (lg, 14px)
+   * --------------------------------------------------------------------- */
+  --radius-selector: 9999px;
+  --radius-field: 0.625rem;   /* 10px · md */
+  --radius-box: 0.875rem;     /* 14px · lg */
+
+  /* --- Sizing · Field & selector base ------------------------------------
+   * Slightly more generous than DaisyUI defaults for tap-friendly comfort.
+   * --------------------------------------------------------------------- */
+  --size-selector: 0.28125rem; /* 4.5px */
+  --size-field: 0.28125rem;    /* 4.5px */
+
+  /* --- Borders & effects -------------------------------------------------
+   * Hairline borders, no fake depth, no noise. The system earns its
+   * elevation from soft shadows defined in tokens.css — never from gradients.
+   * --------------------------------------------------------------------- */
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+
+/* ----------------------------------------------------------------------------
+ * Hanko · Night · dark
+ * Sumi ink page, washi cream text, vermillion seal unchanged.
+ * The seal does not move — only its surroundings invert.
+ * Semantic colors stay identical to the light theme (brand guide intent).
+ * -------------------------------------------------------------------------- */
+
+@plugin "daisyui/theme" {
+  name: "hanko-night";
+  default: false;
+  prefersdark: true;
+  color-scheme: dark;
+
+  /* --- Surfaces (inverted) -----------------------------------------------
+   * base-100 is the deepest ink — the page background in dark mode.
+   * base-200 is one step raised — cards, panels.
+   * base-300 is the most-raised surface — modals, popovers.
+   * base-content is Snow — the brightest cream for text.
+   * --------------------------------------------------------------------- */
+  --color-base-100: #0E0F12;     /* Sumi · page bg */
+  --color-base-200: #181920;     /* Ink  · cards */
+  --color-base-300: #2A2B33;     /* Onyx · raised */
+  --color-base-content: #FBFAF6; /* Snow · text */
+
+  /* --- Primary · The Stamp (unchanged) -----------------------------------
+   * Vermillion is the constant. Same hex regardless of theme.
+   * --------------------------------------------------------------------- */
+  --color-primary: #E0432F;
+  --color-primary-content: #FBFAF6;
+
+  /* --- Secondary · Snow button (inverted from light) ---------------------
+   * In dark mode, the strong second action is bright cream-on-ink.
+   * --------------------------------------------------------------------- */
+  --color-secondary: #FBFAF6;
+  --color-secondary-content: #0E0F12;
+
+  /* --- Accent · Coral (unchanged) ----------------------------------------
+   * Same Coral hex as light theme — the brand color story doesn't shift.
+   * --------------------------------------------------------------------- */
+  --color-accent: #F19684;
+  --color-accent-content: #B5301F;
+
+  /* --- Neutral · Bright counterpoint -------------------------------------
+   * Inverted — Snow as the "other" surface in dark mode (e.g. light callout
+   * cards inside a dark page).
+   * --------------------------------------------------------------------- */
+  --color-neutral: #FBFAF6;
+  --color-neutral-content: #0E0F12;
+
+  /* --- Semantic · Same hex as light theme --------------------------------
+   * Brand guide doesn't define dark-mode variants — the natural pigments
+   * stay the same. Adjust here later if any color reads poorly against ink.
+   * --------------------------------------------------------------------- */
+  --color-info: #3D5C8A;
+  --color-info-content: #FBFAF6;
+
+  --color-success: #3F8F5C;
+  --color-success-content: #FBFAF6;
+
+  --color-warning: #D89B2B;
+  --color-warning-content: #0E0F12;
+
+  --color-error: #C8302A;
+  --color-error-content: #FBFAF6;
+
+  /* --- Shape, sizing, effects (same as light) ----------------------------
+   * Shape tokens never differ between themes — radii are a brand constant.
+   * --------------------------------------------------------------------- */
+  --radius-selector: 9999px;
+  --radius-field: 0.625rem;
+  --radius-box: 0.875rem;
+  --size-selector: 0.28125rem;
+  --size-field: 0.28125rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}

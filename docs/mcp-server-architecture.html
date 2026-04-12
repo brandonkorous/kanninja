@@ -1,0 +1,1754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kanNINJA MCP Server — Architecture Sketch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============ THEME ============ */
+  :root {
+    --font-display: 'Fraunces', ui-serif, Georgia, serif;
+    --font-body: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+    /* Editorial paper/ink — warm neutrals, terracotta + sage accents */
+    --bg: #f8f4ec;
+    --bg-atmosphere: rgba(194, 65, 12, 0.06);
+    --bg-atmosphere-2: rgba(77, 124, 15, 0.04);
+    --surface: #fbfaf6;
+    --surface-2: #f1ebdd;
+    --surface-elevated: #fffdf8;
+    --surface-recessed: #ece4d2;
+    --border: rgba(14, 15, 18, 0.08);
+    --border-bright: rgba(14, 15, 18, 0.16);
+    --text: #1a1613;
+    --text-dim: #7a6f64;
+    --accent: #c2410c;
+    --accent-dim: rgba(194, 65, 12, 0.10);
+    --accent-strong: #9a3412;
+    --sage: #4d7c0f;
+    --sage-dim: rgba(77, 124, 15, 0.10);
+    --gold: #a16207;
+    --gold-dim: rgba(161, 98, 7, 0.10);
+    --slate: #475569;
+    --slate-dim: rgba(71, 85, 105, 0.09);
+    --plum: #9f1239;
+    --plum-dim: rgba(159, 18, 57, 0.09);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14100c;
+      --bg-atmosphere: rgba(251, 146, 60, 0.09);
+      --bg-atmosphere-2: rgba(163, 230, 53, 0.06);
+      --surface: #1c1813;
+      --surface-2: #251f18;
+      --surface-elevated: #2c251c;
+      --surface-recessed: #110d09;
+      --border: rgba(255, 253, 245, 0.08);
+      --border-bright: rgba(255, 253, 245, 0.18);
+      --text: #f5efe4;
+      --text-dim: #a69b89;
+      --accent: #fb923c;
+      --accent-dim: rgba(251, 146, 60, 0.14);
+      --accent-strong: #fdba74;
+      --sage: #a3e635;
+      --sage-dim: rgba(163, 230, 53, 0.12);
+      --gold: #fbbf24;
+      --gold-dim: rgba(251, 191, 36, 0.12);
+      --slate: #94a3b8;
+      --slate-dim: rgba(148, 163, 184, 0.11);
+      --plum: #fda4af;
+      --plum-dim: rgba(253, 164, 175, 0.12);
+    }
+  }
+
+  /* ============ RESET + BASE ============ */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 12% 0%, var(--bg-atmosphere) 0%, transparent 55%),
+      radial-gradient(ellipse at 88% 100%, var(--bg-atmosphere-2) 0%, transparent 50%);
+    background-attachment: fixed;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-wrap: break-word;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Overflow protection — every grid/flex child must be able to shrink */
+  [style*="display: grid"] > *, [style*="display: flex"] > * { min-width: 0; }
+
+  ::selection { background: var(--accent-dim); color: var(--text); }
+
+  /* ============ LAYOUT CONTAINER ============ */
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 72px 48px 120px 48px;
+    min-width: 0;
+  }
+
+  /* ============ ANIMATION ============ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate {
+    animation: fadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--i, 0) * 0.05s);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* ============ TYPOGRAPHY ============ */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .eyebrow::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--accent);
+    opacity: 0.8;
+  }
+
+  h1.display {
+    font-family: var(--font-display);
+    font-size: clamp(44px, 6.5vw, 92px);
+    line-height: 0.96;
+    letter-spacing: -0.035em;
+    font-weight: 500;
+    margin-top: 24px;
+    text-wrap: balance;
+  }
+
+  h1.display em {
+    font-style: italic;
+    font-weight: 500;
+    color: var(--accent);
+  }
+
+  .lede {
+    font-family: var(--font-body);
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--text-dim);
+    max-width: 760px;
+    margin-top: 32px;
+  }
+
+  h2.section-title {
+    font-family: var(--font-display);
+    font-size: clamp(32px, 3.8vw, 50px);
+    line-height: 1.08;
+    letter-spacing: -0.022em;
+    font-weight: 500;
+    margin: 0 0 14px 0;
+    text-wrap: balance;
+    max-width: 860px;
+  }
+
+  h2.section-title em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .section-lede {
+    font-size: 16.5px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    max-width: 720px;
+    margin-bottom: 52px;
+  }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .section-label::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .section-label.sage { color: var(--sage); }
+  .section-label.sage::before { background: var(--sage); }
+  .section-label.gold { color: var(--gold); }
+  .section-label.gold::before { background: var(--gold); }
+  .section-label.slate { color: var(--slate); }
+  .section-label.slate::before { background: var(--slate); }
+  .section-label.plum { color: var(--plum); }
+  .section-label.plum::before { background: var(--plum); }
+
+  /* ============ HERO ============ */
+  .hero {
+    padding-bottom: 80px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 96px;
+  }
+
+  .tag-row {
+    margin-top: 48px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+
+  .tag--accent {
+    background: var(--accent-dim);
+    border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+    color: var(--accent);
+  }
+
+  /* ============ SECTION ============ */
+  .section { margin-bottom: 112px; }
+
+  /* ============ WHY CARDS ============ */
+  .why-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+
+  .why-card {
+    padding: 30px 30px 34px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    transition: border-color 0.25s ease, transform 0.25s ease;
+    min-width: 0;
+  }
+
+  .why-card:hover {
+    border-color: var(--border-bright);
+    transform: translateY(-2px);
+  }
+
+  .why-card .num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.14em;
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  .why-card h3 {
+    font-family: var(--font-display);
+    font-size: 26px;
+    line-height: 1.2;
+    font-weight: 600;
+    margin-bottom: 12px;
+    letter-spacing: -0.012em;
+  }
+
+  .why-card p {
+    font-size: 15px;
+    line-height: 1.62;
+    color: var(--text-dim);
+  }
+
+  .why-card p code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  /* ============ ARCHITECTURE DIAGRAM ============ */
+  .arch-diagram {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 1020px;
+  }
+
+  .arch-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 26px 30px 28px;
+    min-width: 0;
+  }
+
+  .arch-row--hero {
+    background: var(--surface-elevated);
+    border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+    box-shadow: 0 1px 2px rgba(14,15,18,0.03), 0 6px 24px rgba(14,15,18,0.05);
+  }
+
+  .arch-row--recessed {
+    background: var(--surface-recessed);
+    border-style: dashed;
+  }
+
+  .client-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .client-pill {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 9px 18px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .flow-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 2px 0;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .flow-arrow svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--border-bright);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+  }
+
+  .arch-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .arch-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 22px 20px;
+    min-width: 0;
+  }
+
+  .arch-card h4 {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-dim);
+  }
+
+  .arch-card .title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    line-height: 1.2;
+    font-weight: 600;
+    margin-bottom: 10px;
+    letter-spacing: -0.012em;
+  }
+
+  .arch-card p {
+    font-size: 13.5px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .arch-card p code {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    background: var(--bg);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  .arch-card--accent { border-color: color-mix(in srgb, var(--accent) 28%, var(--border)); }
+  .arch-card--accent h4 { color: var(--accent); }
+  .arch-card--sage { border-color: color-mix(in srgb, var(--sage) 28%, var(--border)); }
+  .arch-card--sage h4 { color: var(--sage); }
+  .arch-card--gold { border-color: color-mix(in srgb, var(--gold) 28%, var(--border)); }
+  .arch-card--gold h4 { color: var(--gold); }
+  .arch-card--slate { border-color: color-mix(in srgb, var(--slate) 28%, var(--border)); }
+  .arch-card--slate h4 { color: var(--slate); }
+
+  /* ============ AUTH COMPARISON ============ */
+  .auth-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+  }
+
+  .auth-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 34px 34px 38px;
+    min-width: 0;
+  }
+
+  .auth-card h3 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    line-height: 1.15;
+    font-weight: 600;
+    margin-bottom: 4px;
+    letter-spacing: -0.015em;
+  }
+
+  .auth-card h3 em { font-style: italic; color: var(--accent); font-weight: 500; }
+
+  .auth-card .sub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 28px;
+  }
+
+  .auth-steps {
+    list-style: none;
+    counter-reset: step;
+    padding: 0;
+  }
+
+  .auth-steps li {
+    position: relative;
+    padding-left: 44px;
+    padding-top: 2px;
+    padding-bottom: 18px;
+    counter-increment: step;
+    font-size: 14.5px;
+    color: var(--text-dim);
+    line-height: 1.58;
+  }
+
+  .auth-steps li::before {
+    content: counter(step, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--accent);
+    padding: 4px 8px;
+    background: var(--accent-dim);
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  .auth-steps li:last-child { padding-bottom: 0; }
+
+  .auth-steps li strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .auth-steps li code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    padding: 1px 6px;
+    border-radius: 4px;
+    word-break: break-word;
+  }
+
+  /* ============ TOOL SURFACE ============ */
+  .tool-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .tool-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 30px 32px 34px;
+    min-width: 0;
+  }
+
+  .tool-card .header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .tool-card h3 {
+    font-family: var(--font-display);
+    font-size: 26px;
+    line-height: 1.15;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+  }
+
+  .tool-card h3 em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .tool-tier {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 5px 11px;
+    border-radius: 999px;
+    white-space: nowrap;
+    font-weight: 600;
+  }
+
+  .tool-tier--free {
+    color: var(--sage);
+    background: var(--sage-dim);
+    border: 1px solid color-mix(in srgb, var(--sage) 32%, transparent);
+  }
+
+  .tool-tier--pro {
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
+  }
+
+  .tool-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .tool-list li {
+    position: relative;
+    padding: 11px 0 11px 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-dim);
+    border-bottom: 1px dashed var(--border);
+  }
+
+  .tool-list li:last-child { border-bottom: none; padding-bottom: 0; }
+  .tool-list li:first-child { padding-top: 0; }
+
+  .tool-list li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    top: 11px;
+    color: var(--text-dim);
+    opacity: 0.5;
+  }
+
+  .tool-list li:first-child::before { top: 0; }
+
+  .tool-list code {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    background: var(--surface-2);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+  }
+
+  /* ============ DEEP DIVE (CODE) ============ */
+  .deep-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 24px;
+  }
+
+  .deep-meta {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px 34px 34px;
+    min-width: 0;
+  }
+
+  .deep-meta h3 {
+    font-family: var(--font-display);
+    font-size: 30px;
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: -0.018em;
+    margin-bottom: 10px;
+  }
+
+  .deep-meta h3 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .deep-meta .path {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--text-dim);
+    margin-bottom: 22px;
+    word-break: break-all;
+  }
+
+  .deep-meta p {
+    font-size: 14.5px;
+    line-height: 1.64;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+  }
+
+  .deep-meta dl {
+    margin-top: 22px;
+    padding-top: 22px;
+    border-top: 1px dashed var(--border);
+  }
+
+  .deep-meta dt {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-top: 16px;
+    margin-bottom: 5px;
+    font-weight: 600;
+  }
+
+  .deep-meta dt:first-child { margin-top: 0; }
+
+  .deep-meta dd {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.56;
+  }
+
+  .deep-meta dd code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  .code-file {
+    background: var(--surface-recessed);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .code-file__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 22px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+
+  .code-file__header::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .code-file__body {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+    padding: 24px 26px 26px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-x: auto;
+    color: var(--text);
+  }
+
+  .code-file__body .k { color: var(--plum); font-weight: 500; }
+  .code-file__body .s { color: var(--sage); }
+  .code-file__body .c { color: var(--text-dim); font-style: italic; }
+  .code-file__body .n { color: var(--accent); }
+  .code-file__body .t { color: var(--slate); }
+
+  /* ============ TIER TABLE ============ */
+  .tier-table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .tier-table-scroll { overflow-x: auto; }
+
+  table.tier {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    min-width: 760px;
+  }
+
+  table.tier thead th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    padding: 20px 16px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  table.tier thead th:first-child {
+    padding-left: 28px;
+    color: var(--text);
+  }
+
+  table.tier tbody td {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: middle;
+  }
+
+  table.tier tbody td:first-child {
+    padding-left: 28px;
+    font-weight: 500;
+  }
+
+  table.tier tbody tr:last-child td { border-bottom: none; }
+  table.tier tbody tr:hover td {
+    background: color-mix(in srgb, var(--accent) 4%, transparent);
+  }
+
+  .tier-yes {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--sage-dim);
+    color: var(--sage);
+    font-size: 10px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+  }
+
+  .tier-no {
+    display: inline-block;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    opacity: 0.45;
+    font-size: 13px;
+  }
+
+  .tier-detail {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  .tier-detail small {
+    display: block;
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 2px;
+  }
+
+  /* ============ ROADMAP TIMELINE ============ */
+  .timeline {
+    position: relative;
+    padding-left: 42px;
+    max-width: 960px;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 14px;
+    bottom: 14px;
+    width: 2px;
+    background: linear-gradient(to bottom,
+      var(--accent) 0%,
+      var(--gold) 50%,
+      var(--sage) 100%);
+    opacity: 0.35;
+  }
+
+  .phase {
+    position: relative;
+    padding-bottom: 52px;
+  }
+
+  .phase:last-child { padding-bottom: 0; }
+
+  .phase::before {
+    content: '';
+    position: absolute;
+    left: -32px;
+    top: 9px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 0 4px var(--bg);
+  }
+
+  .phase--gold::before { border-color: var(--gold); }
+  .phase--sage::before { border-color: var(--sage); }
+
+  .phase-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+
+  .phase-head .stamp {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 5px 11px;
+    border-radius: 4px;
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  .phase--gold .stamp { background: var(--gold-dim); color: var(--gold); }
+  .phase--sage .stamp { background: var(--sage-dim); color: var(--sage); }
+
+  .phase h3 {
+    font-family: var(--font-display);
+    font-size: 30px;
+    line-height: 1.15;
+    font-weight: 600;
+    letter-spacing: -0.018em;
+  }
+
+  .phase h3 em { font-style: italic; color: var(--accent); font-weight: 500; }
+  .phase--gold h3 em { color: var(--gold); }
+  .phase--sage h3 em { color: var(--sage); }
+
+  .phase .desc {
+    font-size: 15.5px;
+    line-height: 1.62;
+    color: var(--text-dim);
+    max-width: 720px;
+    margin-bottom: 20px;
+  }
+
+  .phase .desc code {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  .phase-items {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px 22px;
+  }
+
+  .phase-items ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .phase-items li {
+    position: relative;
+    padding: 9px 0 9px 22px;
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.58;
+  }
+
+  .phase-items li::before {
+    content: '+';
+    position: absolute;
+    left: 0;
+    top: 9px;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-weight: 700;
+  }
+
+  .phase--gold .phase-items li::before { color: var(--gold); }
+  .phase--sage .phase-items li::before { color: var(--sage); }
+
+  .phase-items li code {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    background: var(--surface-2);
+    padding: 1px 7px;
+    border-radius: 4px;
+    color: var(--text);
+  }
+
+  .phase-items .ship {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border);
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.55;
+  }
+
+  .phase-items .ship strong {
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .phase--gold .phase-items .ship strong { color: var(--gold); }
+  .phase--sage .phase-items .ship strong { color: var(--sage); }
+
+  /* ============ CALLOUTS ============ */
+  .callouts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  .callout {
+    padding: 24px 28px 26px;
+    border-radius: 12px;
+    border-left: 3px solid var(--accent);
+    background: var(--accent-dim);
+    min-width: 0;
+  }
+
+  .callout--gold { border-color: var(--gold); background: var(--gold-dim); }
+  .callout--plum { border-color: var(--plum); background: var(--plum-dim); }
+  .callout--slate { border-color: var(--slate); background: var(--slate-dim); }
+  .callout--sage { border-color: var(--sage); background: var(--sage-dim); }
+
+  .callout h4 {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .callout--gold h4 { color: var(--gold); }
+  .callout--plum h4 { color: var(--plum); }
+  .callout--slate h4 { color: var(--slate); }
+  .callout--sage h4 { color: var(--sage); }
+
+  .callout p {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  .callout p code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: color-mix(in srgb, var(--bg) 65%, transparent);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  /* ============ NEXT STEPS ============ */
+  .next-steps {
+    background: var(--surface-elevated);
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+    border-radius: 18px;
+    padding: 52px 56px 56px;
+    box-shadow: 0 1px 2px rgba(14,15,18,0.03), 0 10px 36px rgba(14,15,18,0.05);
+  }
+
+  .next-steps .section-label { margin-bottom: 20px; }
+
+  .next-steps h2 {
+    font-family: var(--font-display);
+    font-size: clamp(32px, 3.6vw, 46px);
+    line-height: 1.08;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin-bottom: 18px;
+    text-wrap: balance;
+  }
+
+  .next-steps h2 em { font-style: italic; color: var(--accent); }
+
+  .next-steps .kicker {
+    font-size: 16px;
+    color: var(--text-dim);
+    margin-bottom: 40px;
+    max-width: 680px;
+    line-height: 1.6;
+  }
+
+  .next-steps ol {
+    list-style: none;
+    counter-reset: next;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .next-steps ol li {
+    counter-increment: next;
+    position: relative;
+    padding: 22px 26px 24px 68px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.58;
+    color: var(--text-dim);
+    min-width: 0;
+  }
+
+  .next-steps ol li::before {
+    content: counter(next, decimal-leading-zero);
+    position: absolute;
+    left: 24px;
+    top: 24px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+  }
+
+  .next-steps ol li strong {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+    letter-spacing: -0.008em;
+  }
+
+  .next-steps ol li code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+    background: var(--accent-dim);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  /* ============ FOOTER ============ */
+  .footer {
+    margin-top: 112px;
+    padding-top: 36px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .footer .brand {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 500;
+  }
+
+  .footer .brand em { font-style: italic; color: var(--accent); }
+
+  .footer .meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 1024px) {
+    .why-grid { grid-template-columns: 1fr 1fr; }
+    .tool-grid { grid-template-columns: 1fr; }
+    .deep-grid { grid-template-columns: 1fr; }
+    .next-steps ol { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 768px) {
+    .page { padding: 48px 22px 80px; }
+    .hero { margin-bottom: 64px; padding-bottom: 56px; }
+    .section { margin-bottom: 80px; }
+    .why-grid { grid-template-columns: 1fr; }
+    .auth-grid { grid-template-columns: 1fr; }
+    .arch-split { grid-template-columns: 1fr; }
+    .callouts { grid-template-columns: 1fr; }
+    .next-steps { padding: 38px 28px 42px; border-radius: 14px; }
+    .timeline { padding-left: 32px; }
+    .timeline::before { left: 10px; }
+    .phase::before { left: -28px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ============ HERO ============ -->
+  <header class="hero animate" style="--i:0">
+    <span class="eyebrow">MCP server · architecture sketch</span>
+    <h1 class="display">Manage your dojo<br><em>from any agent.</em></h1>
+    <p class="lede">A design sketch for exposing kanNINJA v2 to any client that speaks the Model Context Protocol — Claude Code, Cursor, Claude.ai, ChatGPT desktop, and every MCP-aware IDE. Two deploy modes, one tool surface, tier-gated AI capabilities, one pnpm package in the monorepo.</p>
+    <div class="tag-row">
+      <span class="tag tag--accent">Phase 2a → 3</span>
+      <span class="tag">pnpm monorepo</span>
+      <span class="tag">Fastify-backed</span>
+      <span class="tag">Clerk OAuth</span>
+      <span class="tag">@kanninja/mcp</span>
+      <span class="tag">Not yet scheduled</span>
+    </div>
+  </header>
+
+  <!-- ============ WHY ============ -->
+  <section class="section animate" style="--i:1">
+    <span class="section-label">Why build it</span>
+    <h2 class="section-title">An AI-first kanban<br>needs an <em>AI-first surface.</em></h2>
+    <p class="section-lede">Three arguments. Any one of them would be enough on its own. The combination is the tell.</p>
+
+    <div class="why-grid">
+      <article class="why-card">
+        <span class="num">01 · positioning</span>
+        <h3>It fits the product</h3>
+        <p>kanNINJA leans hard into AI — twelve native capabilities, the dojo-kata-clan vocabulary, the whole katana thing. An MCP server is the most honest expression of that positioning: the product reaches users where they already work, rather than demanding a context switch to a browser tab.</p>
+      </article>
+
+      <article class="why-card">
+        <span class="num">02 · distribution</span>
+        <h3>Cheap acquisition</h3>
+        <p>Anthropic's MCP directory, Smithery, and the plugin panels in every MCP-aware IDE are low-cost surfaces for exactly the audience that pays for Pro+. Terminal-native developers discover tools by typing <code>add kanNINJA</code> — and never see your landing page.</p>
+      </article>
+
+      <article class="why-card">
+        <span class="num">03 · conversion</span>
+        <h3>Natural tier pull</h3>
+        <p>Free CRUD tools (read boards, move tasks, add comments) anchor adoption. AI-native tools — break down epics, estimate kata, draft standup — sit behind Pro+. Usage pushes users up the ladder organically instead of asking marketing to do the lifting.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ ARCHITECTURE ============ -->
+  <section class="section animate" style="--i:2">
+    <span class="section-label sage">System architecture</span>
+    <h2 class="section-title">One package, <em>two deploy modes.</em></h2>
+    <p class="section-lede">The interesting line is between local stdio (ship fast, user brings their own key) and remote HTTP+SSE (one-click add, OAuth, billable). Both share a single tool registry that reuses the Fastify API contracts — no duplication.</p>
+
+    <div class="arch-diagram">
+
+      <div class="arch-row arch-row--hero">
+        <span class="section-label slate" style="margin-bottom:18px">MCP clients</span>
+        <div class="client-pills">
+          <span class="client-pill">Claude Code</span>
+          <span class="client-pill">Cursor</span>
+          <span class="client-pill">Claude.ai</span>
+          <span class="client-pill">ChatGPT desktop</span>
+          <span class="client-pill">Zed / Windsurf</span>
+          <span class="client-pill">Continue.dev</span>
+        </div>
+      </div>
+
+      <div class="flow-arrow">
+        <svg viewBox="0 0 20 20"><path d="M10 4 L10 16 M6 12 L10 16 L14 12"/></svg>
+        stdio or HTTP+SSE
+      </div>
+
+      <div class="arch-row">
+        <span class="section-label">Transport · two modes</span>
+        <div class="arch-split">
+          <div class="arch-card arch-card--accent">
+            <h4>Mode A</h4>
+            <div class="title">Local stdio</div>
+            <p>User-run subprocess via <code>npx @kanninja/mcp</code>. API-key auth from env. Ships fast, no hosting cost, works on any network. Published to npm and Smithery.</p>
+          </div>
+          <div class="arch-card arch-card--sage">
+            <h4>Mode B</h4>
+            <div class="title">Hosted remote</div>
+            <p><code>mcp.kanninja.app</code> over HTTP + SSE. Clerk OAuth, one-click add from Claude.ai or ChatGPT. Billable, listed in Anthropic's directory.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-arrow">
+        <svg viewBox="0 0 20 20"><path d="M10 4 L10 16 M6 12 L10 16 L14 12"/></svg>
+        shared tool registry
+      </div>
+
+      <div class="arch-row">
+        <span class="section-label gold">Core package · @kanninja/mcp</span>
+        <div class="arch-split">
+          <div class="arch-card arch-card--gold">
+            <h4>Tool registry</h4>
+            <p>Single source of truth for tool names, descriptions, and handlers. One definition, both transports consume it.</p>
+          </div>
+          <div class="arch-card arch-card--gold">
+            <h4>Zod → JSON schema</h4>
+            <p>Reuses schemas from <code>shared/</code>. Tiny adapter converts the Drizzle-adjacent Zod to MCP <code>inputSchema</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-arrow">
+        <svg viewBox="0 0 20 20"><path d="M10 4 L10 16 M6 12 L10 16 L14 12"/></svg>
+        authenticated HTTP
+      </div>
+
+      <div class="arch-row">
+        <span class="section-label slate">Backend · Fastify 5 REST API</span>
+        <div class="arch-split">
+          <div class="arch-card arch-card--slate">
+            <h4>Public contracts</h4>
+            <p><code>/v1/boards</code>, <code>/v1/tasks</code>, <code>/v1/comments</code>, <code>/v1/ai/*</code>, <code>/v1/billing/me</code>. Semver'd and deprecation-tracked from day one.</p>
+          </div>
+          <div class="arch-card arch-card--slate">
+            <h4>Tier enforcement</h4>
+            <p>Every route checks the caller's subscription via <code>/v1/billing/me</code> cached in Redis. 402 on tier mismatch — no MCP-specific bypass.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-arrow">
+        <svg viewBox="0 0 20 20"><path d="M10 4 L10 16 M6 12 L10 16 L14 12"/></svg>
+        drizzle orm
+      </div>
+
+      <div class="arch-row arch-row--recessed">
+        <span class="section-label">Data · Supabase Postgres (Drizzle)</span>
+        <div class="arch-split">
+          <div class="arch-card">
+            <h4>Tables</h4>
+            <p><code>workspaces</code>, <code>boards</code>, <code>columns</code>, <code>tasks</code>, <code>comments</code>, <code>labels</code>, <code>memberships</code>, <code>api_keys</code>, <code>audit_log</code>.</p>
+          </div>
+          <div class="arch-card">
+            <h4>Row-level security</h4>
+            <p>Every query scoped by <code>workspace_id</code> and user membership. Same RLS the web app uses — no MCP-specific bypass, no surface-of-last-resort.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ AUTH ============ -->
+  <section class="section animate" style="--i:3">
+    <span class="section-label gold">Auth flows</span>
+    <h2 class="section-title">Two auth paths. <em>Same contract.</em></h2>
+    <p class="section-lede">The backend treats an API key and an OAuth access token as equivalent credentials at the API layer. Which transport the call arrived through is irrelevant to Fastify — authentication happens once, tier enforcement happens every time.</p>
+
+    <div class="auth-grid">
+      <div class="auth-card">
+        <h3>Local stdio <em>·</em> API key</h3>
+        <div class="sub">mode A — ships in Phase 2a</div>
+        <ol class="auth-steps">
+          <li><strong>Generate key</strong> in kanNINJA settings. Format <code>ninja_live_…</code>. Scoped to a single workspace.</li>
+          <li><strong>Add to client config</strong>. In <code>claude_desktop_config.json</code> or <code>mcp.json</code>: <code>env: { KANNINJA_API_KEY }</code>.</li>
+          <li><strong>Client boots subprocess</strong>. Claude Code runs <code>npx @kanninja/mcp</code> as a stdio child process on demand.</li>
+          <li><strong>Package authenticates</strong>. Reads key from env, attaches <code>Authorization: Bearer</code> on every Fastify call.</li>
+          <li><strong>Backend verifies</strong>. <code>POST /v1/auth/verify-key</code> returns user + workspace + tier, cached for the subprocess lifetime.</li>
+          <li><strong>Tool calls proxy through</strong>. Every invocation is a regular REST call with the cached credential.</li>
+        </ol>
+      </div>
+
+      <div class="auth-card">
+        <h3>Remote HTTP <em>·</em> OAuth</h3>
+        <div class="sub">mode B — ships in Phase 2b</div>
+        <ol class="auth-steps">
+          <li><strong>User adds server</strong> at <code>https://mcp.kanninja.app</code> in Claude.ai or ChatGPT desktop.</li>
+          <li><strong>Server returns 401</strong> with <code>WWW-Authenticate: Bearer</code> header and OAuth metadata discovery URL.</li>
+          <li><strong>Client redirects</strong> to Clerk's authorize endpoint with kanNINJA's client ID and required scope list.</li>
+          <li><strong>User consents</strong> to scopes: <code>read:boards</code>, <code>write:tasks</code>, <code>ai:capabilities</code>, <code>team:read</code>.</li>
+          <li><strong>Clerk returns tokens</strong>. Server stores refresh token; client receives short-lived JWT access token.</li>
+          <li><strong>Tool calls authenticated as user</strong>. Every request carries the JWT; Fastify validates signature, expiration, and scope.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TOOL SURFACE ============ -->
+  <section class="section animate" style="--i:4">
+    <span class="section-label slate">Tool surface</span>
+    <h2 class="section-title">Four categories. <em>One vocabulary.</em></h2>
+    <p class="section-lede">Every tool name reads as a verb against a board concept. Free tools move data. Pro+ tools think about it. Team+ tools coordinate across people.</p>
+
+    <div class="tool-grid">
+
+      <article class="tool-card">
+        <div class="header">
+          <h3>Read <em>— query</em></h3>
+          <span class="tool-tier tool-tier--free">Free · all tiers</span>
+        </div>
+        <ul class="tool-list">
+          <li><code>list_boards</code>all dojos visible to the caller</li>
+          <li><code>get_board</code>columns, tasks, members, recent activity</li>
+          <li><code>list_tasks</code>filtered by status, assignee, due, label, clan</li>
+          <li><code>get_task</code>full task detail with comments and history</li>
+          <li><code>get_my_work</code>tasks assigned to the caller, grouped by status</li>
+          <li><code>search</code>text and semantic search across tasks and comments</li>
+        </ul>
+      </article>
+
+      <article class="tool-card">
+        <div class="header">
+          <h3>Write <em>— mutate</em></h3>
+          <span class="tool-tier tool-tier--free">Free · rate-limited</span>
+        </div>
+        <ul class="tool-list">
+          <li><code>create_task</code>new kata on a board</li>
+          <li><code>update_task</code>title, description, custom fields, due date</li>
+          <li><code>move_task</code>change column or status with optional comment</li>
+          <li><code>add_comment</code>posts as the authenticated user</li>
+          <li><code>assign_task</code>to self, clan member, or bot</li>
+          <li><code>add_label</code> / <code>remove_label</code>taxonomy tags</li>
+          <li><code>set_due_date</code>respects workspace timezone</li>
+          <li><code>create_board</code>usage-gated on free tier</li>
+        </ul>
+      </article>
+
+      <article class="tool-card">
+        <div class="header">
+          <h3>AI-native <em>— think</em></h3>
+          <span class="tool-tier tool-tier--pro">Pro+</span>
+        </div>
+        <ul class="tool-list">
+          <li><code>break_down_task</code>epic into subtasks with acceptance criteria</li>
+          <li><code>estimate_task</code>story points with rationale and comparables</li>
+          <li><code>suggest_next</code>what to work on given context and team load</li>
+          <li><code>summarize_board</code>digest of state changes since a timestamp</li>
+          <li><code>draft_standup</code>yesterday / today / blockers from recent activity</li>
+          <li><code>extract_tasks</code>paste meeting notes, return structured tasks</li>
+        </ul>
+      </article>
+
+      <article class="tool-card">
+        <div class="header">
+          <h3>Clan <em>— team</em></h3>
+          <span class="tool-tier tool-tier--pro">Team+</span>
+        </div>
+        <ul class="tool-list">
+          <li><code>list_clan_members</code>roster with roles and current load</li>
+          <li><code>get_clan_velocity</code>rolling throughput by clan</li>
+          <li><code>get_member_load</code>assigned kata plus time-tracked hours</li>
+          <li><code>assign_to_clan_member</code>with a load-balancing hint</li>
+          <li><code>list_upcoming_reviews</code>standups, retros, 1:1s from calendar</li>
+          <li><code>log_time_on_task</code>creates a time entry against a kata</li>
+        </ul>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ============ DEEP DIVE ============ -->
+  <section class="section animate" style="--i:5">
+    <span class="section-label">Canonical example</span>
+    <h2 class="section-title">Anatomy of one tool: <em>break_down_task.</em></h2>
+    <p class="section-lede">The most interesting tool to spec because it's AI-native, Pro-gated, streams in hosted mode, calls into the backend AI capability layer, writes an audit entry, and meters usage. If you can ship this cleanly, the other five AI tools fall out.</p>
+
+    <div class="deep-grid">
+      <div class="deep-meta">
+        <h3><em>break_down_task</em></h3>
+        <div class="path">v2/mcp-server/src/tools/ai/breakDownTask.ts</div>
+        <p>Given a task that's too large to act on, return 3–8 subtasks with titles, acceptance criteria, and rough estimates. Posts the result as a threaded comment on the parent and — if the caller opts in — creates the subtask records directly.</p>
+        <p>Streams token-by-token in hosted mode over HTTP+SSE. In local stdio mode it buffers and returns once, because MCP stdio doesn't yet support streamed tool output.</p>
+
+        <dl>
+          <dt>Tier gate</dt>
+          <dd>Pro, Team, or Enterprise. Returns <code>402</code> on Starter / Builder with an upgrade prompt in the error message.</dd>
+          <dt>Cost model</dt>
+          <dd>Metered per call. Deducted from the workspace AI credit balance — hard-capped, not billable beyond plan allowance.</dd>
+          <dt>Side effects</dt>
+          <dd>Comment created on parent task. Optional subtask creation if <code>apply: true</code>. Full input and output recorded in <code>audit_log</code> for Team+ workspaces.</dd>
+          <dt>Telemetry</dt>
+          <dd>Tool name, tier, latency, token count, acceptance (did the user apply the suggestion?). Feeds the AI-tool product funnel dashboard.</dd>
+        </dl>
+      </div>
+
+      <div class="code-file">
+        <div class="code-file__header">breakDownTask.ts</div>
+        <pre class="code-file__body"><code><span class="k">import</span> { z } <span class="k">from</span> <span class="s">'zod'</span>;
+<span class="k">import</span> { defineTool, requireTier } <span class="k">from</span> <span class="s">'../../registry'</span>;
+<span class="k">import</span> { callApi } <span class="k">from</span> <span class="s">'../../api'</span>;
+
+<span class="c">// Shared with the Fastify route at /v1/ai/break-down-task</span>
+<span class="k">const</span> <span class="n">input</span> = z.object({
+  taskId: z.string().uuid(),
+  maxSubtasks: z.number().int().min(<span class="t">2</span>).max(<span class="t">12</span>).default(<span class="t">6</span>),
+  apply: z.boolean().default(<span class="t">false</span>),
+  style: z.enum([<span class="s">'lean'</span>, <span class="s">'detailed'</span>]).default(<span class="s">'lean'</span>),
+});
+
+<span class="k">const</span> <span class="n">output</span> = z.object({
+  parentTaskId: z.string().uuid(),
+  subtasks: z.array(z.object({
+    title: z.string().min(<span class="t">1</span>).max(<span class="t">140</span>),
+    acceptanceCriteria: z.array(z.string()).min(<span class="t">1</span>),
+    estimateHours: z.number().nullable(),
+  })).min(<span class="t">2</span>).max(<span class="t">12</span>),
+  applied: z.boolean(),
+  commentUrl: z.string().url(),
+});
+
+<span class="k">export default</span> defineTool({
+  name: <span class="s">'break_down_task'</span>,
+  title: <span class="s">'Break a task into subtasks'</span>,
+  description:
+    <span class="s">'Decompose an epic into 3–8 actionable subtasks. Posts a'</span> +
+    <span class="s">' comment on the parent and optionally creates the subtasks.'</span>,
+  tier: requireTier(<span class="s">'pro'</span>),
+  inputSchema: input,
+  outputSchema: output,
+
+  <span class="k">async</span> <span class="n">handler</span>(args, ctx) {
+    <span class="c">// The Fastify route does the AI work, writes audit log,</span>
+    <span class="c">// and meters usage. The MCP tool is deliberately thin.</span>
+    <span class="k">return</span> callApi(ctx, <span class="s">'POST'</span>, <span class="s">'/v1/ai/break-down-task'</span>, args);
+  },
+});</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TIER GATING ============ -->
+  <section class="section animate" style="--i:6">
+    <span class="section-label plum">Tier gating</span>
+    <h2 class="section-title">Free tools hook them. <em>Pro tools keep them.</em></h2>
+    <p class="section-lede">Matrix of what each subscription tier can actually do over MCP. Rate limits are enforced at the Fastify layer using the same Redis buckets the web app uses — same code path, no surface-specific divergence.</p>
+
+    <div class="tier-table-wrap">
+      <div class="tier-table-scroll">
+        <table class="tier">
+          <thead>
+            <tr>
+              <th>Capability</th>
+              <th>Starter · free</th>
+              <th>Builder · $9</th>
+              <th>Pro · $29</th>
+              <th>Team · $79</th>
+              <th>Enterprise · $149</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Local stdio server</td>
+              <td><span class="tier-yes">✓</span></td>
+              <td><span class="tier-yes">✓</span></td>
+              <td><span class="tier-yes">✓</span></td>
+              <td><span class="tier-yes">✓</span></td>
+              <td><span class="tier-yes">✓</span></td>
+            </tr>
+            <tr>
+              <td>Hosted remote (OAuth)</td>
+              <td><span class="tier-no">—</span></td>
+              <td><span class="tier-no">—</span></td>
+              <td><span class="tier-yes">✓</span></td>
+              <td><span class="tier-yes">✓</span></td>
+              <td><span class="tier-yes">✓</span></td>
+            </tr>
+            <tr>
+              <td>Read tools</td>
+              <td><span class="tier-yes">✓</span></td>
+              <td><span class="tier-yes">✓</span></td>
+              <td><span class="tier-yes">✓</span></td>
+              <td><span class="tier-yes">✓</span></td>
+              <td><span class="tier-yes">✓</span></td>
+            </tr>
+            <tr>
+              <td>Write tools</td>
+              <td><span class="tier-detail">50/day<small>write budget</small></span></td>
+              <td><span class="tier-detail">500/day</span></td>
+              <td><span class="tier-detail">unlimited</span></td>
+              <td><span class="tier-detail">unlimited</span></td>
+              <td><span class="tier-detail">unlimited</span></td>
+            </tr>
+            <tr>
+              <td>AI-native tools</td>
+              <td><span class="tier-no">—</span></td>
+              <td><span class="tier-no">—</span></td>
+              <td><span class="tier-detail">50/mo<small>credits</small></span></td>
+              <td><span class="tier-detail">300/mo</span></td>
+              <td><span class="tier-detail">unlimited</span></td>
+            </tr>
+            <tr>
+              <td>Clan / team tools</td>
+              <td><span class="tier-no">—</span></td>
+              <td><span class="tier-no">—</span></td>
+              <td><span class="tier-no">—</span></td>
+              <td><span class="tier-yes">✓</span></td>
+              <td><span class="tier-yes">✓</span></td>
+            </tr>
+            <tr>
+              <td>OAuth scope granularity</td>
+              <td><span class="tier-no">—</span></td>
+              <td><span class="tier-no">—</span></td>
+              <td><span class="tier-detail">basic</span></td>
+              <td><span class="tier-detail">workspace</span></td>
+              <td><span class="tier-detail">SSO + SCIM</span></td>
+            </tr>
+            <tr>
+              <td>Audit log</td>
+              <td><span class="tier-no">—</span></td>
+              <td><span class="tier-no">—</span></td>
+              <td><span class="tier-no">—</span></td>
+              <td><span class="tier-yes">✓</span></td>
+              <td><span class="tier-yes">✓</span></td>
+            </tr>
+            <tr>
+              <td>API keys per user</td>
+              <td><span class="tier-detail">1</span></td>
+              <td><span class="tier-detail">3</span></td>
+              <td><span class="tier-detail">10</span></td>
+              <td><span class="tier-detail">25</span></td>
+              <td><span class="tier-detail">unlimited</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ROADMAP ============ -->
+  <section class="section animate" style="--i:7">
+    <span class="section-label gold">Phase roadmap</span>
+    <h2 class="section-title">Three ships. <em>Each one justifies the next.</em></h2>
+    <p class="section-lede">Ship small, prove demand, add the moat. Don't build AI tools before anyone is using basic CRUD over MCP — you'll build the wrong ones. Local first is the cheap way to find out what people actually reach for.</p>
+
+    <div class="timeline">
+
+      <div class="phase">
+        <div class="phase-head">
+          <span class="stamp">Phase 2a · v0.1</span>
+        </div>
+        <h3>Local stdio — <em>ship it fast.</em></h3>
+        <p class="desc">Get a working MCP server into real users' hands with minimum infrastructure. No hosted endpoint, no OAuth, no billing integration. Just an npm package that speaks stdio to any MCP client, authenticated with an API key.</p>
+        <div class="phase-items">
+          <ul>
+            <li>New package at <code>v2/mcp-server/</code> using <code>@modelcontextprotocol/sdk</code></li>
+            <li>API-key auth only; backend adds <code>POST /v1/auth/verify-key</code> plus a key management UI</li>
+            <li>Free-tier tools: all Read and most Write (no <code>create_board</code> on free tier)</li>
+            <li>Zod-to-MCP schema adapter in <code>shared/mcp-schema.ts</code> (≈ 50 lines)</li>
+            <li>Published to npm as <code>@kanninja/mcp</code> and submitted to Smithery</li>
+          </ul>
+          <div class="ship"><strong>Ship criteria</strong>User can go from landing page to working tools inside a Claude Code session in under two minutes.</div>
+        </div>
+      </div>
+
+      <div class="phase phase--gold">
+        <div class="phase-head">
+          <span class="stamp">Phase 2b · v0.3</span>
+        </div>
+        <h3>Hosted remote — <em>one-click add.</em></h3>
+        <p class="desc">Deploy <code>mcp.kanninja.app</code> with Clerk OAuth plus Stripe-gated access. This is the version people actually adopt from Claude.ai without ever touching a config file.</p>
+        <div class="phase-items">
+          <ul>
+            <li>Fastify service at <code>mcp.kanninja.app</code> with HTTP + SSE transport</li>
+            <li>Clerk OAuth 2.0 with scopes <code>read:boards</code>, <code>write:tasks</code>, <code>ai:capabilities</code>, <code>team:read</code></li>
+            <li>Stripe subscription check cached in Redis (30 s TTL) on every request</li>
+            <li>Published to the Anthropic MCP directory and Smithery hosted tier</li>
+            <li>Per-tier rate limits enforced at the Fastify layer via existing Redis buckets</li>
+          </ul>
+          <div class="ship"><strong>Ship criteria</strong>User adds kanNINJA to Claude.ai in a single click and OAuth consent takes one tap.</div>
+        </div>
+      </div>
+
+      <div class="phase phase--sage">
+        <div class="phase-head">
+          <span class="stamp">Phase 3 · v1.0</span>
+        </div>
+        <h3>AI-native tools — <em>the moat.</em></h3>
+        <p class="desc">The tools that make kanNINJA worth choosing over Linear's MCP server. Everything else is commodity; these are the product.</p>
+        <div class="phase-items">
+          <ul>
+            <li>Ship all six AI-native tools backed by existing <code>/v1/ai/*</code> capability routes</li>
+            <li>Clan tools gated behind Team tier, respecting existing RBAC</li>
+            <li>Per-workspace AI credit metering integrated with billing</li>
+            <li>Telemetry feeds a Metabase dashboard: tool acceptance rate, tier pull-through, churn correlation</li>
+            <li>Audit log for Team+ records full input and output for compliance review</li>
+          </ul>
+          <div class="ship"><strong>Ship criteria</strong>At least 40 % of Pro+ subscribers invoke one AI tool per week within 30 days of launch.</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ OPEN QUESTIONS ============ -->
+  <section class="section animate" style="--i:8">
+    <span class="section-label plum">Open questions · risks</span>
+    <h2 class="section-title">The things <em>I can't answer yet.</em></h2>
+    <p class="section-lede">Each of these could be small. Each of them could also become the thing that blocks the launch. Flagging early so they get answered on purpose, not by default.</p>
+
+    <div class="callouts">
+      <div class="callout">
+        <h4>01 · AI cost ceiling</h4>
+        <p>Chatty clients will happily burn tokens. Who pays for the LLM calls when a Claude Code session runs <code>break_down_task</code> on twenty kata in a row? Hard monthly caps per tier, or usage-metered with overage billing? Decide before Phase 3 starts.</p>
+      </div>
+
+      <div class="callout callout--gold">
+        <h4>02 · Schema drift during Phase 1</h4>
+        <p>Fastify contracts will churn during Core Kanban CRUD work. MCP users are external consumers — breaking changes have real cost. Semver plus a two-version deprecation window, or freeze the MCP tool surface against the last stable Phase 1 milestone?</p>
+      </div>
+
+      <div class="callout callout--plum">
+        <h4>03 · Compliance and audit</h4>
+        <p>Team+ customers will want to know what an MCP call did on their behalf. Every mutation needs a structured audit entry plus a viewer in the web app. Could be a week of work alone — scope it into 2b, or wait for 3?</p>
+      </div>
+
+      <div class="callout callout--slate">
+        <h4>04 · Differentiation from Linear</h4>
+        <p>Linear already ships an MCP server. Matching them on CRUD is commodity work. Phase 3's AI tools are the only real reason to choose kanNINJA — so Phase 3 can't slip, and its tools can't be table-stakes clones of each other's output.</p>
+      </div>
+
+      <div class="callout callout--sage">
+        <h4>05 · Local vs remote priority</h4>
+        <p>Most competitors ship remote-hosted first because it drives direct conversion. We're flipping that: local stdio is cheaper and lower risk, and it lets us validate tool design before committing to OAuth infrastructure. Worth re-checking this bet before 2a kicks off.</p>
+      </div>
+
+      <div class="callout">
+        <h4>06 · API key revocation UX</h4>
+        <p>Stolen API key equals workspace exposure. Self-service rotation, list of active sessions, "revoke all" button. Not technically hard — but it must exist on day one of Phase 2a or we ship a security footgun.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NEXT STEPS ============ -->
+  <section class="section animate" style="--i:9">
+    <div class="next-steps">
+      <span class="section-label">Next steps</span>
+      <h2>Six concrete moves, <em>in order.</em></h2>
+      <p class="kicker">None of these require the Phase 1 CRUD backend to be finished. They're the preparation that lets Phase 2a ship the day Phase 1 lands.</p>
+
+      <ol>
+        <li>
+          <strong>Design Fastify routes with MCP in mind</strong>
+          During Phase 1, give <code>/v1/*</code> resources stable names and shared Zod schemas in <code>shared/</code> even before the MCP package exists. Zero extra cost now, months saved later.
+        </li>
+        <li>
+          <strong>Write the Zod → MCP adapter</strong>
+          A ~50-line utility in <code>shared/mcp-schema.ts</code> that turns any <code>z.object(...)</code> into an MCP <code>inputSchema</code>. Unit-test it against a dozen existing Zod objects.
+        </li>
+        <li>
+          <strong>Spec the API-key data model</strong>
+          <code>api_keys</code> table: id, user, workspace, scopes, display prefix, hashed secret, last_used_at, revoked_at. RLS plus a service for create, list, verify, revoke.
+        </li>
+        <li>
+          <strong>Prototype @kanninja/mcp locally</strong>
+          Against a staging workspace, with just two tools: <code>list_boards</code>, <code>get_board</code>. Verify the full path — stdio → package → Fastify → Drizzle → response rendered in Claude Code.
+        </li>
+        <li>
+          <strong>Decide cost and rate-limit policy</strong>
+          One-page doc covering write-tool limits by tier, AI tool cost model, overage behavior. Needs sign-off before Phase 2a build starts — this shapes the billing code.
+        </li>
+        <li>
+          <strong>Reserve namespaces</strong>
+          Register <code>@kanninja/mcp</code> on npm, <code>mcp.kanninja.app</code> DNS, and submit a stub listing to Smithery. Cheap, prevents squatting.
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="brand">kanNINJA — <em>discipline, made visible.</em></div>
+    <div class="meta">architecture sketch · v0.1 · 2026-04-09</div>
+  </footer>
+
+</div>
+
+</body>
+</html>
