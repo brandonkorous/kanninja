@@ -1,0 +1,32 @@
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/coverage
+**/.cache
+
+# env
+**/.env
+**/.env.local
+**/.env.*.local
+
+# git / editor
+.git
+.gitignore
+.github
+.vscode
+.idea
+**/*.log
+
+# docs / captures (not needed in image)
+demo-video
+docs
+*.md
+!backend/**/*.md
+!frontend/**/*.md
+!shared/**/*.md
+
+# tooling
+fly.*.toml
+Dockerfile*
+.dockerignore

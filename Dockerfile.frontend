@@ -1,0 +1,62 @@
+# syntax=docker/dockerfile:1.7
+
+# ---------- base ----------
+FROM node:20-alpine AS base
+RUN corepack enable && corepack prepare pnpm@9 --activate
+WORKDIR /app
+
+# ---------- deps ----------
+FROM base AS deps
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY shared/package.json ./shared/
+COPY frontend/package.json ./frontend/
+RUN pnpm install --frozen-lockfile \
+    --filter @kanninja/shared \
+    --filter @kanninja/frontend
+
+# ---------- build ----------
+FROM base AS build
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Public env vars must be present at build time for Next.js
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ARG NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+ARG NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+ARG NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/dashboard
+ARG NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/dashboard
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY \
+    NEXT_PUBLIC_CLERK_SIGN_IN_URL=$NEXT_PUBLIC_CLERK_SIGN_IN_URL \
+    NEXT_PUBLIC_CLERK_SIGN_UP_URL=$NEXT_PUBLIC_CLERK_SIGN_UP_URL \
+    NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=$NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL \
+    NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=$NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL \
+    NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL \
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/shared/node_modules ./shared/node_modules
+COPY --from=deps /app/frontend/node_modules ./frontend/node_modules
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
+COPY shared ./shared
+COPY frontend ./frontend
+RUN pnpm --filter @kanninja/shared run build \
+ && pnpm --filter @kanninja/frontend run build
+
+# ---------- runtime ----------
+FROM node:20-alpine AS runtime
+WORKDIR /app
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=3000 \
+    HOSTNAME=0.0.0.0
+
+# Uses Next.js standalone output — see frontend/next.config.ts
+COPY --from=build /app/frontend/.next/standalone ./
+COPY --from=build /app/frontend/.next/static ./frontend/.next/static
+COPY --from=build /app/frontend/public ./frontend/public
+
+EXPOSE 3000
+CMD ["node", "frontend/server.js"]

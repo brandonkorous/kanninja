@@ -1,0 +1,39 @@
+# syntax=docker/dockerfile:1.7
+
+# ---------- base ----------
+FROM node:20-alpine AS base
+RUN corepack enable && corepack prepare pnpm@9 --activate
+WORKDIR /app
+
+# ---------- deps ----------
+FROM base AS deps
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY shared/package.json ./shared/
+COPY backend/package.json ./backend/
+RUN pnpm install --frozen-lockfile \
+    --filter @kanninja/shared \
+    --filter @kanninja/backend
+
+# ---------- build ----------
+FROM base AS build
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/shared/node_modules ./shared/node_modules
+COPY --from=deps /app/backend/node_modules ./backend/node_modules
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
+COPY shared ./shared
+COPY backend ./backend
+RUN pnpm --filter @kanninja/shared run build \
+ && pnpm --filter @kanninja/backend run build
+RUN pnpm --filter @kanninja/backend deploy --prod /out
+
+# ---------- runtime ----------
+FROM node:20-alpine AS runtime
+WORKDIR /app
+ENV NODE_ENV=production \
+    PORT=3001 \
+    HOST=0.0.0.0
+COPY --from=build /out/dist ./dist
+COPY --from=build /out/node_modules ./node_modules
+COPY --from=build /out/package.json ./package.json
+EXPOSE 3001
+CMD ["node", "dist/index.js"]
