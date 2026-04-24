@@ -38,11 +38,11 @@ spec:
                 name: backend-secrets
           resources:
             requests:
-              cpu: "50m"
-              memory: "128Mi"
+              cpu: '50m'
+              memory: '128Mi'
             limits:
-              cpu: "500m"
-              memory: "512Mi"
+              cpu: '500m'
+              memory: '512Mi'
           startupProbe:
             httpGet:
               path: /api/health
@@ -68,6 +68,6 @@ spec:
             runAsNonRoot: true
             runAsUser: 1000
             capabilities:
-              drop: ["ALL"]
+              drop: ['ALL']
             readOnlyRootFilesystem: true
       terminationGracePeriodSeconds: 30

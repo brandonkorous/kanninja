@@ -1,243 +1,243 @@
 name: Build & Deploy to AKS
 
 on:
-  push:
-    branches: [main]
-  workflow_dispatch:
+    push:
+        branches: [ main ]
+    workflow_dispatch:
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_OWNER: brandonkorous
-  AKS_RESOURCE_GROUP: rg-ww-platform-prod-wu3
-  AKS_CLUSTER_NAME: aks-ww-platform-prod-wu3
-  NAMESPACE: kanninja
+    REGISTRY: ghcr.io
+    IMAGE_OWNER: brandonkorous
+    AKS_RESOURCE_GROUP: rg-ww-platform-prod-wu3
+    AKS_CLUSTER_NAME: aks-ww-platform-prod-wu3
+    NAMESPACE: kanninja
 
 jobs:
-  # ------------------------------------------------------------------
-  # Build & push backend image
-  # ------------------------------------------------------------------
-  build-backend:
-    name: Build backend
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    outputs:
-      image: ${{ steps.meta.outputs.tags }}
-      digest: ${{ steps.build.outputs.digest }}
-      sha_tag: ${{ steps.vars.outputs.sha_tag }}
-    steps:
-      - uses: actions/checkout@v4
+    # ------------------------------------------------------------------
+    # Build & push backend image
+    # ------------------------------------------------------------------
+    build-backend:
+        name: Build backend
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
+        outputs:
+            image: ${{ steps.meta.outputs.tags }}
+            digest: ${{ steps.build.outputs.digest }}
+            sha_tag: ${{ steps.vars.outputs.sha_tag }}
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Set version tag
-        id: vars
-        run: echo "sha_tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+            - name: Set version tag
+              id: vars
+              run: echo "sha_tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
-      - uses: docker/setup-buildx-action@v3
+            - uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+            - name: Log in to GHCR
+              uses: docker/login-action@v3
+              with:
+                  registry: ${{ env.REGISTRY }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/kanninja-backend
-          tags: |
-            type=sha,prefix=sha-,format=short
-            type=raw,value=latest,enable={{is_default_branch}}
+            - name: Docker metadata
+              id: meta
+              uses: docker/metadata-action@v5
+              with:
+                  images: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/kanninja-backend
+                  tags: |
+                      type=sha,prefix=sha-,format=short
+                      type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build & push
-        id: build
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile.backend
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=backend
-          cache-to: type=gha,mode=max,scope=backend,ignore-error=true
+            - name: Build & push
+              id: build
+              uses: docker/build-push-action@v6
+              with:
+                  context: .
+                  file: ./Dockerfile.backend
+                  push: true
+                  tags: ${{ steps.meta.outputs.tags }}
+                  labels: ${{ steps.meta.outputs.labels }}
+                  cache-from: type=gha,scope=backend
+                  cache-to: type=gha,mode=max,scope=backend,ignore-error=true
 
-  # ------------------------------------------------------------------
-  # Build & push frontend image (Next.js — public env vars baked in)
-  # ------------------------------------------------------------------
-  build-frontend:
-    name: Build frontend
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    outputs:
-      image: ${{ steps.meta.outputs.tags }}
-      digest: ${{ steps.build.outputs.digest }}
-      sha_tag: ${{ steps.vars.outputs.sha_tag }}
-    steps:
-      - uses: actions/checkout@v4
+    # ------------------------------------------------------------------
+    # Build & push frontend image (Next.js — public env vars baked in)
+    # ------------------------------------------------------------------
+    build-frontend:
+        name: Build frontend
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
+        outputs:
+            image: ${{ steps.meta.outputs.tags }}
+            digest: ${{ steps.build.outputs.digest }}
+            sha_tag: ${{ steps.vars.outputs.sha_tag }}
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Set version tag
-        id: vars
-        run: echo "sha_tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+            - name: Set version tag
+              id: vars
+              run: echo "sha_tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
-      - uses: docker/setup-buildx-action@v3
+            - uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+            - name: Log in to GHCR
+              uses: docker/login-action@v3
+              with:
+                  registry: ${{ env.REGISTRY }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/kanninja-frontend
-          tags: |
-            type=sha,prefix=sha-,format=short
-            type=raw,value=latest,enable={{is_default_branch}}
+            - name: Docker metadata
+              id: meta
+              uses: docker/metadata-action@v5
+              with:
+                  images: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/kanninja-frontend
+                  tags: |
+                      type=sha,prefix=sha-,format=short
+                      type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build & push
-        id: build
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile.frontend
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=frontend
-          cache-to: type=gha,mode=max,scope=frontend,ignore-error=true
-          build-args: |
-            NEXT_PUBLIC_API_URL=https://api.kanninja.com
-            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
-            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+            - name: Build & push
+              id: build
+              uses: docker/build-push-action@v6
+              with:
+                  context: .
+                  file: ./Dockerfile.frontend
+                  push: true
+                  tags: ${{ steps.meta.outputs.tags }}
+                  labels: ${{ steps.meta.outputs.labels }}
+                  cache-from: type=gha,scope=frontend
+                  cache-to: type=gha,mode=max,scope=frontend,ignore-error=true
+                  build-args: |
+                      NEXT_PUBLIC_API_URL=https://api.kanninja.com
+                      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+                      NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+                      NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
-  # ------------------------------------------------------------------
-  # Build & push MCP server image (published only — NOT deployed to AKS)
-  # ------------------------------------------------------------------
-  build-mcp:
-    name: Build MCP server
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@v4
+    # ------------------------------------------------------------------
+    # Build & push MCP server image (published only — NOT deployed to AKS)
+    # ------------------------------------------------------------------
+    build-mcp:
+        name: Build MCP server
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
+        steps:
+            - uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
+            - uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+            - name: Log in to GHCR
+              uses: docker/login-action@v3
+              with:
+                  registry: ${{ env.REGISTRY }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/kanninja-mcp
-          tags: |
-            type=sha,prefix=sha-,format=short
-            type=raw,value=latest,enable={{is_default_branch}}
+            - name: Docker metadata
+              id: meta
+              uses: docker/metadata-action@v5
+              with:
+                  images: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/kanninja-mcp
+                  tags: |
+                      type=sha,prefix=sha-,format=short
+                      type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build & push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile.mcp
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=mcp
-          cache-to: type=gha,mode=max,scope=mcp,ignore-error=true
+            - name: Build & push
+              uses: docker/build-push-action@v6
+              with:
+                  context: .
+                  file: ./Dockerfile.mcp
+                  push: true
+                  tags: ${{ steps.meta.outputs.tags }}
+                  labels: ${{ steps.meta.outputs.labels }}
+                  cache-from: type=gha,scope=mcp
+                  cache-to: type=gha,mode=max,scope=mcp,ignore-error=true
 
-  # ------------------------------------------------------------------
-  # Deploy to AKS
-  # ------------------------------------------------------------------
-  deploy:
-    name: Deploy to AKS
-    runs-on: ubuntu-latest
-    needs: [build-backend, build-frontend]
-    permissions:
-      id-token: write  # required for Azure OIDC
-      contents: read
-    concurrency:
-      group: deploy-aks-prod
-      cancel-in-progress: false
-    steps:
-      - uses: actions/checkout@v4
+    # ------------------------------------------------------------------
+    # Deploy to AKS
+    # ------------------------------------------------------------------
+    deploy:
+        name: Deploy to AKS
+        runs-on: ubuntu-latest
+        needs: [ build-backend, build-frontend ]
+        permissions:
+            id-token: write # required for Azure OIDC
+            contents: read
+        concurrency:
+            group: deploy-aks-prod
+            cancel-in-progress: false
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Azure login (OIDC)
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+            - name: Azure login (OIDC)
+              uses: azure/login@v2
+              with:
+                  client-id: ${{ secrets.AZURE_CLIENT_ID }}
+                  tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+                  subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # kubelogin isn't on ubuntu-latest by default — install it before
-      # aks-set-context, which invokes it when use-kubelogin: true.
-      # GITHUB_TOKEN is required because the action queries GitHub's
-      # release API to resolve kubelogin-version: latest.
-      - name: Install kubelogin
-        uses: azure/use-kubelogin@v1
-        with:
-          kubelogin-version: latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            # kubelogin isn't on ubuntu-latest by default — install it before
+            # aks-set-context, which invokes it when use-kubelogin: true.
+            # GITHUB_TOKEN is required because the action queries GitHub's
+            # release API to resolve kubelogin-version: latest.
+            - name: Install kubelogin
+              uses: azure/use-kubelogin@v1
+              with:
+                  kubelogin-version: latest
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get AKS credentials
-        uses: azure/aks-set-context@v4
-        with:
-          resource-group: ${{ env.AKS_RESOURCE_GROUP }}
-          cluster-name: ${{ env.AKS_CLUSTER_NAME }}
-          admin: false
-          use-kubelogin: true
+            - name: Get AKS credentials
+              uses: azure/aks-set-context@v4
+              with:
+                  resource-group: ${{ env.AKS_RESOURCE_GROUP }}
+                  cluster-name: ${{ env.AKS_CLUSTER_NAME }}
+                  admin: false
+                  use-kubelogin: true
 
-      - name: Set up Kustomize
-        uses: imranismail/setup-kustomize@v2
+            - name: Set up Kustomize
+              uses: imranismail/setup-kustomize@v2
 
-      - name: Pin image tags
-        working-directory: k8s
-        run: |
-          SHA_TAG="sha-${GITHUB_SHA::7}"
-          kustomize edit set image \
-            ghcr.io/${{ env.IMAGE_OWNER }}/kanninja-backend=ghcr.io/${{ env.IMAGE_OWNER }}/kanninja-backend:${SHA_TAG}
-          kustomize edit set image \
-            ghcr.io/${{ env.IMAGE_OWNER }}/kanninja-frontend=ghcr.io/${{ env.IMAGE_OWNER }}/kanninja-frontend:${SHA_TAG}
-          echo "--- resolved kustomization.yaml ---"
-          cat kustomization.yaml
+            - name: Pin image tags
+              working-directory: k8s
+              run: |
+                  SHA_TAG="sha-${GITHUB_SHA::7}"
+                  kustomize edit set image \
+                    ghcr.io/${{ env.IMAGE_OWNER }}/kanninja-backend=ghcr.io/${{ env.IMAGE_OWNER }}/kanninja-backend:${SHA_TAG}
+                  kustomize edit set image \
+                    ghcr.io/${{ env.IMAGE_OWNER }}/kanninja-frontend=ghcr.io/${{ env.IMAGE_OWNER }}/kanninja-frontend:${SHA_TAG}
+                  echo "--- resolved kustomization.yaml ---"
+                  cat kustomization.yaml
 
-      - name: Apply manifests
-        working-directory: k8s
-        run: kubectl apply -k .
+            - name: Apply manifests
+              working-directory: k8s
+              run: kubectl apply -k .
 
-      # Trigger a one-off run of the GHCR token rotator so that
-      # `ghcr-pull-secret` exists (or is freshly rotated) before the
-      # Deployments try to pull images. Idempotent — safe to run on every deploy.
-      - name: Prime GHCR pull secret
-        run: |
-          set -e
-          JOB_NAME="ghcr-prime-$(date +%s)"
-          kubectl -n ${{ env.NAMESPACE }} create job --from=cronjob/ghcr-token-rotator "$JOB_NAME"
-          kubectl -n ${{ env.NAMESPACE }} wait --for=condition=complete --timeout=3m "job/$JOB_NAME"
-          kubectl -n ${{ env.NAMESPACE }} logs "job/$JOB_NAME" || true
-          kubectl -n ${{ env.NAMESPACE }} delete job "$JOB_NAME"
+            # Trigger a one-off run of the GHCR token rotator so that
+            # `ghcr-pull-secret` exists (or is freshly rotated) before the
+            # Deployments try to pull images. Idempotent — safe to run on every deploy.
+            - name: Prime GHCR pull secret
+              run: |
+                  set -e
+                  JOB_NAME="ghcr-prime-$(date +%s)"
+                  kubectl -n ${{ env.NAMESPACE }} create job --from=cronjob/ghcr-token-rotator "$JOB_NAME"
+                  kubectl -n ${{ env.NAMESPACE }} wait --for=condition=complete --timeout=3m "job/$JOB_NAME"
+                  kubectl -n ${{ env.NAMESPACE }} logs "job/$JOB_NAME" || true
+                  kubectl -n ${{ env.NAMESPACE }} delete job "$JOB_NAME"
 
-      - name: Wait for rollout
-        run: |
-          kubectl -n ${{ env.NAMESPACE }} rollout status deploy/backend --timeout=5m
-          kubectl -n ${{ env.NAMESPACE }} rollout status deploy/frontend --timeout=5m
+            - name: Wait for rollout
+              run: |
+                  kubectl -n ${{ env.NAMESPACE }} rollout status deploy/backend --timeout=5m
+                  kubectl -n ${{ env.NAMESPACE }} rollout status deploy/frontend --timeout=5m
 
-      - name: Summary
-        if: always()
-        run: |
-          echo "### Deployment summary" >> $GITHUB_STEP_SUMMARY
-          kubectl -n ${{ env.NAMESPACE }} get deploy,svc,ingress >> $GITHUB_STEP_SUMMARY
+            - name: Summary
+              if: always()
+              run: |
+                  echo "### Deployment summary" >> $GITHUB_STEP_SUMMARY
+                  kubectl -n ${{ env.NAMESPACE }} get deploy,svc,ingress >> $GITHUB_STEP_SUMMARY
