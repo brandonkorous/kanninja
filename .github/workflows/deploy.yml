@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_OWNER: ${{ github.repository_owner }}
+  IMAGE_OWNER: brandonkorous
   AKS_RESOURCE_GROUP: rg-ww-platform-prod-wu3
   AKS_CLUSTER_NAME: aks-ww-platform-prod-wu3
   NAMESPACE: kanninja
