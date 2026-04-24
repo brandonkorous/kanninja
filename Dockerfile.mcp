@@ -13,7 +13,7 @@ COPY . .
 
 RUN pnpm install --frozen-lockfile
 RUN pnpm -r --filter @kanninja/mcp... run build
-RUN pnpm --filter @kanninja/mcp deploy --prod /out
+RUN pnpm --filter @kanninja/mcp deploy --prod --legacy /out
 
 # ---------- runtime ----------
 FROM node:22-alpine AS runtime

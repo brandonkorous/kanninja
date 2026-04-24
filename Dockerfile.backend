@@ -19,7 +19,9 @@ RUN pnpm install --frozen-lockfile
 RUN pnpm -r --filter @kanninja/backend... run build
 
 # Assemble a pruned runtime tree (prod deps only, shared inlined).
-RUN pnpm --filter @kanninja/backend deploy --prod /out
+# `--legacy` is required on pnpm 10 when the source workspace doesn't set
+# `inject-workspace-packages=true` (see ERR_PNPM_DEPLOY_NONINJECTED_WORKSPACE).
+RUN pnpm --filter @kanninja/backend deploy --prod --legacy /out
 
 # ---------- runtime ----------
 FROM node:22-alpine AS runtime
