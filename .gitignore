@@ -10,3 +10,6 @@ Thumbs.db
 coverage/
 .turbo/
 drizzle/meta/
+
+# TypeScript incremental build cache — per-dev state, not shared
+*.tsbuildinfo

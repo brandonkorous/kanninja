@@ -5,6 +5,11 @@
 **/coverage
 **/.cache
 
+# TypeScript incremental build cache — stale copies from the host trick
+# tsc into thinking the build is up-to-date and emitting NOTHING, even
+# when dist/ is missing. Keep this out of the image at all costs.
+**/*.tsbuildinfo
+
 # env
 **/.env
 **/.env.local
