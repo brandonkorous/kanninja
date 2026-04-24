@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kanninja
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - backend-deployment.yaml
+  - backend-service.yaml
+  - frontend-deployment.yaml
+  - frontend-service.yaml
+  - ingress.yaml
+
+# Image tags are rewritten by the GitHub Actions deploy workflow
+# via `kustomize edit set image`. Defaults below are used for manual
+# `kubectl apply -k .` runs.
+images:
+  - name: ghcr.io/wizeworks/kanninja-backend
+    newTag: latest
+  - name: ghcr.io/wizeworks/kanninja-frontend
+    newTag: latest

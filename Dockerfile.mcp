@@ -1,0 +1,41 @@
+# syntax=docker/dockerfile:1.7
+# MCP server — runs as a stdio subprocess for agent clients.
+# This image is published so users can run the MCP server in a container
+# (e.g. `docker run -e KANNINJA_API_KEY=... ghcr.io/wizeworks/kanninja-mcp`).
+# It is NOT deployed to the AKS cluster.
+
+# ---------- base ----------
+FROM node:20-alpine AS base
+RUN corepack enable && corepack prepare pnpm@9 --activate
+WORKDIR /app
+
+# ---------- deps ----------
+FROM base AS deps
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY shared/package.json ./shared/
+COPY mcp-server/package.json ./mcp-server/
+RUN pnpm install --frozen-lockfile \
+    --filter @kanninja/shared \
+    --filter @kanninja/mcp
+
+# ---------- build ----------
+FROM base AS build
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/shared/node_modules ./shared/node_modules
+COPY --from=deps /app/mcp-server/node_modules ./mcp-server/node_modules
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
+COPY shared ./shared
+COPY mcp-server ./mcp-server
+RUN pnpm --filter @kanninja/shared run build \
+ && pnpm --filter @kanninja/mcp run build
+RUN pnpm --filter @kanninja/mcp deploy --prod /out
+
+# ---------- runtime ----------
+FROM node:20-alpine AS runtime
+WORKDIR /app
+ENV NODE_ENV=production \
+    KANNINJA_API_URL=https://api.kanninja.com
+COPY --from=build /out/dist ./dist
+COPY --from=build /out/node_modules ./node_modules
+COPY --from=build /out/package.json ./package.json
+ENTRYPOINT ["node", "dist/index.js"]

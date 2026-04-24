@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kanninja
+  labels:
+    app.kubernetes.io/name: kanninja
+    app.kubernetes.io/managed-by: kustomize

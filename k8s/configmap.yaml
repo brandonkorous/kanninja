@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: kanninja
+data:
+  NODE_ENV: "production"
+  HOST: "0.0.0.0"
+  PORT: "3001"
+  FRONTEND_URL: "https://kanninja.com"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: kanninja
+data:
+  NODE_ENV: "production"
+  HOSTNAME: "0.0.0.0"
+  PORT: "3000"
