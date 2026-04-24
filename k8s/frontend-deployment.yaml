@@ -31,11 +31,13 @@ spec:
           ports:
             - name: http
               containerPort: 3000
+          # ConfigMap after Secret so prod NODE_ENV/HOSTNAME/PORT can't be
+          # accidentally overridden by a stale dev value.
           envFrom:
-            - configMapRef:
-                name: frontend-config
             - secretRef:
                 name: frontend-secrets
+            - configMapRef:
+                name: frontend-config
           resources:
             requests:
               cpu: '50m'

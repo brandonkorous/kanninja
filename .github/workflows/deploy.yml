@@ -204,6 +204,29 @@ jobs:
             - name: Set up Kustomize
               uses: imranismail/setup-kustomize@v2
 
+            # Fail fast if the cluster isn't bootstrapped. Without these
+            # Secrets the Deployments start but Pods hang in
+            # CreateContainerConfigError — the rollout-wait step would then
+            # time out at 5 minutes with an opaque failure. Catching it here
+            # gives a clear, actionable error.
+            - name: Pre-flight — required Secrets exist
+              run: |
+                  set -e
+                  missing=()
+                  for name in backend-secrets frontend-secrets ghcr-app-credentials; do
+                    if ! kubectl -n ${{ env.NAMESPACE }} get secret "$name" >/dev/null 2>&1; then
+                      missing+=("$name")
+                    fi
+                  done
+                  if [ ${#missing[@]} -gt 0 ]; then
+                    echo "::error::Missing required Secret(s) in namespace ${{ env.NAMESPACE }}: ${missing[*]}"
+                    echo "::error::Bootstrap the cluster by running v2/k8s/bootstrap.ps1 from your local machine:"
+                    echo "::error::  cd v2/k8s"
+                    echo "::error::  ./bootstrap.ps1"
+                    exit 1
+                  fi
+                  echo "All required Secrets present."
+
             - name: Pin image tags
               working-directory: k8s
               run: |

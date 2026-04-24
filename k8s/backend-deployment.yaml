@@ -31,11 +31,15 @@ spec:
           ports:
             - name: http
               containerPort: 3001
+          # Ordering matters: the last source wins on overlapping keys.
+          # ConfigMap is listed *after* the Secret so prod config (NODE_ENV,
+          # HOST, PORT, FRONTEND_URL) can't be accidentally downgraded by a
+          # stale dev value in backend-secrets.
           envFrom:
-            - configMapRef:
-                name: backend-config
             - secretRef:
                 name: backend-secrets
+            - configMapRef:
+                name: backend-config
           resources:
             requests:
               cpu: '50m'

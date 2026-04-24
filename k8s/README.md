@@ -145,26 +145,45 @@ kubectl -n kanninja logs -l job-name=ghcr-token-rotator --tail=20
 
 **Private key never leaves your machine + the cluster.** It's explicitly listed in both `.gitignore` and `k8s/.gitignore`.
 
-### 4. Application secrets
+### 4. Application secrets — run the bootstrap script
 
-Two Kubernetes Secrets need to exist in the `kanninja` namespace:
+Three Kubernetes Secrets need to exist in the `kanninja` namespace before the deploy workflow's pre-flight check passes:
 
-- **`backend-secrets`** — all runtime config for the Fastify API (database, Clerk, Stripe, OpenAI, OAuth providers). See [Environment variable reference](#environment-variable-reference) below for the full list.
-- **`frontend-secrets`** — `CLERK_SECRET_KEY` only. Required by Clerk's Next.js middleware and any server component that calls `auth()`/`currentUser()`. Use the **same value** you set in `backend-secrets`.
+- **`ghcr-app-credentials`** — GitHub App credentials (App ID, Installation ID, private key) that seed the pull-token rotator. See [Section 3](#3-ghcr-pull-auth-via-a-github-app).
+- **`backend-secrets`** — runtime env for the Fastify API (DB, Clerk, Stripe, OpenAI, OAuth providers). See [Environment variable reference](#environment-variable-reference).
+- **`frontend-secrets`** — `CLERK_SECRET_KEY` for Clerk's Next.js middleware + server components.
+
+[bootstrap.ps1](bootstrap.ps1) upserts all three from your local `backend/.env` + `frontend/.env` + the GitHub App private key. It's idempotent — safe to re-run whenever values change.
 
 ```powershell
-# Option 1 — from the template file (after filling values in BOTH Secrets)
-Copy-Item secret.example.yaml secret.yaml
-# ... edit secret.yaml ...
-kubectl apply -f secret.yaml
-
-# Option 2 — from env files (preferred; keeps secrets off disk in a YAML)
-kubectl -n kanninja create secret generic backend-secrets `
-    --from-env-file=backend.env
-
-kubectl -n kanninja create secret generic frontend-secrets `
-    --from-literal=CLERK_SECRET_KEY="sk_live_..."
+# From v2/k8s/
+./bootstrap.ps1
 ```
+
+What it does:
+
+1. Verifies kubectl is pointed at `aks-ww-platform-prod-wu3` (prompts if not)
+2. Creates the `kanninja` namespace if missing
+3. Reads `../backend/.env`, strips ConfigMap-owned keys (`NODE_ENV`, `HOST`, `PORT`, `FRONTEND_URL`) and empty values, upserts `backend-secrets`
+4. Reads `../frontend/.env`, extracts only `CLERK_SECRET_KEY`, upserts `frontend-secrets`
+5. Upserts `ghcr-app-credentials` from the `.pem` file in this directory
+
+**Parameters** (all optional — defaults match the standard layout):
+
+```powershell
+./bootstrap.ps1 `
+    -BackendEnv        ../backend/.env `
+    -FrontendEnv       ../frontend/.env `
+    -GhcrPrivateKey    ./kanninja-deployer.2026-04-24.private-key.pem `
+    -GhcrAppId         3486525 `
+    -GhcrInstallationId 126646503 `
+    -Namespace         kanninja `
+    -ExpectedContext   aks-ww-platform-prod-wu3
+```
+
+Flags: `-SkipContextCheck` (skip kubectl-context assertion), `-SkipGhcr` (skip the GHCR app credentials — useful if you're only rotating the app secrets).
+
+**Why a script and not raw kubectl?** The deployment's `envFrom` lists `backend-secrets` *before* `backend-config`, so ConfigMap values win on overlapping keys. Still, a dev `.env` with `OPENAI_API_KEY=sk-test-...` would silently ship a dev key to prod unless the script strips config-map keys and empty values. The script also handles quoted values and `#` comments, which `kubectl --from-env-file` does not.
 
 ### 5. DNS
 
