@@ -184,10 +184,14 @@ jobs:
 
       # kubelogin isn't on ubuntu-latest by default — install it before
       # aks-set-context, which invokes it when use-kubelogin: true.
+      # GITHUB_TOKEN is required because the action queries GitHub's
+      # release API to resolve kubelogin-version: latest.
       - name: Install kubelogin
         uses: azure/use-kubelogin@v1
         with:
           kubelogin-version: latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get AKS credentials
         uses: azure/aks-set-context@v4
