@@ -219,12 +219,13 @@ jobs:
             # independently). Runs every deploy so GH is the source of truth.
             - name: Bootstrap cluster Secrets from GitHub Actions secrets
               env:
-                  # --- Required: backend core ---
+                  # --- Backend core ---
+                  # CLERK_PUBLISHABLE_KEY isn't read by backend code, only
+                  # frontend at build time — omitted from this block.
                   SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
                   SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
                   DATABASE_URL:              ${{ secrets.DATABASE_URL }}
                   CLERK_SECRET_KEY:          ${{ secrets.CLERK_SECRET_KEY }}
-                  CLERK_PUBLISHABLE_KEY:     ${{ secrets.CLERK_PUBLISHABLE_KEY }}
                   CLERK_WEBHOOK_SECRET:      ${{ secrets.CLERK_WEBHOOK_SECRET }}
                   STRIPE_SECRET_KEY:         ${{ secrets.STRIPE_SECRET_KEY }}
                   STRIPE_WEBHOOK_SECRET:     ${{ secrets.STRIPE_WEBHOOK_SECRET }}
@@ -277,13 +278,15 @@ jobs:
                   set -euo pipefail
                   NS=${{ env.NAMESPACE }}
 
-                  # Required GH secrets. Fail fast if any are empty so the
-                  # cluster isn't left in a half-bootstrapped state.
+                  # Required GH secrets = the ones the server strictly needs
+                  # to boot + serve auth requests. Everything else is a
+                  # feature-level dependency (Stripe, OpenAI, integrations)
+                  # that the backend code handles gracefully when absent.
+                  # Keeping this list tight so optional features don't
+                  # block the deploy.
                   required=(
                     SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY DATABASE_URL
-                    CLERK_SECRET_KEY CLERK_PUBLISHABLE_KEY
-                    STRIPE_SECRET_KEY
-                    OPENAI_API_KEY INTEGRATION_ENCRYPTION_KEY
+                    CLERK_SECRET_KEY
                     GHCR_APP_PRIVATE_KEY
                   )
                   missing=()
@@ -299,10 +302,11 @@ jobs:
                   # Backend: build --from-literal args only for non-empty vars
                   # so optional provider secrets don't create empty Secret keys.
                   # ConfigMap-owned keys (NODE_ENV, HOST, PORT, FRONTEND_URL)
-                  # are intentionally not in the list above.
+                  # are intentionally not in the list above. CLERK_PUBLISHABLE_KEY
+                  # is declared in env.ts but never read — omitted.
                   backend_keys=(
                     SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY DATABASE_URL
-                    CLERK_SECRET_KEY CLERK_PUBLISHABLE_KEY CLERK_WEBHOOK_SECRET
+                    CLERK_SECRET_KEY CLERK_WEBHOOK_SECRET
                     STRIPE_SECRET_KEY STRIPE_WEBHOOK_SECRET
                     OPENAI_API_KEY INTEGRATION_ENCRYPTION_KEY
                     GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET

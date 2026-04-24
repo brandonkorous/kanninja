@@ -153,17 +153,44 @@ Set them at **Settings → Secrets and variables → Actions → New repository 
 
 #### Required (workflow fails fast if any are empty)
 
+Just what the server strictly needs to boot and verify auth requests:
+
 | GH Actions secret | Goes into K8s Secret as | Notes |
 |---|---|---|
 | `SUPABASE_URL` | `backend-secrets.SUPABASE_URL` | |
 | `SUPABASE_SERVICE_ROLE_KEY` | `backend-secrets.SUPABASE_SERVICE_ROLE_KEY` | |
 | `DATABASE_URL` | `backend-secrets.DATABASE_URL` | |
 | `CLERK_SECRET_KEY` | `backend-secrets.CLERK_SECRET_KEY` + `frontend-secrets.CLERK_SECRET_KEY` | Same value used in both |
-| `CLERK_PUBLISHABLE_KEY` | `backend-secrets.CLERK_PUBLISHABLE_KEY` | |
-| `STRIPE_SECRET_KEY` | `backend-secrets.STRIPE_SECRET_KEY` | |
-| `OPENAI_API_KEY` | `backend-secrets.OPENAI_API_KEY` | |
-| `INTEGRATION_ENCRYPTION_KEY` | `backend-secrets.INTEGRATION_ENCRYPTION_KEY` | 64-char hex; generate with `openssl rand -hex 32` |
 | `GHCR_APP_PRIVATE_KEY` | `ghcr-app-credentials.private-key.pem` | Full `.pem` contents incl. BEGIN/END lines |
+
+#### Feature-level (add when you enable the feature)
+
+The backend's env schema has `.default('')` on all of these and the code paths check for emptiness before using them. The workflow won't block if they're missing — the corresponding feature just won't work.
+
+| GH Actions secret | Goes into K8s Secret as | Feature |
+|---|---|---|
+| `CLERK_WEBHOOK_SECRET` | `backend-secrets.CLERK_WEBHOOK_SECRET` | Clerk → `/api/webhooks/clerk` syncs user profiles |
+| `STRIPE_SECRET_KEY` | `backend-secrets.STRIPE_SECRET_KEY` | Subscriptions / billing |
+| `STRIPE_WEBHOOK_SECRET` | `backend-secrets.STRIPE_WEBHOOK_SECRET` | Stripe → `/api/webhooks/stripe` |
+| `OPENAI_API_KEY` | `backend-secrets.OPENAI_API_KEY` | AI features (Pro+ tier) |
+| `INTEGRATION_ENCRYPTION_KEY` | `backend-secrets.INTEGRATION_ENCRYPTION_KEY` | Encrypts OAuth tokens for integrations at rest. **64-char hex** (32 bytes). Generate once, keep stable — if this changes, every integration connected before the change stops working. See below. |
+
+**Generate an `INTEGRATION_ENCRYPTION_KEY`** (do this now even if you're not using integrations yet — starting with a stable value means you never have to migrate):
+
+```powershell
+# PowerShell
+-join ((1..32) | ForEach-Object { '{0:x2}' -f (Get-Random -Maximum 256) })
+```
+
+```bash
+# Bash (if you prefer)
+openssl rand -hex 32
+```
+
+#### Not currently needed
+
+- **`CLERK_PUBLISHABLE_KEY`** — declared in `backend/env.ts` but never read by any backend code. The frontend already bakes it in at build time from the `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` secret. Don't create a separate `CLERK_PUBLISHABLE_KEY` secret — it does nothing.
+- **`STRIPE_PUBLISHABLE_KEY`** / **`NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`** — the frontend doesn't import `@stripe/stripe-js` yet. Add this secret when/if you wire up client-side Stripe.js. For server-side billing (Checkout Sessions, Customer Portal, webhooks), `STRIPE_SECRET_KEY` alone is enough.
 
 #### Optional — webhook + OAuth providers
 
