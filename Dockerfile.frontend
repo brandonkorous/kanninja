@@ -2,7 +2,7 @@
 
 # ---------- build (deps + compile) ----------
 FROM node:22-alpine AS build
-RUN corepack enable && corepack prepare pnpm@9 --activate
+RUN corepack enable && corepack prepare pnpm@10.9.0 --activate
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
