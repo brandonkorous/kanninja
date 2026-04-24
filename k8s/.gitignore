@@ -1,3 +1,4 @@
 # Never commit filled secrets.
 secret.yaml
 *.env
+*private-key*

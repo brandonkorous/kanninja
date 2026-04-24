@@ -6,6 +6,7 @@ namespace: kanninja
 resources:
   - namespace.yaml
   - configmap.yaml
+  - ghcr-rotator.yaml
   - backend-deployment.yaml
   - backend-service.yaml
   - frontend-deployment.yaml

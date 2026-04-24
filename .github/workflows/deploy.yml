@@ -219,6 +219,18 @@ jobs:
         working-directory: k8s
         run: kubectl apply -k .
 
+      # Trigger a one-off run of the GHCR token rotator so that
+      # `ghcr-pull-secret` exists (or is freshly rotated) before the
+      # Deployments try to pull images. Idempotent — safe to run on every deploy.
+      - name: Prime GHCR pull secret
+        run: |
+          set -e
+          JOB_NAME="ghcr-prime-$(date +%s)"
+          kubectl -n ${{ env.NAMESPACE }} create job --from=cronjob/ghcr-token-rotator "$JOB_NAME"
+          kubectl -n ${{ env.NAMESPACE }} wait --for=condition=complete --timeout=3m "job/$JOB_NAME"
+          kubectl -n ${{ env.NAMESPACE }} logs "job/$JOB_NAME" || true
+          kubectl -n ${{ env.NAMESPACE }} delete job "$JOB_NAME"
+
       - name: Wait for rollout
         run: |
           kubectl -n ${{ env.NAMESPACE }} rollout status deploy/backend --timeout=5m

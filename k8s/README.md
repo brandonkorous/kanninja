@@ -84,30 +84,66 @@ Set these under **Settings → Secrets and variables → Actions**:
 | `NEXT_PUBLIC_SUPABASE_URL`          | Baked into frontend at build time |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY`     | Baked into frontend at build time |
 
-### 3. GHCR image visibility
+### 3. GHCR pull auth via a GitHub App
 
-The workflow pushes to `ghcr.io/wizeworks/kanninja-backend|frontend|mcp`. By default, GHCR packages are **private**.
+Images stay private. No PATs. Pull credentials are minted by a GitHub App, rotated in-cluster every ~50 minutes by a CronJob, and never tied to a human user.
 
-**Option A — public images (simplest, no imagePullSecret needed):**
-After the first successful push, go to GitHub → your profile/org → Packages → each package → **Package settings → Change visibility → Public**.
+**Architecture:**
 
-**Option B — private images (requires imagePullSecret):**
+```
+GitHub App (org-scoped, packages:read)
+       │  private key (only long-lived credential)
+       ▼
+Secret: ghcr-app-credentials  ← created manually, once
+       │
+       ▼
+CronJob: ghcr-token-rotator (every 50 min)
+       │  mints 1-hour installation token
+       ▼
+Secret: ghcr-pull-secret  ← updated by the rotator, consumed by Deployments
+       │
+       ▼
+Backend / Frontend Pods  →  ghcr.io
+```
+
+**One-time setup (the App is already created; this captures the credential into the cluster).**
+
+You should already have:
+
+- App ID (e.g. `3486525`)
+- Installation ID (e.g. `126646503`)
+- Private key `.pem` file (placed in `v2/k8s/` and gitignored)
+
+Create the Secret that feeds the rotator:
 
 ```powershell
-# Create a fine-grained PAT with read:packages scope, then:
-kubectl -n kanninja create secret docker-registry ghcr-pull-secret `
-    --docker-server=ghcr.io `
-    --docker-username=YOUR_GH_USER `
-    --docker-password=YOUR_PAT `
-    --docker-email=you@example.com
+kubectl -n kanninja create secret generic ghcr-app-credentials `
+    --from-literal=app-id="3486525" `
+    --from-literal=installation-id="126646503" `
+    --from-file=private-key.pem="./private-key.pem"
 ```
 
-Then add to both Deployment specs (under `spec.template.spec`):
+Verify the rotator is wired up after the first deploy:
 
-```yaml
-imagePullSecrets:
-  - name: ghcr-pull-secret
+```powershell
+# Should show the CronJob
+kubectl -n kanninja get cronjob ghcr-token-rotator
+
+# Should show the pull secret (created by the prime step in the workflow)
+kubectl -n kanninja get secret ghcr-pull-secret
+
+# See a recent rotation run
+kubectl -n kanninja logs -l job-name=ghcr-token-rotator --tail=20
 ```
+
+**If you ever need to rotate the App's private key:**
+
+1. In the App settings, **Generate a private key**. A new `.pem` downloads.
+2. Re-run the `kubectl create secret generic ghcr-app-credentials ...` command above with `--save-config=true --dry-run=client -o yaml | kubectl apply -f -` (or `kubectl delete` first).
+3. Next CronJob tick picks up the new key automatically — no Deployment restart needed.
+4. Delete the old key in the App settings.
+
+**Private key never leaves your machine + the cluster.** It's explicitly listed in both `.gitignore` and `k8s/.gitignore`.
 
 ### 4. Application secrets
 
