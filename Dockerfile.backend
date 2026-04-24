@@ -1,29 +1,28 @@
 # syntax=docker/dockerfile:1.7
 
-# ---------- base ----------
-FROM node:20-alpine AS base
+# ---------- build (deps + compile) ----------
+FROM node:20-alpine AS build
 RUN corepack enable && corepack prepare pnpm@9 --activate
 WORKDIR /app
 
-# ---------- deps ----------
-FROM base AS deps
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+# Workspace manifests first (lets the install layer cache on lockfile changes only).
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
 COPY shared/package.json ./shared/
 COPY backend/package.json ./backend/
-RUN pnpm install --frozen-lockfile \
-    --filter @kanninja/shared \
-    --filter @kanninja/backend
 
-# ---------- build ----------
-FROM base AS build
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/shared/node_modules ./shared/node_modules
-COPY --from=deps /app/backend/node_modules ./backend/node_modules
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
+# Install deps for backend AND its workspace deps.
+# The trailing `...` is load-bearing — it pulls in @kanninja/shared.
+RUN pnpm install --frozen-lockfile --filter @kanninja/backend...
+
+# Now copy sources (cached separately from deps).
 COPY shared ./shared
 COPY backend ./backend
+
+# Shared must compile before backend's tsc runs — backend imports from shared/dist.
 RUN pnpm --filter @kanninja/shared run build \
  && pnpm --filter @kanninja/backend run build
+
+# Assemble a pruned runtime tree (prod deps only, shared inlined).
 RUN pnpm --filter @kanninja/backend deploy --prod /out
 
 # ---------- runtime ----------

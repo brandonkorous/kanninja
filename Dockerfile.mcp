@@ -4,30 +4,25 @@
 # (e.g. `docker run -e KANNINJA_API_KEY=... ghcr.io/wizeworks/kanninja-mcp`).
 # It is NOT deployed to the AKS cluster.
 
-# ---------- base ----------
-FROM node:20-alpine AS base
+# ---------- build (deps + compile) ----------
+FROM node:20-alpine AS build
 RUN corepack enable && corepack prepare pnpm@9 --activate
 WORKDIR /app
 
-# ---------- deps ----------
-FROM base AS deps
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
 COPY shared/package.json ./shared/
 COPY mcp-server/package.json ./mcp-server/
-RUN pnpm install --frozen-lockfile \
-    --filter @kanninja/shared \
-    --filter @kanninja/mcp
 
-# ---------- build ----------
-FROM base AS build
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/shared/node_modules ./shared/node_modules
-COPY --from=deps /app/mcp-server/node_modules ./mcp-server/node_modules
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
+# Install deps for mcp AND its workspace deps (shared).
+# Trailing `...` is load-bearing.
+RUN pnpm install --frozen-lockfile --filter @kanninja/mcp...
+
 COPY shared ./shared
 COPY mcp-server ./mcp-server
+
 RUN pnpm --filter @kanninja/shared run build \
  && pnpm --filter @kanninja/mcp run build
+
 RUN pnpm --filter @kanninja/mcp deploy --prod /out
 
 # ---------- runtime ----------

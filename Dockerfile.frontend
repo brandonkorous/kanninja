@@ -1,24 +1,12 @@
 # syntax=docker/dockerfile:1.7
 
-# ---------- base ----------
-FROM node:20-alpine AS base
+# ---------- build (deps + compile) ----------
+FROM node:20-alpine AS build
 RUN corepack enable && corepack prepare pnpm@9 --activate
 WORKDIR /app
-
-# ---------- deps ----------
-FROM base AS deps
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY shared/package.json ./shared/
-COPY frontend/package.json ./frontend/
-RUN pnpm install --frozen-lockfile \
-    --filter @kanninja/shared \
-    --filter @kanninja/frontend
-
-# ---------- build ----------
-FROM base AS build
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Public env vars must be present at build time for Next.js
+# NEXT_PUBLIC_* must be present at build time — Next.js bakes them into the client bundle.
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 ARG NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
@@ -36,12 +24,20 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
     NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL \
     NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/shared/node_modules ./shared/node_modules
-COPY --from=deps /app/frontend/node_modules ./frontend/node_modules
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
+# Workspace manifests first (install layer cached on lockfile changes only).
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
+COPY shared/package.json ./shared/
+COPY frontend/package.json ./frontend/
+
+# Install deps for frontend AND its workspace deps (shared).
+# Trailing `...` is load-bearing.
+RUN pnpm install --frozen-lockfile --filter @kanninja/frontend...
+
+# Now copy sources.
 COPY shared ./shared
 COPY frontend ./frontend
+
+# Shared must compile before frontend's Next build.
 RUN pnpm --filter @kanninja/shared run build \
  && pnpm --filter @kanninja/frontend run build
 
