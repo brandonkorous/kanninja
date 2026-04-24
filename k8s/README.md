@@ -145,37 +145,69 @@ kubectl -n kanninja logs -l job-name=ghcr-token-rotator --tail=20
 
 **Private key never leaves your machine + the cluster.** It's explicitly listed in both `.gitignore` and `k8s/.gitignore`.
 
-### 4. Application secrets — set three GitHub Actions secrets
+### 4. Application secrets — set individual GitHub Actions secrets
 
-The deploy workflow writes all required Kubernetes Secrets into the cluster on every run from values stored in GitHub Actions repository secrets. No manual kubectl commands, no local scripts — set the GH secrets once, every deploy rotates them into the cluster automatically.
+Every runtime value the cluster needs is stored as its **own** GitHub Actions repository secret. The deploy workflow reads each one individually, filters out empty ones, and upserts the three cluster Secrets (`backend-secrets`, `frontend-secrets`, `ghcr-app-credentials`) on every run.
 
-Set these three at **Settings → Secrets and variables → Actions → New repository secret**:
+Set them at **Settings → Secrets and variables → Actions → New repository secret**.
 
-| Secret | Contents | Becomes K8s Secret |
+#### Required (workflow fails fast if any are empty)
+
+| GH Actions secret | Goes into K8s Secret as | Notes |
 |---|---|---|
-| `BACKEND_ENV` | Full contents of your production `backend/.env` file (KEY=VALUE lines) | `backend-secrets` |
-| `FRONTEND_CLERK_SECRET_KEY` | The `sk_live_…` (or `sk_test_…`) value from Clerk | `frontend-secrets` (key: `CLERK_SECRET_KEY`) |
-| `GHCR_APP_PRIVATE_KEY` | Full `.pem` contents of the GitHub App private key (BEGIN/END lines included) | `ghcr-app-credentials` (key: `private-key.pem`) |
+| `SUPABASE_URL` | `backend-secrets.SUPABASE_URL` | |
+| `SUPABASE_SERVICE_ROLE_KEY` | `backend-secrets.SUPABASE_SERVICE_ROLE_KEY` | |
+| `DATABASE_URL` | `backend-secrets.DATABASE_URL` | |
+| `CLERK_SECRET_KEY` | `backend-secrets.CLERK_SECRET_KEY` + `frontend-secrets.CLERK_SECRET_KEY` | Same value used in both |
+| `CLERK_PUBLISHABLE_KEY` | `backend-secrets.CLERK_PUBLISHABLE_KEY` | |
+| `STRIPE_SECRET_KEY` | `backend-secrets.STRIPE_SECRET_KEY` | |
+| `OPENAI_API_KEY` | `backend-secrets.OPENAI_API_KEY` | |
+| `INTEGRATION_ENCRYPTION_KEY` | `backend-secrets.INTEGRATION_ENCRYPTION_KEY` | 64-char hex; generate with `openssl rand -hex 32` |
+| `GHCR_APP_PRIVATE_KEY` | `ghcr-app-credentials.private-key.pem` | Full `.pem` contents incl. BEGIN/END lines |
 
-The App ID (`3486525`) and Installation ID (`126646503`) are non-secret (visible in the App's URL) and are hardcoded as workflow env vars at the top of [deploy.yml](../.github/workflows/deploy.yml). If you ever retire this App and make a new one, update them there.
+#### Optional — webhook + OAuth providers
 
-**What the workflow does with `BACKEND_ENV`:**
+Set these only for integrations you actually use. Empty/unset values are quietly skipped (the backend's env schema has `.default('')` on all of them, and the workflow doesn't create empty K8s secret keys).
 
-Before writing the `backend-secrets` Secret, the bootstrap step filters the contents:
+| GH Actions secret | Goes into K8s Secret as |
+|---|---|
+| `CLERK_WEBHOOK_SECRET` | `backend-secrets.CLERK_WEBHOOK_SECRET` |
+| `STRIPE_WEBHOOK_SECRET` | `backend-secrets.STRIPE_WEBHOOK_SECRET` |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | `backend-secrets.GOOGLE_CLIENT_ID`, `.GOOGLE_CLIENT_SECRET` |
+| `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET`, `SLACK_SIGNING_SECRET` | `backend-secrets.SLACK_*` |
+| **`GH_APP_CLIENT_ID`**, **`GH_APP_CLIENT_SECRET`**, **`GH_APP_WEBHOOK_SECRET`** | `backend-secrets.GITHUB_CLIENT_ID`, `.GITHUB_CLIENT_SECRET`, `.GITHUB_WEBHOOK_SECRET` (see note below) |
+| `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_TENANT_ID` | `backend-secrets.MICROSOFT_*` |
+| `ATLASSIAN_CLIENT_ID`, `ATLASSIAN_CLIENT_SECRET` | `backend-secrets.ATLASSIAN_*` |
+| `GITLAB_CLIENT_ID`, `GITLAB_CLIENT_SECRET`, `GITLAB_INSTANCE_URL` | `backend-secrets.GITLAB_*` |
+| `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `DISCORD_BOT_TOKEN`, `DISCORD_PUBLIC_KEY` | `backend-secrets.DISCORD_*` |
+| `NOTION_CLIENT_ID`, `NOTION_CLIENT_SECRET` | `backend-secrets.NOTION_*` |
+| `FIGMA_CLIENT_ID`, `FIGMA_CLIENT_SECRET` | `backend-secrets.FIGMA_*` |
+| `LINEAR_CLIENT_ID`, `LINEAR_CLIENT_SECRET` | `backend-secrets.LINEAR_*` |
+| `DROPBOX_CLIENT_ID`, `DROPBOX_CLIENT_SECRET` | `backend-secrets.DROPBOX_*` |
+| `LOOM_CLIENT_ID`, `LOOM_CLIENT_SECRET` | `backend-secrets.LOOM_*` |
+| `ZENDESK_CLIENT_ID`, `ZENDESK_CLIENT_SECRET` | `backend-secrets.ZENDESK_*` |
+| `INTERCOM_CLIENT_ID`, `INTERCOM_CLIENT_SECRET` | `backend-secrets.INTERCOM_*` |
+| `HUBSPOT_CLIENT_ID`, `HUBSPOT_CLIENT_SECRET` | `backend-secrets.HUBSPOT_*` |
+| `SALESFORCE_CLIENT_ID`, `SALESFORCE_CLIENT_SECRET` | `backend-secrets.SALESFORCE_*` |
 
-- Strips ConfigMap-owned keys (`NODE_ENV`, `HOST`, `HOSTNAME`, `PORT`, `FRONTEND_URL`) so a stale dev `NODE_ENV=development` can't silently downgrade prod config
-- Strips empty-value lines (`KEY=`) so empty Secret keys don't pile up
-- Strips comments and blank lines (grep `^[A-Z][A-Z0-9_]*=`)
+> **The `GH_APP_*` gotcha:** GitHub reserves the `GITHUB_` prefix for secret names — you can't create a repo secret called `GITHUB_CLIENT_ID`. Name those three secrets `GH_APP_CLIENT_ID`, `GH_APP_CLIENT_SECRET`, `GH_APP_WEBHOOK_SECRET` in GitHub Actions; the workflow remaps them back to `GITHUB_*` keys when writing to `backend-secrets` (which is what the backend's `env.ts` expects).
 
-Temp files are `shred -u`'d after use.
+#### Non-secret identifiers
 
-**Rotation flow:** update the value in GitHub → push any commit (or re-run the workflow via `workflow_dispatch`) → next deploy overwrites the K8s Secret. Pods pick up the new value on their next restart — if you want the new value to take effect immediately without a code change, trigger a rollout restart:
+| Value | Where it lives | Notes |
+|---|---|---|
+| GitHub App ID (`3486525`) | `env.GHCR_APP_ID` in [deploy.yml](../.github/workflows/deploy.yml) | Visible in App URL, not secret |
+| GitHub App Installation ID (`126646503`) | `env.GHCR_APP_INSTALLATION_ID` in [deploy.yml](../.github/workflows/deploy.yml) | Visible in install URL, not secret |
+
+#### Rotation
+
+Update the value in GitHub → push any commit (or re-run the workflow via `workflow_dispatch`) → the next deploy rewrites the cluster Secret. Pods pick up the new value on their next restart:
 
 ```powershell
 kubectl -n kanninja rollout restart deploy/backend deploy/frontend
 ```
 
-**Escape hatch:** if you ever need to write Secrets to the cluster from a local machine (during an incident, say), you can use raw kubectl. But the workflow is authoritative — any local override will be overwritten on the next deploy.
+Each GH Actions secret is independently rotatable and audit-logged — a single compromised key doesn't force you to re-cycle the whole bundle.
 
 ### 5. DNS
 

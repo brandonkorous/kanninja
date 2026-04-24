@@ -214,55 +214,144 @@ jobs:
                   kubectl get namespace ${{ env.NAMESPACE }} 2>/dev/null \
                     || kubectl create namespace ${{ env.NAMESPACE }}
 
-            # Upsert the three Secrets the Deployments depend on, sourced from
-            # GitHub Actions repository secrets (the source of truth). Runs on
-            # every deploy so rotating a value in GitHub → next workflow run →
-            # cluster is up-to-date. Fails fast if any required GH secret is
-            # empty.
-            #
-            #   backend-secrets       — full backend/.env contents
-            #   frontend-secrets      — CLERK_SECRET_KEY only
-            #   ghcr-app-credentials  — GitHub App id + install id + private key
+            # Upsert the three cluster Secrets from individual GitHub Actions
+            # secrets (one GH secret per env var — rotatable and auditable
+            # independently). Runs every deploy so GH is the source of truth.
             - name: Bootstrap cluster Secrets from GitHub Actions secrets
               env:
-                  BACKEND_ENV: ${{ secrets.BACKEND_ENV }}
-                  FRONTEND_CLERK_SECRET_KEY: ${{ secrets.FRONTEND_CLERK_SECRET_KEY }}
-                  GHCR_APP_PRIVATE_KEY: ${{ secrets.GHCR_APP_PRIVATE_KEY }}
+                  # --- Required: backend core ---
+                  SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
+                  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+                  DATABASE_URL:              ${{ secrets.DATABASE_URL }}
+                  CLERK_SECRET_KEY:          ${{ secrets.CLERK_SECRET_KEY }}
+                  CLERK_PUBLISHABLE_KEY:     ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+                  CLERK_WEBHOOK_SECRET:      ${{ secrets.CLERK_WEBHOOK_SECRET }}
+                  STRIPE_SECRET_KEY:         ${{ secrets.STRIPE_SECRET_KEY }}
+                  STRIPE_WEBHOOK_SECRET:     ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+                  OPENAI_API_KEY:            ${{ secrets.OPENAI_API_KEY }}
+                  INTEGRATION_ENCRYPTION_KEY: ${{ secrets.INTEGRATION_ENCRYPTION_KEY }}
+
+                  # --- Optional: OAuth provider integrations ---
+                  GOOGLE_CLIENT_ID:          ${{ secrets.GOOGLE_CLIENT_ID }}
+                  GOOGLE_CLIENT_SECRET:      ${{ secrets.GOOGLE_CLIENT_SECRET }}
+                  SLACK_CLIENT_ID:           ${{ secrets.SLACK_CLIENT_ID }}
+                  SLACK_CLIENT_SECRET:       ${{ secrets.SLACK_CLIENT_SECRET }}
+                  SLACK_SIGNING_SECRET:      ${{ secrets.SLACK_SIGNING_SECRET }}
+                  GH_APP_CLIENT_ID:          ${{ secrets.GH_APP_CLIENT_ID }}
+                  GH_APP_CLIENT_SECRET:      ${{ secrets.GH_APP_CLIENT_SECRET }}
+                  GH_APP_WEBHOOK_SECRET:     ${{ secrets.GH_APP_WEBHOOK_SECRET }}
+                  MICROSOFT_CLIENT_ID:       ${{ secrets.MICROSOFT_CLIENT_ID }}
+                  MICROSOFT_CLIENT_SECRET:   ${{ secrets.MICROSOFT_CLIENT_SECRET }}
+                  MICROSOFT_TENANT_ID:       ${{ secrets.MICROSOFT_TENANT_ID }}
+                  ATLASSIAN_CLIENT_ID:       ${{ secrets.ATLASSIAN_CLIENT_ID }}
+                  ATLASSIAN_CLIENT_SECRET:   ${{ secrets.ATLASSIAN_CLIENT_SECRET }}
+                  GITLAB_CLIENT_ID:          ${{ secrets.GITLAB_CLIENT_ID }}
+                  GITLAB_CLIENT_SECRET:      ${{ secrets.GITLAB_CLIENT_SECRET }}
+                  GITLAB_INSTANCE_URL:       ${{ secrets.GITLAB_INSTANCE_URL }}
+                  DISCORD_CLIENT_ID:         ${{ secrets.DISCORD_CLIENT_ID }}
+                  DISCORD_CLIENT_SECRET:     ${{ secrets.DISCORD_CLIENT_SECRET }}
+                  DISCORD_BOT_TOKEN:         ${{ secrets.DISCORD_BOT_TOKEN }}
+                  DISCORD_PUBLIC_KEY:        ${{ secrets.DISCORD_PUBLIC_KEY }}
+                  NOTION_CLIENT_ID:          ${{ secrets.NOTION_CLIENT_ID }}
+                  NOTION_CLIENT_SECRET:      ${{ secrets.NOTION_CLIENT_SECRET }}
+                  FIGMA_CLIENT_ID:           ${{ secrets.FIGMA_CLIENT_ID }}
+                  FIGMA_CLIENT_SECRET:       ${{ secrets.FIGMA_CLIENT_SECRET }}
+                  LINEAR_CLIENT_ID:          ${{ secrets.LINEAR_CLIENT_ID }}
+                  LINEAR_CLIENT_SECRET:      ${{ secrets.LINEAR_CLIENT_SECRET }}
+                  DROPBOX_CLIENT_ID:         ${{ secrets.DROPBOX_CLIENT_ID }}
+                  DROPBOX_CLIENT_SECRET:     ${{ secrets.DROPBOX_CLIENT_SECRET }}
+                  LOOM_CLIENT_ID:            ${{ secrets.LOOM_CLIENT_ID }}
+                  LOOM_CLIENT_SECRET:        ${{ secrets.LOOM_CLIENT_SECRET }}
+                  ZENDESK_CLIENT_ID:         ${{ secrets.ZENDESK_CLIENT_ID }}
+                  ZENDESK_CLIENT_SECRET:     ${{ secrets.ZENDESK_CLIENT_SECRET }}
+                  INTERCOM_CLIENT_ID:        ${{ secrets.INTERCOM_CLIENT_ID }}
+                  INTERCOM_CLIENT_SECRET:    ${{ secrets.INTERCOM_CLIENT_SECRET }}
+                  HUBSPOT_CLIENT_ID:         ${{ secrets.HUBSPOT_CLIENT_ID }}
+                  HUBSPOT_CLIENT_SECRET:     ${{ secrets.HUBSPOT_CLIENT_SECRET }}
+                  SALESFORCE_CLIENT_ID:      ${{ secrets.SALESFORCE_CLIENT_ID }}
+                  SALESFORCE_CLIENT_SECRET:  ${{ secrets.SALESFORCE_CLIENT_SECRET }}
+
+                  # --- GHCR App for the pull-token rotator ---
+                  GHCR_APP_PRIVATE_KEY:      ${{ secrets.GHCR_APP_PRIVATE_KEY }}
               run: |
                   set -euo pipefail
                   NS=${{ env.NAMESPACE }}
 
-                  # --- validate GH secrets are non-empty --------------------
+                  # Required GH secrets. Fail fast if any are empty so the
+                  # cluster isn't left in a half-bootstrapped state.
+                  required=(
+                    SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY DATABASE_URL
+                    CLERK_SECRET_KEY CLERK_PUBLISHABLE_KEY
+                    STRIPE_SECRET_KEY
+                    OPENAI_API_KEY INTEGRATION_ENCRYPTION_KEY
+                    GHCR_APP_PRIVATE_KEY
+                  )
                   missing=()
-                  [ -z "${BACKEND_ENV}" ]              && missing+=("BACKEND_ENV")
-                  [ -z "${FRONTEND_CLERK_SECRET_KEY}" ]&& missing+=("FRONTEND_CLERK_SECRET_KEY")
-                  [ -z "${GHCR_APP_PRIVATE_KEY}" ]     && missing+=("GHCR_APP_PRIVATE_KEY")
+                  for var in "${required[@]}"; do
+                    if [ -z "${!var:-}" ]; then missing+=("$var"); fi
+                  done
                   if [ ${#missing[@]} -gt 0 ]; then
                     echo "::error::Required GitHub Actions secrets are empty: ${missing[*]}"
                     echo "::error::Set them at: Settings → Secrets and variables → Actions"
                     exit 1
                   fi
 
-                  # --- backend-secrets --------------------------------------
-                  # Strip ConfigMap-owned keys + empty values so a stale dev
-                  # BACKEND_ENV value can't downgrade prod config. Write to a
-                  # temp file, kubectl --from-env-file, then delete.
-                  printf '%s' "$BACKEND_ENV" \
-                    | grep -E '^[A-Z][A-Z0-9_]*=' \
-                    | grep -vE '^(NODE_ENV|HOST|HOSTNAME|PORT|FRONTEND_URL)=' \
-                    | grep -vE '^[A-Z0-9_]+=$' \
-                    > /tmp/backend.env || true
+                  # Backend: build --from-literal args only for non-empty vars
+                  # so optional provider secrets don't create empty Secret keys.
+                  # ConfigMap-owned keys (NODE_ENV, HOST, PORT, FRONTEND_URL)
+                  # are intentionally not in the list above.
+                  backend_keys=(
+                    SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY DATABASE_URL
+                    CLERK_SECRET_KEY CLERK_PUBLISHABLE_KEY CLERK_WEBHOOK_SECRET
+                    STRIPE_SECRET_KEY STRIPE_WEBHOOK_SECRET
+                    OPENAI_API_KEY INTEGRATION_ENCRYPTION_KEY
+                    GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET
+                    SLACK_CLIENT_ID SLACK_CLIENT_SECRET SLACK_SIGNING_SECRET
+                    MICROSOFT_CLIENT_ID MICROSOFT_CLIENT_SECRET MICROSOFT_TENANT_ID
+                    ATLASSIAN_CLIENT_ID ATLASSIAN_CLIENT_SECRET
+                    GITLAB_CLIENT_ID GITLAB_CLIENT_SECRET GITLAB_INSTANCE_URL
+                    DISCORD_CLIENT_ID DISCORD_CLIENT_SECRET DISCORD_BOT_TOKEN DISCORD_PUBLIC_KEY
+                    NOTION_CLIENT_ID NOTION_CLIENT_SECRET
+                    FIGMA_CLIENT_ID FIGMA_CLIENT_SECRET
+                    LINEAR_CLIENT_ID LINEAR_CLIENT_SECRET
+                    DROPBOX_CLIENT_ID DROPBOX_CLIENT_SECRET
+                    LOOM_CLIENT_ID LOOM_CLIENT_SECRET
+                    ZENDESK_CLIENT_ID ZENDESK_CLIENT_SECRET
+                    INTERCOM_CLIENT_ID INTERCOM_CLIENT_SECRET
+                    HUBSPOT_CLIENT_ID HUBSPOT_CLIENT_SECRET
+                    SALESFORCE_CLIENT_ID SALESFORCE_CLIENT_SECRET
+                  )
+                  # The integration backend code reads env.GITHUB_* at runtime;
+                  # map GH_APP_* (renamed to avoid collision with GitHub's
+                  # reserved GITHUB_ secret prefix) back to GITHUB_* keys here.
+                  backend_extra_keys=(GITHUB_CLIENT_ID GITHUB_CLIENT_SECRET GITHUB_WEBHOOK_SECRET)
+                  declare -A backend_extra_sources=(
+                    [GITHUB_CLIENT_ID]="$GH_APP_CLIENT_ID"
+                    [GITHUB_CLIENT_SECRET]="$GH_APP_CLIENT_SECRET"
+                    [GITHUB_WEBHOOK_SECRET]="$GH_APP_WEBHOOK_SECRET"
+                  )
+
+                  args=()
+                  for key in "${backend_keys[@]}"; do
+                    value="${!key:-}"
+                    [ -n "$value" ] && args+=("--from-literal=$key=$value")
+                  done
+                  for key in "${backend_extra_keys[@]}"; do
+                    value="${backend_extra_sources[$key]:-}"
+                    [ -n "$value" ] && args+=("--from-literal=$key=$value")
+                  done
+
                   kubectl -n "$NS" create secret generic backend-secrets \
-                      --from-env-file=/tmp/backend.env \
+                      "${args[@]}" \
                       --dry-run=client -o yaml | kubectl apply -f -
-                  shred -u /tmp/backend.env 2>/dev/null || rm -f /tmp/backend.env
 
-                  # --- frontend-secrets -------------------------------------
+                  # Frontend: CLERK_SECRET_KEY only (Next.js middleware). Same
+                  # value as backend's — one source of truth.
                   kubectl -n "$NS" create secret generic frontend-secrets \
-                      --from-literal=CLERK_SECRET_KEY="$FRONTEND_CLERK_SECRET_KEY" \
+                      --from-literal=CLERK_SECRET_KEY="$CLERK_SECRET_KEY" \
                       --dry-run=client -o yaml | kubectl apply -f -
 
-                  # --- ghcr-app-credentials ---------------------------------
+                  # GHCR pull-token rotator credentials.
                   printf '%s' "$GHCR_APP_PRIVATE_KEY" > /tmp/private-key.pem
                   kubectl -n "$NS" create secret generic ghcr-app-credentials \
                       --from-literal=app-id="${{ env.GHCR_APP_ID }}" \
