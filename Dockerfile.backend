@@ -1,32 +1,28 @@
 # syntax=docker/dockerfile:1.7
 
 # ---------- build (deps + compile) ----------
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 RUN corepack enable && corepack prepare pnpm@9 --activate
 WORKDIR /app
 
-# Workspace manifests first (lets the install layer cache on lockfile changes only).
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
-COPY shared/package.json ./shared/
-COPY backend/package.json ./backend/
+# Copy the full workspace first so pnpm can set up symlinks against real
+# directories. `.dockerignore` keeps node_modules / dist / .next out of the
+# context, so this is just source + manifests.
+COPY . .
 
-# Install deps for backend AND its workspace deps.
-# The trailing `...` is load-bearing — it pulls in @kanninja/shared.
-RUN pnpm install --frozen-lockfile --filter @kanninja/backend...
+# Install all workspace deps. A full install is more reliable for workspace
+# symlink setup than `--filter`, and the extra install time is amortised by
+# the GHA buildx cache layer.
+RUN pnpm install --frozen-lockfile
 
-# Now copy sources (cached separately from deps).
-COPY shared ./shared
-COPY backend ./backend
-
-# Shared must compile before backend's tsc runs — backend imports from shared/dist.
-RUN pnpm --filter @kanninja/shared run build \
- && pnpm --filter @kanninja/backend run build
+# `-r --filter @kanninja/backend...` topologically builds shared first, then backend.
+RUN pnpm -r --filter @kanninja/backend... run build
 
 # Assemble a pruned runtime tree (prod deps only, shared inlined).
 RUN pnpm --filter @kanninja/backend deploy --prod /out
 
 # ---------- runtime ----------
-FROM node:20-alpine AS runtime
+FROM node:22-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production \
     PORT=3001 \

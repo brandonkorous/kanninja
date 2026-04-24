@@ -5,28 +5,18 @@
 # It is NOT deployed to the AKS cluster.
 
 # ---------- build (deps + compile) ----------
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 RUN corepack enable && corepack prepare pnpm@9 --activate
 WORKDIR /app
 
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
-COPY shared/package.json ./shared/
-COPY mcp-server/package.json ./mcp-server/
+COPY . .
 
-# Install deps for mcp AND its workspace deps (shared).
-# Trailing `...` is load-bearing.
-RUN pnpm install --frozen-lockfile --filter @kanninja/mcp...
-
-COPY shared ./shared
-COPY mcp-server ./mcp-server
-
-RUN pnpm --filter @kanninja/shared run build \
- && pnpm --filter @kanninja/mcp run build
-
+RUN pnpm install --frozen-lockfile
+RUN pnpm -r --filter @kanninja/mcp... run build
 RUN pnpm --filter @kanninja/mcp deploy --prod /out
 
 # ---------- runtime ----------
-FROM node:20-alpine AS runtime
+FROM node:22-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production \
     KANNINJA_API_URL=https://api.kanninja.com
