@@ -8,6 +8,8 @@ import { ToastProvider } from '@/providers/ToastProvider';
 import { ConsentProvider } from '@/providers/ConsentProvider';
 import { CookieBanner } from '@/components/legal/CookieBanner';
 import { CookiePreferencesDialog } from '@/components/legal/CookiePreferencesDialog';
+import { ClarityScript } from '@/components/legal/ClarityScript';
+import { GoogleAnalyticsScript } from '@/components/legal/GoogleAnalyticsScript';
 import './globals.css';
 
 // Hanko brand fonts. Variable names must match the consumers in
@@ -55,6 +57,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                                         {children}
                                         <CookieBanner />
                                         <CookiePreferencesDialog />
+                                        <ClarityScript />
+                                        <GoogleAnalyticsScript />
                                     </ConsentProvider>
                                 </ToastProvider>
                             </QueryProvider>
