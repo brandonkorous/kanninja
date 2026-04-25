@@ -12,7 +12,7 @@ function buildMcpConfig(key: string): string {
       mcpServers: {
         kanninja: {
           command: 'npx',
-          args: ['-y', '@kanninja/mcp'],
+          args: ['-y', 'kanninja-mcp'],
           env: { KANNINJA_API_KEY: key },
         },
       },

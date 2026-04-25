@@ -18,7 +18,7 @@ NGINX Ingress (cluster)
                                                           Stripe    (external)
 ```
 
-- **MCP server** (`@kanninja/mcp`) is NOT deployed here — it's a stdio subprocess clients run locally. Its image is published to GHCR for containerised local use only.
+- **MCP server** (`kanninja-mcp`) is NOT deployed here — it's a stdio subprocess clients run locally. Its image is published to GHCR for containerised local use only.
 
 ## One-time setup
 

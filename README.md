@@ -35,7 +35,7 @@ kanninja/
 ├── shared/       # @kanninja/shared — Zod schemas, enums, constants
 ├── backend/      # @kanninja/backend — Fastify API
 ├── frontend/     # @kanninja/frontend — Next.js app
-└── mcp-server/   # @kanninja/mcp — Model Context Protocol server
+└── mcp-server/   # kanninja-mcp — Model Context Protocol server
 ```
 
 Frontend never queries the database directly. All data flows through the Fastify API. The only direct Supabase usage on the frontend is Realtime (broadcast + presence).

@@ -91,6 +91,84 @@
   .checkbox:focus-visible {
     outline: none;
   }
+
+  /* Legal prose ----------------------------------------------------------------
+   * Nested-element styling for content inside <LegalLayout> sections. The
+   * layout component owns paragraph spacing (space-y-5); these rules style
+   * inline elements (links, strong, em) and flow children (sub-headings,
+   * lists, definition lists) so each legal page can author plain JSX without
+   * re-deriving styles. */
+  .legal-prose a {
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-color: color-mix(in oklch, var(--color-primary) 40%, transparent);
+    transition: text-decoration-color 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .legal-prose a:hover {
+    text-decoration-color: var(--color-primary);
+  }
+  .legal-prose strong {
+    color: var(--color-base-content);
+    font-weight: 600;
+  }
+  .legal-prose em {
+    font-style: italic;
+  }
+  .legal-prose h3 {
+    font-family: var(--font-mono);
+    font-size: var(--text-eyebrow);
+    line-height: var(--text-eyebrow--line-height);
+    letter-spacing: var(--text-eyebrow--letter-spacing);
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--color-base-content);
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+  }
+  .legal-prose ul,
+  .legal-prose ol {
+    padding-left: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .legal-prose ul {
+    list-style: none;
+  }
+  .legal-prose ul > li {
+    position: relative;
+  }
+  .legal-prose ul > li::before {
+    content: '';
+    position: absolute;
+    left: -1.25rem;
+    top: 0.7rem;
+    width: 0.375rem;
+    height: 1px;
+    background: var(--color-primary);
+  }
+  .legal-prose ol {
+    list-style: decimal;
+  }
+  .legal-prose ol > li::marker {
+    color: color-mix(in oklch, var(--color-base-content) 40%, transparent);
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+  }
+  .legal-prose dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.5rem 1.5rem;
+  }
+  .legal-prose dt {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: color-mix(in oklch, var(--color-base-content) 60%, transparent);
+    padding-top: 0.125rem;
+  }
 }
 
 /* Hanko motion ---------------------------------------------------------------

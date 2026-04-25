@@ -1,24 +1,23 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-const isPublicRoute = createRouteMatcher([
-  '/',
-  '/features(.*)',
-  '/pricing(.*)',
-  '/about(.*)',
-  '/contact(.*)',
-  '/blog(.*)',
-  '/support(.*)',
-  '/privacy(.*)',
-  '/terms(.*)',
-  '/compare(.*)',
-  '/sign-in(.*)',
-  '/sign-up(.*)',
-  '/invite/(.*)',
-  '/api/webhooks/(.*)',
+// Protected routes are explicit. Anything not listed here is public —
+// marketing pages, sign-in/up, invites, and webhooks all stay open by
+// default. Add a route here when it ships under (app).
+const isProtectedRoute = createRouteMatcher([
+  '/dashboard(.*)',
+  '/dojo(.*)',
+  '/clans(.*)',
+  '/ai-hub(.*)',
+  '/templates(.*)',
+  '/analytics(.*)',
+  '/notifications(.*)',
+  '/profile(.*)',
+  '/settings(.*)',
+  '/integrations(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
-  if (!isPublicRoute(request)) {
+  if (isProtectedRoute(request)) {
     await auth.protect();
   }
 });

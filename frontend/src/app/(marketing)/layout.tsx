@@ -14,6 +14,7 @@ const footerColumns: { label: string; links: { href: string; label: string }[] }
         links: [
             { href: '/features', label: 'Features' },
             { href: '/pricing', label: 'Pricing' },
+            { href: '/mcp', label: 'MCP' },
             { href: '/templates', label: 'Templates' },
             { href: '/changelog', label: 'Changelog' },
         ],
@@ -42,7 +43,10 @@ const footerColumns: { label: string; links: { href: string; label: string }[] }
             { href: '/privacy', label: 'Privacy' },
             { href: '/terms', label: 'Terms' },
             { href: '/cookies', label: 'Cookies' },
+            { href: '/aup', label: 'Acceptable use' },
             { href: '/dpa', label: 'DPA' },
+            { href: '/subprocessors', label: 'Subprocessors' },
+            { href: '/refund', label: 'Refunds' },
         ],
     },
 ];
@@ -64,6 +68,9 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
                         </Link>
                         <Link href="/pricing" className={`${navLinkClass} hidden md:inline-flex`}>
                             Pricing
+                        </Link>
+                        <Link href="/mcp" className={`${navLinkClass} hidden md:inline-flex`}>
+                            MCP
                         </Link>
                         <Link href="/about" className={`${navLinkClass} hidden md:inline-flex`}>
                             About

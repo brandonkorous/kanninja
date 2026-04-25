@@ -1,0 +1,75 @@
+name: Publish MCP server to npm
+
+# Triggers on tags shaped like `mcp-v0.1.0`, `mcp-v0.1.1`, etc.
+# Manual dispatch is also supported for re-running a failed publish.
+on:
+    push:
+        tags:
+            - 'mcp-v*'
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: 'Tag to publish (e.g. mcp-v0.1.0)'
+                required: true
+
+jobs:
+    publish:
+        name: Publish kanninja-mcp
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            id-token: write # for npm provenance
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: ${{ inputs.tag || github.ref }}
+
+            - uses: pnpm/action-setup@v4
+              with:
+                  version: 10.9.0
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+                  registry-url: 'https://registry.npmjs.org'
+                  cache: 'pnpm'
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            # Build shared first (mcp-server depends on @kanninja/shared via workspace:*).
+            # The topological filter handles ordering automatically.
+            - name: Build mcp-server (and its deps)
+              run: pnpm -r --filter kanninja-mcp... run build
+
+            # Verify the version in package.json matches the tag.
+            # Tag `mcp-v0.1.0` must correspond to package.json version "0.1.0".
+            - name: Verify tag matches package version
+              run: |
+                  set -e
+                  TAG="${{ inputs.tag || github.ref_name }}"
+                  EXPECTED="${TAG#mcp-v}"
+                  ACTUAL=$(node -p "require('./mcp-server/package.json').version")
+                  if [ "$ACTUAL" != "$EXPECTED" ]; then
+                    echo "::error::Tag $TAG expects version $EXPECTED, package.json has $ACTUAL"
+                    exit 1
+                  fi
+                  echo "Publishing kanninja-mcp@$ACTUAL"
+
+            # Authentication is via npm Trusted Publisher (OIDC) — no token
+            # needed. The `id-token: write` permission above lets the runner
+            # mint the OIDC JWT npm verifies. `--provenance` records the
+            # GitHub Actions context on the published package.
+            #
+            # `--no-git-checks` is required because pnpm publish defaults to
+            # warning on uncommitted changes / non-default branch — neither
+            # applies in CI but pnpm doesn't know that.
+            - name: Publish to npm
+              run: pnpm --filter kanninja-mcp publish --access public --no-git-checks --provenance
+
+            - name: Summary
+              if: always()
+              run: |
+                  echo "### MCP server published" >> $GITHUB_STEP_SUMMARY
+                  echo "- Tag: \`${{ inputs.tag || github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+                  echo "- npm: https://www.npmjs.com/package/kanninja-mcp" >> $GITHUB_STEP_SUMMARY

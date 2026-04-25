@@ -1,5 +1,5 @@
 {
-  "name": "@kanninja/mcp",
+  "name": "kanninja-mcp",
   "version": "0.1.0",
   "description": "kanNINJA MCP server — manage your dojo from any agent",
   "type": "module",

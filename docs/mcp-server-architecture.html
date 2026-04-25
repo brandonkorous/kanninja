@@ -1377,7 +1377,7 @@
           <span class="tag">pnpm monorepo</span>
           <span class="tag">Fastify-backed</span>
           <span class="tag">Clerk OAuth</span>
-          <span class="tag">@kanninja/mcp</span>
+          <span class="tag">kanninja-mcp</span>
           <span class="tag">Not yet scheduled</span>
         </div>
       </header>
@@ -1460,7 +1460,7 @@
                 <h4>Mode A</h4>
                 <div class="title">Local stdio</div>
                 <p>
-                  User-run subprocess via <code>npx @kanninja/mcp</code>. API-key auth from env.
+                  User-run subprocess via <code>npx kanninja-mcp</code>. API-key auth from env.
                   Ships fast, no hosting cost, works on any network. Published to npm and Smithery.
                 </p>
               </div>
@@ -1481,7 +1481,7 @@
           </div>
 
           <div class="arch-row">
-            <span class="section-label gold">Core package · @kanninja/mcp</span>
+            <span class="section-label gold">Core package · kanninja-mcp</span>
             <div class="arch-split">
               <div class="arch-card arch-card--gold">
                 <h4>Tool registry</h4>
@@ -1580,7 +1580,7 @@
               </li>
               <li>
                 <strong>Client boots subprocess</strong>. Claude Code runs
-                <code>npx @kanninja/mcp</code> as a stdio child process on demand.
+                <code>npx kanninja-mcp</code> as a stdio child process on demand.
               </li>
               <li>
                 <strong>Package authenticates</strong>. Reads key from env, attaches
@@ -1942,7 +1942,7 @@
                   tier)
                 </li>
                 <li>Zod-to-MCP schema adapter in <code>shared/mcp-schema.ts</code> (≈ 50 lines)</li>
-                <li>Published to npm as <code>@kanninja/mcp</code> and submitted to Smithery</li>
+                <li>Published to npm as <code>kanninja-mcp</code> and submitted to Smithery</li>
               </ul>
               <div class="ship">
                 <strong>Ship criteria</strong>User can go from landing page to working tools inside
@@ -2109,7 +2109,7 @@
               secret, last_used_at, revoked_at. RLS plus a service for create, list, verify, revoke.
             </li>
             <li>
-              <strong>Prototype @kanninja/mcp locally</strong>
+              <strong>Prototype kanninja-mcp locally</strong>
               Against a staging workspace, with just two tools: <code>list_boards</code>,
               <code>get_board</code>. Verify the full path — stdio → package → Fastify → Drizzle →
               response rendered in Claude Code.
@@ -2121,7 +2121,7 @@
             </li>
             <li>
               <strong>Reserve namespaces</strong>
-              Register <code>@kanninja/mcp</code> on npm, <code>mcp.kanninja.com</code> DNS, and
+              Register <code>kanninja-mcp</code> on npm, <code>mcp.kanninja.com</code> DNS, and
               submit a stub listing to Smithery. Cheap, prevents squatting.
             </li>
           </ol>
