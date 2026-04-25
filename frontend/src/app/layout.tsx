@@ -5,6 +5,9 @@ import { QueryProvider } from '@/providers/QueryProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import { FontAwesomeProvider } from '@/providers/FontAwesomeProvider';
 import { ToastProvider } from '@/providers/ToastProvider';
+import { ConsentProvider } from '@/providers/ConsentProvider';
+import { CookieBanner } from '@/components/legal/CookieBanner';
+import { CookiePreferencesDialog } from '@/components/legal/CookiePreferencesDialog';
 import './globals.css';
 
 // Hanko brand fonts. Variable names must match the consumers in
@@ -47,7 +50,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     <ThemeProvider>
                         <FontAwesomeProvider>
                             <QueryProvider>
-                                <ToastProvider>{children}</ToastProvider>
+                                <ToastProvider>
+                                    <ConsentProvider>
+                                        {children}
+                                        <CookieBanner />
+                                        <CookiePreferencesDialog />
+                                    </ConsentProvider>
+                                </ToastProvider>
                             </QueryProvider>
                         </FontAwesomeProvider>
                     </ThemeProvider>

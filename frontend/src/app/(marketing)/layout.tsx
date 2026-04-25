@@ -47,6 +47,10 @@ const footerColumns: { label: string; links: { href: string; label: string }[] }
             { href: '/dpa', label: 'DPA' },
             { href: '/subprocessors', label: 'Subprocessors' },
             { href: '/refund', label: 'Refunds' },
+            {
+                href: '/privacy-choices',
+                label: 'Do Not Sell or Share My Personal Information',
+            },
         ],
     },
 ];

@@ -11,11 +11,14 @@ import {
   faCreditCard,
   faRightFromBracket,
   faChevronUp,
+  faShieldHalved,
 } from '@fortawesome/free-solid-svg-icons';
+import { useConsent } from '@/providers/ConsentProvider';
 
 export function UserDropdown({ compact = false }: { compact?: boolean }) {
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
+  const { openPreferences } = useConsent();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -166,6 +169,22 @@ export function UserDropdown({ compact = false }: { compact?: boolean }) {
                 />
                 Billing
               </Link>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  openPreferences();
+                }}
+              >
+                <FontAwesomeIcon
+                  icon={faShieldHalved}
+                  aria-hidden="true"
+                  className="text-base-content/60"
+                />
+                Privacy choices
+              </button>
             </li>
             <li role="separator" className="border-t border-base-300 my-2" />
             <li>
