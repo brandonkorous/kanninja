@@ -5,6 +5,7 @@ import { db } from '../../db/index.js';
 import { boards } from '../../db/schema/boards.js';
 import { lists } from '../../db/schema/lists.js';
 import { cards } from '../../db/schema/cards.js';
+import { cardChecklistItems } from '../../db/schema/card-features.js';
 import { eq, asc } from 'drizzle-orm';
 import { generateInitialIndex, generateIndexAfter } from '../../utils/order-index.js';
 
@@ -19,6 +20,9 @@ const applyTemplateSchema = z.object({
           title: z.string(),
           description: z.string().optional(),
           priority: z.enum(['none', 'low', 'medium', 'high', 'urgent']).optional(),
+          // AI-generated templates ship with starter checklists; built-in
+          // templates omit the field entirely (treated as no items).
+          checklist: z.array(z.string().min(1).max(500)).optional(),
         }),
       ),
     }),
@@ -97,15 +101,32 @@ export async function templateRoutes(fastify: FastifyInstance) {
 
         let cardOrder = generateInitialIndex();
         for (const cardInput of listInput.cards) {
-          await db.insert(cards).values({
-            listId: list.id,
-            title: cardInput.title,
-            description: cardInput.description ?? null,
-            priority: cardInput.priority ?? 'none',
-            orderIndex: cardOrder,
-            createdBy: request.profileId!,
-          });
+          const [card] = await db
+            .insert(cards)
+            .values({
+              listId: list.id,
+              title: cardInput.title,
+              description: cardInput.description ?? null,
+              priority: cardInput.priority ?? 'none',
+              orderIndex: cardOrder,
+              createdBy: request.profileId!,
+            })
+            .returning();
           cardOrder = generateIndexAfter(cardOrder);
+
+          // Bulk-insert any starter checklist items the model produced.
+          // Order index is integer-sequential here (not fractional) to match
+          // the per-card checklist endpoint convention at routes/cards/checklist.ts.
+          if (cardInput.checklist?.length) {
+            await db.insert(cardChecklistItems).values(
+              cardInput.checklist.map((title, i) => ({
+                cardId: card.id,
+                userId: request.profileId!,
+                title,
+                orderIndex: i + 1,
+              })),
+            );
+          }
         }
       }
 

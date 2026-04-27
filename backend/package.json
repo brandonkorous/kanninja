@@ -28,6 +28,7 @@
         "drizzle-orm": "^0.45.2",
         "fastify": "^5.2.0",
         "fastify-plugin": "^5.1.0",
+        "llm-harness": "0.2.0",
         "openai": "^6.34.0",
         "postgres": "^3.4.0",
         "stripe": "^17.0.0",

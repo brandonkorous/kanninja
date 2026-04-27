@@ -1,3 +1,4 @@
+import { createHmac } from 'node:crypto';
 import { env } from '../../config/env.js';
 import type {
   IntegrationProvider,
@@ -82,7 +83,6 @@ export const slackProvider: IntegrationProvider = {
     const age = Math.abs(Date.now() / 1000 - Number(timestamp));
     if (age > 300) return false;
 
-    const { createHmac } = require('node:crypto');
     const baseString = `v0:${timestamp}:${typeof payload === 'string' ? payload : payload.toString()}`;
     const expectedSig = 'v0=' + createHmac('sha256', env.SLACK_SIGNING_SECRET)
       .update(baseString)

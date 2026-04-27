@@ -35,22 +35,52 @@ export function useAISuggestions() {
   });
 }
 
-export function useGenerateTemplate() {
+// Pass 1 of the template flow: project description → lists + board title.
+export function useGenerateTemplateLists() {
   const api = useApi();
   const toast = useToast();
   return useMutation({
-    mutationFn: (input: { templateType: string; customRequest?: string }) =>
+    mutationFn: (request: string) =>
+      api
+        .post<{
+          data: { board_title: string; board_description: string; lists: string[] };
+        }>('/api/v1/ai/generate-template/lists', { request })
+        .then((r) => r.data),
+    onError: (err) => toast.error(getToastErrorMessage(err)),
+  });
+}
+
+// Pass 2: with the board's lists pinned, generate the starter cards.
+export function useGenerateTemplateCards() {
+  const api = useApi();
+  const toast = useToast();
+  return useMutation({
+    mutationFn: (input: { request: string; boardTitle: string; lists: string[] }) =>
       api
         .post<{
           data: {
-            board_title: string;
-            board_description: string;
-            lists: Array<{
-              title: string;
-              cards: Array<{ title: string; description?: string; priority?: string }>;
-            }>;
+            cards: Array<{ title: string; description?: string; priority?: string }>;
           };
-        }>('/api/v1/ai/generate-template', input)
+        }>('/api/v1/ai/generate-template/cards', input)
+        .then((r) => r.data),
+    onError: (err) => toast.error(getToastErrorMessage(err)),
+  });
+}
+
+// Pass 3 (per card): focused checklist generation. Reused by the templates
+// flow and the inline assist on the card-detail Checklist tab.
+export function useGenerateChecklist() {
+  const api = useApi();
+  const toast = useToast();
+  return useMutation({
+    mutationFn: (input: {
+      title: string;
+      description?: string;
+      priority?: string;
+      estimatedHours?: number;
+    }) =>
+      api
+        .post<{ data: { steps: string[] } }>('/api/v1/ai/generate-checklist', input)
         .then((r) => r.data),
     onError: (err) => toast.error(getToastErrorMessage(err)),
   });

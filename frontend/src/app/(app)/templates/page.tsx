@@ -39,6 +39,7 @@ type ApplyInput = {
             title: string;
             description?: string;
             priority?: Priority;
+            checklist?: string[];
         }[];
     }[];
 };
@@ -173,16 +174,31 @@ export default function TemplatesPage() {
                 isApplying={applyTemplate.isPending}
                 onClose={() => setShowAI(false)}
                 onGenerated={(result) => {
+                    // Pool every card into the first list and leave the rest
+                    // empty. A brand-new board can't have anything "In
+                    // Progress" or "Completed" — work hasn't started yet.
+                    // Even with prompt guidance the model occasionally
+                    // sprinkles cards across stages, so this is the safety
+                    // net that guarantees correct behavior.
+                    const allCards = result.lists.flatMap((l) =>
+                        l.cards.map((c) => ({
+                            title: c.title,
+                            description: c.description ?? undefined,
+                            priority: normalizePriority(c.priority),
+                            // Filter to non-empty strings — the model
+                            // occasionally emits empty entries which would
+                            // fail the backend min(1) validation.
+                            checklist: c.checklist?.filter(
+                                (s) => typeof s === 'string' && s.trim().length > 0,
+                            ),
+                        })),
+                    );
                     applyTemplate.mutate({
                         title: result.board_title,
                         description: result.board_description ?? undefined,
-                        lists: result.lists.map((l) => ({
+                        lists: result.lists.map((l, i) => ({
                             title: l.title,
-                            cards: l.cards.map((c) => ({
-                                title: c.title,
-                                description: c.description ?? undefined,
-                                priority: normalizePriority(c.priority),
-                            })),
+                            cards: i === 0 ? allCards : [],
                         })),
                     });
                     setShowAI(false);

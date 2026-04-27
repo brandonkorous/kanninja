@@ -45,13 +45,34 @@ export async function aiRoutes(fastify: FastifyInstance) {
   );
 
   fastify.post(
-    '/api/v1/ai/generate-template',
+    '/api/v1/ai/generate-template/lists',
     { preHandler: aiPreHandler },
     async (request) => {
-      const { templateType, customRequest } = z
-        .object({ templateType: z.string().min(1), customRequest: z.string().optional() })
+      const { request: req } = z
+        .object({ request: z.string().min(1) })
         .parse(request.body);
-      const result = await aiService.generateTemplate(request.profileId!, templateType, customRequest);
+      const result = await aiService.generateTemplateLists(request.profileId!, req);
+      return { data: result };
+    },
+  );
+
+  fastify.post(
+    '/api/v1/ai/generate-template/cards',
+    { preHandler: aiPreHandler },
+    async (request) => {
+      const input = z
+        .object({
+          request: z.string().min(1),
+          boardTitle: z.string().min(1),
+          lists: z.array(z.string().min(1)).min(1).max(10),
+        })
+        .parse(request.body);
+      const result = await aiService.generateTemplateCards(
+        request.profileId!,
+        input.request,
+        input.boardTitle,
+        input.lists,
+      );
       return { data: result };
     },
   );

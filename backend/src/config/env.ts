@@ -19,6 +19,10 @@ const envSchema = z.object({
 
   OPENAI_API_KEY: z.string().default(''),
 
+  // Anthropic — currently unused. Reserved so adding Claude as a fallback in
+  // src/config/llm.ts is a config-only change, not an env-schema change.
+  ANTHROPIC_API_KEY: z.string().default(''),
+
   // Integration system
   INTEGRATION_ENCRYPTION_KEY: z.string().default(''),
 

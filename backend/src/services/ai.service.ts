@@ -1,4 +1,5 @@
 import { openai } from '../config/openai.js';
+import { llm } from '../config/llm.js';
 import { db } from '../db/index.js';
 import { aiInteractions } from '../db/schema/analytics.js';
 import { boards } from '../db/schema/boards.js';
@@ -7,8 +8,6 @@ import { cards } from '../db/schema/cards.js';
 import { eq } from 'drizzle-orm';
 import { AppError } from '../utils/errors.js';
 import { getIntegrationContext, getCalendarEvents } from '../integrations/ai-context.js';
-
-const MODEL = 'gpt-4o-mini';
 
 async function logInteraction(userId: string, query: string, responseType: string, context?: Record<string, unknown>) {
   await db.insert(aiInteractions).values({
@@ -71,21 +70,18 @@ function buildDateScaffold(): string {
 }
 
 async function callJSON<T>(systemPrompt: string, userPrompt: string): Promise<T> {
-  const response = await openai.chat.completions.create({
-    model: MODEL,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt },
-    ],
-    response_format: { type: 'json_object' },
+  const response = await llm.complete({
+    model: 'primary',
+    system: systemPrompt,
+    messages: [{ role: 'user', content: userPrompt }],
+    responseFormat: 'json_object',
     temperature: 0.4,
   });
 
-  const content = response.choices[0]?.message?.content;
-  if (!content) throw new AppError('INTERNAL_ERROR', 'Empty AI response', 500);
+  if (!response.text) throw new AppError('INTERNAL_ERROR', 'Empty AI response', 500);
 
   try {
-    return JSON.parse(content) as T;
+    return JSON.parse(response.text) as T;
   } catch {
     throw new AppError('INTERNAL_ERROR', 'Failed to parse AI response', 500);
   }
@@ -125,16 +121,95 @@ export const aiService = {
     return result;
   },
 
-  async generateTemplate(userId: string, templateType: string, customRequest?: string) {
+  // Pass 1 of the template flow. The big trap the prompt fights: producing
+  // labels that SOUND like stages but are actually project phases or
+  // categories ("Welcome & Access Setup", "Creative & Copy Production").
+  // A card never moves between those — it just lives in one. So the
+  // prompt biases hard toward universal lifecycle states (Backlog / In
+  // progress / Done) and only permits domain-specific states for true
+  // pipelines that process many instances of the same kind of unit.
+  async generateTemplateLists(userId: string, request: string) {
+    const systemPrompt = [
+      'You design kanban columns. Your biggest failure mode is producing labels that SOUND like stages but are actually project phases, processes, or topics in disguise — and you must avoid this.',
+      '',
+      'CORE PRINCIPLE — what a kanban column IS:',
+      'A column is a STATE OF EXECUTION on a single card right now — not a phase of the project, not a topic, not a process, not a team. The card is the unit of work. The column tells you what is happening to that one card at this moment.',
+      '',
+      'THE ACID TEST you must apply before finalizing:',
+      'Pick one concrete card the project would generate (e.g. "Install dev environment", "Buy a folding table", "Write launch email"). As work on that ONE card progresses, does it sit in column 1, then column 2, then column 3, IN SEQUENCE? If yes, your columns are valid states. If that card would only ever live in one of your columns — because the other columns are about other KINDS of tasks — your columns are categories or phases. Redo them.',
+      '',
+      'TWO VALID PATTERNS, one default:',
+      '',
+      '(1) DEFAULT — universal lifecycle. Use this unless the project is clearly a pipeline (see below). Pick one of:',
+      '- 3-column: Backlog → In progress → Done',
+      '- 4-column: Backlog → In progress → Review → Done',
+      '- 5-column: Backlog → Planning → In progress → Review → Done',
+      'You may rename "Backlog" to "To do" or similar synonyms. Do NOT invent project-specific labels here. Boring labels are correct for project-projects.',
+      '',
+      '(2) PIPELINE — only if the project is a stream of MANY INSTANCES of the SAME KIND OF UNIT, and every instance genuinely passes through identical states. In that case, name the states from the domain:',
+      '- Bug tracker (every bug passes through these): Reported → Triaged → In progress → Testing → Resolved',
+      '- Editorial pipeline (every article passes through these): Idea → Drafting → Editing → Scheduled → Published',
+      '- Hiring (every candidate passes through these): Sourced → Phone screen → Onsite → Offer → Hired',
+      '- Sales pipeline (every deal passes through these): Lead → Qualified → Proposal → Negotiation → Won',
+      '',
+      'A project is a PIPELINE only if all of these are true: (a) the cards are many instances of one repeating thing (bugs, candidates, articles, deals), (b) every instance passes through every column, in order, (c) "completion" of one instance does not finish the project — the pipeline keeps running.',
+      '',
+      'WHAT IS NOT A PIPELINE — use the universal lifecycle for these:',
+      '- Planning a wedding (each task is different — book caterer, design invitations, write vows)',
+      '- Organizing a garage (each task is different — sort tools, build shelves, paint walls)',
+      '- Onboarding an engineer (each task is different — provision laptop, share docs, schedule 1:1s)',
+      '- Marketing campaign (each task is different — write brief, design ad, set up tracking)',
+      '- Launching a product (each task is different — build feature, write copy, brief sales)',
+      '- Renovating a kitchen, planning a trip, writing a book chapter, side projects, etc.',
+      'For ALL of these, use Backlog → In progress → Done.',
+      '',
+      'FORBIDDEN — these look stage-like but are project phases / categories. Reject them:',
+      '- "Welcome & Access Setup", "System Orientation", "First Deliverables", "Ramp to Ownership" — phases of an onboarding project; cards live in one and don\'t move.',
+      '- "Vendor & Rentals Booked", "Guest & Logistics Locked", "Day-of Setup" — phases of a wedding project; same problem.',
+      '- "Creative & Copy Production", "Channel Setup & QA", "Launch & Optimization" — phases of a campaign; same problem.',
+      '- "Guest List / Venue / Catering" — categories.',
+      '- "Marketing / Engineering / QA" — teams.',
+      '- "High / Medium / Low priority" — filters.',
+      '- "Q1 / Q2 / Q3" — time buckets.',
+      '',
+      'When in doubt, pick Backlog → In progress → Done. Boring is correct. The project specificity belongs in the CARDS, not in the columns.',
+      '',
+      'Also produce a board_title (short title-case, ≤8 words) and board_description (one short sentence).',
+      '',
+      'Respond with JSON: {board_title, board_description, lists: string[]}.',
+    ].join('\n');
     const result = await callJSON<{
       board_title: string;
       board_description: string;
-      lists: Array<{ title: string; cards: Array<{ title: string; description?: string; priority?: string }> }>;
-    }>(
-      `You are a project template generator. Create a complete kanban board template for "${templateType}". Respond with JSON: {board_title, board_description, lists: [{title, cards: [{title, description, priority}]}]}. Include 3-5 lists with 2-5 cards each. Priority MUST be lowercase and exactly one of: "low", "medium", "high", "urgent" — never capitalized, never any other value. Omit the priority field rather than guess.`,
-      customRequest ?? `Standard ${templateType} template`,
-    );
-    await logInteraction(userId, templateType, 'template_generate', { customRequest });
+      lists: string[];
+    }>(systemPrompt, request);
+    await logInteraction(userId, request, 'template_lists');
+    return result;
+  },
+
+  // Pass 2: now that lists are pinned, generate the starter cards. The
+  // model sees the full board shape as context, which sharpens card
+  // titles. All cards land in the first list — see the safety net in
+  // the templates page.
+  async generateTemplateCards(
+    userId: string,
+    request: string,
+    boardTitle: string,
+    lists: string[],
+  ) {
+    const firstList = lists[0] ?? 'Backlog';
+    const systemPrompt = [
+      `You generate the starter cards for a kanban board titled "${boardTitle}".`,
+      `The board has these workflow stages: ${lists.map((l, i) => `${i + 1}. ${l}`).join(', ')}.`,
+      `Generate 6–12 cards that represent the concrete tasks needed to begin work. All cards go in the FIRST list ("${firstList}") — they are the starting backlog, not work-in-progress.`,
+      'Each card has a clear, action-oriented title (≤10 words, starts with a verb when natural) and a one-sentence description that adds real specificity beyond the title — not a paraphrase. Skip the description rather than restate the title.',
+      'Priority MUST be lowercase and exactly one of: "low", "medium", "high", "urgent" — omit the priority field rather than guess.',
+      'Respond with JSON: {cards: [{title, description, priority}]}.',
+    ].join(' ');
+    const result = await callJSON<{
+      cards: Array<{ title: string; description?: string; priority?: string }>;
+    }>(systemPrompt, request);
+    await logInteraction(userId, request, 'template_cards');
     return result;
   },
 
