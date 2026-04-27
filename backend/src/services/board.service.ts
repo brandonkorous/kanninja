@@ -41,6 +41,7 @@ export const boardService = {
     return boardRepo.update(boardId, {
       title: input.title,
       description: input.description,
+      color: input.color,
       financialTrackingEnabled: input.financialTrackingEnabled,
       projectBudget: input.projectBudget?.toString() ?? undefined,
       projectValueGoal: input.projectValueGoal?.toString() ?? undefined,

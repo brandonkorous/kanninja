@@ -218,6 +218,7 @@ export const boardRepo = {
     data: Partial<{
       title: string;
       description: string | null;
+      color: string | null;
       financialTrackingEnabled: boolean;
       projectBudget: string | null;
       projectValueGoal: string | null;

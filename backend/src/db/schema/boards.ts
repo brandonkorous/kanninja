@@ -14,6 +14,12 @@ export const boards = pgTable('boards', {
   userId: uuid('user_id').notNull().references(() => profiles.id),
   title: text('title').notNull(),
   description: text('description'),
+  // Curated-palette color slug (e.g. "rose", "amber"). Surfaces only
+  // in clan-level views as a thin left-stripe on cards — disambiguates
+  // which dojo a card belongs to when multiple dojos share the canvas.
+  // Null means the user hasn't picked one; a hash-of-id fallback in
+  // the frontend provides a stable color until they do.
+  color: text('color'),
   financialTrackingEnabled: boolean('financial_tracking_enabled').default(false).notNull(),
   projectBudget: numeric('project_budget'),
   projectValueGoal: numeric('project_value_goal'),

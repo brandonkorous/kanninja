@@ -5,11 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useUpdateBoard, useDeleteBoard } from '@/hooks/use-boards';
 import { Field, Textarea, ConfirmDialog } from '@/components/ui';
 import { DojoAccessSection } from './DojoAccessSection';
+import { DojoColorPicker } from './DojoColorPicker';
+import type { DojoColorId } from '@kanninja/shared';
 
 interface DojoSettingsDialogProps {
     boardId: string;
     boardTitle: string;
     boardDescription: string | null;
+    boardColor: string | null;
     /** True only if the viewer is the board's creator. Gates the
      *  Danger section (delete) and the Access section's manage
      *  controls (attach/detach/role). Description editing is gated
@@ -29,6 +32,7 @@ export function DojoSettingsDialog({
     boardId,
     boardTitle,
     boardDescription,
+    boardColor,
     isCreator,
     open,
     onClose,
@@ -64,6 +68,10 @@ export function DojoSettingsDialog({
 
     const handleSaveDescription = async () => {
         await updateBoard.mutateAsync({ description: description.trim() || null });
+    };
+
+    const handleColorChange = async (color: DojoColorId | null) => {
+        await updateBoard.mutateAsync({ color });
     };
 
     const handleDelete = async () => {
@@ -124,6 +132,21 @@ export function DojoSettingsDialog({
                                     </button>
                                 </div>
                             )}
+                        </div>
+
+                        <div className="mt-6">
+                            <Field label="Color" htmlFor="" optional>
+                                <div className="mt-1">
+                                    <DojoColorPicker
+                                        value={boardColor}
+                                        onChange={handleColorChange}
+                                    />
+                                </div>
+                                <p className="mt-3 text-xs text-base-content/50">
+                                    Shows up as a thin accent stripe on this dojo&rsquo;s kata
+                                    in clan-level views, where multiple dojos share the canvas.
+                                </p>
+                            </Field>
                         </div>
                     </section>
 

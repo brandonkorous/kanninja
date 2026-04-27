@@ -123,6 +123,7 @@ export default function DojoViewsLayout({ children }: { children: React.ReactNod
         boardId={boardId}
         boardTitle={board.title}
         boardDescription={board.description}
+        boardColor={board.color}
         isCreator={board.isCreator}
         open={showSettings}
         onClose={() => setShowSettings(false)}

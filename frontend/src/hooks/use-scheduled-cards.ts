@@ -20,16 +20,23 @@ export interface ScheduledCard {
   description: string | null;
   priority: string;
   assigneeId: string | null;
+  createdBy: string;
   startDate: string | null;
   dueDate: string | null;
   isCompleted: boolean;
   completedAt: string | null;
   estimatedHours: string | null;
   progress: number;
+  createdAt: string;
+  updatedAt: string;
   listId: string;
   listTitle: string;
   boardId: string;
   boardTitle: string;
+  /** Curated-palette slug, or null. Frontend `dojoColorClass` falls
+   *  back to a hash-of-id when null so clan views always render a
+   *  stable left stripe. */
+  boardColor: string | null;
   labelIds: string[];
 }
 
@@ -86,12 +93,16 @@ export function useClanScheduledCards(clanId: string, opts: RangeOptions = {}) {
 
 /**
  * Calendar/timeline reschedule mutation. Wraps the existing card
- * PATCH with optimistic invalidation across both the scheduled-cards
- * cache (used by views) and the board cache (used by kanban). The
- * single PATCH atomically updates startDate + dueDate so dragging a
+ * PATCH with invalidation across both the scheduled-cards cache
+ * (used by views) and the board cache (used by kanban). The single
+ * PATCH atomically updates startDate + dueDate so dragging a
  * timeline bar preserves the span without two server round-trips.
+ *
+ * boardId travels with each mutation rather than the hook so clan
+ * views — which span many boards — can use one hook instance and
+ * route each reschedule to the source card's dojo.
  */
-export function useRescheduleCard(boardId: string) {
+export function useRescheduleCard() {
   const api = useApi();
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -99,12 +110,15 @@ export function useRescheduleCard(boardId: string) {
   return useMutation({
     mutationFn: ({
       cardId,
+      boardId,
       ...input
-    }: Pick<UpdateCardInput, 'startDate' | 'dueDate'> & { cardId: string }) =>
-      api.patch(`/api/v1/boards/${boardId}/cards/${cardId}`, input),
-    onSuccess: () => {
+    }: Pick<UpdateCardInput, 'startDate' | 'dueDate'> & {
+      cardId: string;
+      boardId: string;
+    }) => api.patch(`/api/v1/boards/${boardId}/cards/${cardId}`, input),
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['scheduled-cards'] });
-      queryClient.invalidateQueries({ queryKey: ['boards', boardId] });
+      queryClient.invalidateQueries({ queryKey: ['boards', variables.boardId] });
     },
     onError: (err) => toast.error(getToastErrorMessage(err)),
   });

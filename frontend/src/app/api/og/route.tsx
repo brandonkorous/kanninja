@@ -1,14 +1,15 @@
 import { ImageResponse } from 'next/og';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import type { NextRequest } from 'next/server';
 
-export const runtime = 'edge';
-
-const FRAUNCES_URL =
-    'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap';
-const INTER_URL =
-    'https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap';
-const JETBRAINS_URL =
-    'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&display=swap';
+// Node runtime, not edge — AKS standalone isn't a real edge environment.
+// Fonts are co-located in ./_fonts/ and loaded via `new URL(...,
+// import.meta.url)` so Next bundles them with the compiled route — no
+// reliance on process.cwd(), works identically in dev, standalone, Docker.
+// Forced dynamic so query params always re-render.
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 // Hanko palette (raw hex — these must NOT theme-flip in the rendered PNG).
 const WASHI = '#F8F4EC';
@@ -17,18 +18,34 @@ const VERMILLION = '#E0432F';
 const SLATE = '#6B6A65';
 const ASH = '#D6D2C5';
 
-async function loadFont(cssUrl: string): Promise<ArrayBuffer> {
-    const css = await fetch(cssUrl, {
-        headers: {
-            // Tell Google Fonts to give us .ttf/.otf, not .woff2 (ImageResponse
-            // doesn't decode woff2).
-            'User-Agent':
-                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15',
-        },
-    }).then((r) => r.text());
-    const match = css.match(/src: url\((.+?)\) format\('(opentype|truetype)'\)/);
-    if (!match) throw new Error(`Could not parse font URL from ${cssUrl}`);
-    return fetch(match[1]).then((r) => r.arrayBuffer());
+// Module-scope font cache: pay the disk read once per process, not per OG
+// request. Discord, Slack, and Twitter typically warm this within seconds.
+let cachedFonts: {
+    frauncesRoman: Buffer;
+    frauncesItalic: Buffer;
+    inter: Buffer;
+    mono: Buffer;
+} | null = null;
+
+// fileURLToPath is required because webpack's `import.meta.url` polyfill
+// returns a URL whose constructor identity doesn't match Node's native URL,
+// so readFile rejects it. Converting to a filesystem path string sidesteps
+// the type check while preserving webpack's asset-tracking — the new URL()
+// call still tells the bundler to include the .ttf in the build output.
+function fontPath(name: string): string {
+    return fileURLToPath(new URL(`./_fonts/${name}`, import.meta.url));
+}
+
+async function loadFonts() {
+    if (cachedFonts) return cachedFonts;
+    const [frauncesRoman, frauncesItalic, inter, mono] = await Promise.all([
+        readFile(fontPath('Fraunces-Medium.ttf')),
+        readFile(fontPath('Fraunces-MediumItalic.ttf')),
+        readFile(fontPath('Inter-Regular.ttf')),
+        readFile(fontPath('JetBrainsMono-Medium.ttf')),
+    ]);
+    cachedFonts = { frauncesRoman, frauncesItalic, inter, mono };
+    return cachedFonts;
 }
 
 export async function GET(req: NextRequest) {
@@ -36,14 +53,9 @@ export async function GET(req: NextRequest) {
     const title = searchParams.get('title') ?? 'kanNINJA';
     const eyebrow = searchParams.get('eyebrow') ?? 'wizeworks · kanNINJA';
     const subtitle =
-        searchParams.get('subtitle') ??
-        'A kanban that respects your attention.';
+        searchParams.get('subtitle') ?? 'A kanban that respects your attention.';
 
-    const [fraunces, inter, mono] = await Promise.all([
-        loadFont(FRAUNCES_URL),
-        loadFont(INTER_URL),
-        loadFont(JETBRAINS_URL),
-    ]);
+    const fonts = await loadFonts();
 
     return new ImageResponse(
         (
@@ -82,7 +94,7 @@ export async function GET(req: NextRequest) {
                     {eyebrow}
                 </div>
 
-                {/* Title — Fraunces, mixing roman and italic-vermillion */}
+                {/* Title — Fraunces medium, mixing roman and italic-vermillion */}
                 <div
                     style={{
                         fontFamily: 'Fraunces',
@@ -124,23 +136,25 @@ export async function GET(req: NextRequest) {
                         justifyContent: 'space-between',
                     }}
                 >
-                    <div
-                        style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                        }}
-                    >
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <div
                             style={{
                                 fontFamily: 'Fraunces',
-                                fontWeight: 600,
+                                fontWeight: 500,
                                 fontSize: 40,
                                 color: SUMI,
                                 display: 'flex',
                             }}
                         >
                             kan
-                            <span style={{ fontStyle: 'italic', color: VERMILLION }}>
+                            <span
+                                style={{
+                                    fontFamily: 'Fraunces',
+                                    fontStyle: 'italic',
+                                    fontWeight: 500,
+                                    color: VERMILLION,
+                                }}
+                            >
                                 NINJA
                             </span>
                         </div>
@@ -171,7 +185,7 @@ export async function GET(req: NextRequest) {
                             color: WASHI,
                             fontFamily: 'Fraunces',
                             fontSize: 96,
-                            fontWeight: 600,
+                            fontWeight: 500,
                             lineHeight: 1,
                         }}
                     >
@@ -184,12 +198,12 @@ export async function GET(req: NextRequest) {
             width: 1200,
             height: 630,
             fonts: [
-                { name: 'Fraunces', data: fraunces, style: 'normal', weight: 500 },
-                { name: 'Inter', data: inter, style: 'normal', weight: 400 },
-                { name: 'JetBrains Mono', data: mono, style: 'normal', weight: 500 },
+                { name: 'Fraunces', data: fonts.frauncesRoman, style: 'normal', weight: 500 },
+                { name: 'Fraunces', data: fonts.frauncesItalic, style: 'italic', weight: 500 },
+                { name: 'Inter', data: fonts.inter, style: 'normal', weight: 400 },
+                { name: 'JetBrains Mono', data: fonts.mono, style: 'normal', weight: 500 },
             ],
             headers: {
-                // Cache aggressively — same query string = same image
                 'Cache-Control': 'public, immutable, max-age=31536000',
             },
         }

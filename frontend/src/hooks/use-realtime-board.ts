@@ -39,23 +39,23 @@ export function useRealtimeBoard(boardId: string) {
       config: { presence: { key: user.id } },
     });
 
-    // Listen to broadcast events from backend mutations
+    // Listen to broadcast events from backend mutations. Both the
+    // board cache (for kanban) and the scheduled-cards cache (for
+    // calendar/timeline/list views) are invalidated — same key
+    // family across all view types so a single broadcast updates
+    // every surface that's watching this board's data, including
+    // any clan-level views currently open in another tab.
+    const invalidate = () => {
+      queryClient.invalidateQueries({ queryKey: ['boards', boardId] });
+      queryClient.invalidateQueries({ queryKey: ['scheduled-cards'] });
+    };
+
     channel
-      .on('broadcast', { event: 'card:created' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['boards', boardId] });
-      })
-      .on('broadcast', { event: 'card:updated' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['boards', boardId] });
-      })
-      .on('broadcast', { event: 'card:moved' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['boards', boardId] });
-      })
-      .on('broadcast', { event: 'card:deleted' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['boards', boardId] });
-      })
-      .on('broadcast', { event: 'list:changed' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['boards', boardId] });
-      });
+      .on('broadcast', { event: 'card:created' }, invalidate)
+      .on('broadcast', { event: 'card:updated' }, invalidate)
+      .on('broadcast', { event: 'card:moved' }, invalidate)
+      .on('broadcast', { event: 'card:deleted' }, invalidate)
+      .on('broadcast', { event: 'list:changed' }, invalidate);
 
     // Presence — dedupe by userId (multi-tab, HMR, strict-mode remounts)
     // and drop the current user so the UI shows only "others in the dojo".

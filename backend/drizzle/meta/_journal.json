@@ -50,6 +50,13 @@
       "when": 1777272137222,
       "tag": "0006_charming_ultimatum",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1777276124789,
+      "tag": "0007_dizzy_kitty_pryde",
+      "breakpoints": true
     }
   ]
 }

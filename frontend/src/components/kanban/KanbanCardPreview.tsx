@@ -11,6 +11,7 @@ import {
     faUser,
 } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import { formatDueDate } from '@/lib/due-dates';
 
 interface KanbanCardVisualProps {
     title: string;
@@ -86,7 +87,7 @@ export function KanbanCardContent({
                     {dueDate && (
                         <span className="flex items-center gap-1.5 text-base-content/60">
                             <FontAwesomeIcon icon={faClock} aria-hidden="true" />
-                            {new Date(dueDate).toLocaleDateString()}
+                            {formatDueDate(dueDate)}
                         </span>
                     )}
                     {isCompleted && (

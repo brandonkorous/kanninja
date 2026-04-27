@@ -38,30 +38,39 @@ export function priorityColor(priority: string): PriorityColor {
 }
 
 /**
- * Stable color from a board id — used as the "dojo color" left stripe
- * on cards in clan-level views until boards.color (Phase 7 schema
- * change) lands. Hashes the id into one of a curated palette so the
- * choice looks intentional rather than randomly hex-picked.
- *
- * Once boards.color exists, swap the implementation to read it and
- * fall back to this hash for boards that haven't set one. Public
- * signature stays the same.
+ * Curated dojo palette. Slug → Tailwind classes for the left-stripe
+ * accent (used on clan-level views) and a matching swatch for the
+ * picker UI. The slug list mirrors `DOJO_COLOR_IDS` from shared so
+ * any value the API accepts has an entry here.
  */
-const DOJO_PALETTE = [
-  'border-l-rose-400',
-  'border-l-amber-400',
-  'border-l-emerald-400',
-  'border-l-sky-400',
-  'border-l-violet-400',
-  'border-l-pink-400',
-  'border-l-teal-400',
-  'border-l-orange-400',
-];
+export const DOJO_PALETTE: Record<
+  string,
+  { label: string; stripe: string; swatch: string }
+> = {
+  rose: { label: 'Rose', stripe: 'border-l-rose-400', swatch: 'bg-rose-400' },
+  amber: { label: 'Amber', stripe: 'border-l-amber-400', swatch: 'bg-amber-400' },
+  emerald: { label: 'Emerald', stripe: 'border-l-emerald-400', swatch: 'bg-emerald-400' },
+  sky: { label: 'Sky', stripe: 'border-l-sky-400', swatch: 'bg-sky-400' },
+  violet: { label: 'Violet', stripe: 'border-l-violet-400', swatch: 'bg-violet-400' },
+  pink: { label: 'Pink', stripe: 'border-l-pink-400', swatch: 'bg-pink-400' },
+  teal: { label: 'Teal', stripe: 'border-l-teal-400', swatch: 'bg-teal-400' },
+  orange: { label: 'Orange', stripe: 'border-l-orange-400', swatch: 'bg-orange-400' },
+};
 
-export function dojoColorClass(boardId: string): string {
+const PALETTE_KEYS = Object.keys(DOJO_PALETTE);
+
+/**
+ * Stable left-stripe class for a dojo. Prefers the explicitly-picked
+ * `color` slug (set on `boards.color`); falls back to a hash-of-id
+ * pick when the dojo owner hasn't chosen one. So clan views always
+ * have a stable, intentional-looking accent — even for brand-new
+ * dojos that haven't been styled yet.
+ */
+export function dojoColorClass(boardId: string, color?: string | null): string {
+  if (color && DOJO_PALETTE[color]) return DOJO_PALETTE[color].stripe;
   let hash = 0;
   for (let i = 0; i < boardId.length; i++) {
     hash = (hash * 31 + boardId.charCodeAt(i)) | 0;
   }
-  return DOJO_PALETTE[Math.abs(hash) % DOJO_PALETTE.length];
+  return DOJO_PALETTE[PALETTE_KEYS[Math.abs(hash) % PALETTE_KEYS.length]].stripe;
 }

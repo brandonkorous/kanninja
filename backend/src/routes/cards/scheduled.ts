@@ -10,7 +10,7 @@ import { boards } from '../../db/schema/boards.js';
 import { boardClans } from '../../db/schema/board-clans.js';
 import { cardLabels } from '../../db/schema/card-features.js';
 import { boardRepo } from '../../repositories/board.repo.js';
-import { eq, and, or, isNull, lte, gte, inArray, sql } from 'drizzle-orm';
+import { eq, and, or, isNull, inArray, sql } from 'drizzle-orm';
 
 const querySchema = z.object({
   from: z.string().datetime().optional(),
@@ -27,16 +27,23 @@ type ScheduledCard = {
   description: string | null;
   priority: string;
   assigneeId: string | null;
+  createdBy: string;
   startDate: Date | null;
   dueDate: Date | null;
   isCompleted: boolean;
   completedAt: Date | null;
   estimatedHours: string | null;
   progress: number;
+  createdAt: Date;
+  updatedAt: Date;
   listId: string;
   listTitle: string;
   boardId: string;
   boardTitle: string;
+  /** Curated-palette slug ("rose", "amber", …) or null if the dojo
+   *  owner hasn't picked one. Frontend falls back to a hash-of-id
+   *  color when null so clan views always have a stable stripe. */
+  boardColor: string | null;
   labelIds: string[];
 };
 
@@ -56,13 +63,17 @@ async function queryCards(
 ): Promise<{ scheduled: ScheduledCard[]; unscheduled: ScheduledCard[] }> {
   if (listIds.length === 0) return { scheduled: [], unscheduled: [] };
 
+  // postgres-js can't serialize a Date when the first arg to gte/lte
+  // is a raw sql expression (it loses the column-type hint Drizzle
+  // would normally use). Inline the value into the sql template
+  // instead — Drizzle parameterizes it as a typed timestamptz literal.
   const dateFilter = and(
     or(sql`${cards.startDate} IS NOT NULL`, sql`${cards.dueDate} IS NOT NULL`),
     range.from
-      ? gte(sql`COALESCE(${cards.dueDate}, ${cards.startDate})`, new Date(range.from))
+      ? sql`COALESCE(${cards.dueDate}, ${cards.startDate}) >= ${range.from}::timestamptz`
       : undefined,
     range.to
-      ? lte(sql`COALESCE(${cards.startDate}, ${cards.dueDate})`, new Date(range.to))
+      ? sql`COALESCE(${cards.startDate}, ${cards.dueDate}) <= ${range.to}::timestamptz`
       : undefined,
   );
 
@@ -73,16 +84,20 @@ async function queryCards(
       description: cards.description,
       priority: cards.priority,
       assigneeId: cards.assigneeId,
+      createdBy: cards.createdBy,
       startDate: cards.startDate,
       dueDate: cards.dueDate,
       isCompleted: cards.isCompleted,
       completedAt: cards.completedAt,
       estimatedHours: cards.estimatedHours,
       progress: cards.progress,
+      createdAt: cards.createdAt,
+      updatedAt: cards.updatedAt,
       listId: cards.listId,
       listTitle: lists.title,
       boardId: lists.boardId,
       boardTitle: boards.title,
+      boardColor: boards.color,
     })
     .from(cards)
     .innerJoin(lists, eq(lists.id, cards.listId))
@@ -97,16 +112,20 @@ async function queryCards(
           description: cards.description,
           priority: cards.priority,
           assigneeId: cards.assigneeId,
+          createdBy: cards.createdBy,
           startDate: cards.startDate,
           dueDate: cards.dueDate,
           isCompleted: cards.isCompleted,
           completedAt: cards.completedAt,
           estimatedHours: cards.estimatedHours,
           progress: cards.progress,
+          createdAt: cards.createdAt,
+          updatedAt: cards.updatedAt,
           listId: cards.listId,
           listTitle: lists.title,
           boardId: lists.boardId,
           boardTitle: boards.title,
+          boardColor: boards.color,
         })
         .from(cards)
         .innerJoin(lists, eq(lists.id, cards.listId))
