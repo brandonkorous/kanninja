@@ -52,6 +52,7 @@ export default function KataPage() {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [priority, setPriority] = useState<string>('none');
+    const [startDate, setStartDate] = useState('');
     const [dueDate, setDueDate] = useState('');
     const [isCompleted, setIsCompleted] = useState(false);
     const [assigneeId, setAssigneeId] = useState<string | null>(null);
@@ -63,6 +64,7 @@ export default function KataPage() {
             setTitle(card.title);
             setDescription(card.description ?? '');
             setPriority(card.priority);
+            setStartDate(card.startDate ? card.startDate.split('T')[0] : '');
             setDueDate(card.dueDate ? card.dueDate.split('T')[0] : '');
             setIsCompleted(card.isCompleted);
             setAssigneeId(card.assigneeId);
@@ -107,6 +109,7 @@ export default function KataPage() {
             title: title.trim(),
             description: description.trim() || undefined,
             priority: priority as (typeof priorities)[number],
+            startDate: startDate ? new Date(startDate).toISOString() : null,
             dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
             isCompleted,
         });
@@ -159,6 +162,7 @@ export default function KataPage() {
                                 title={title}
                                 description={description}
                                 priority={priority}
+                                startDate={startDate}
                                 dueDate={dueDate}
                                 isCompleted={isCompleted}
                                 assigneeId={assigneeId}
@@ -169,6 +173,7 @@ export default function KataPage() {
                                 onTitleChange={setTitle}
                                 onDescriptionChange={setDescription}
                                 onPriorityChange={setPriority}
+                                onStartDateChange={setStartDate}
                                 onDueDateChange={setDueDate}
                                 onCompletedChange={setIsCompleted}
                                 onAssigneeChange={(v) => setAssigneeId(v || null)}

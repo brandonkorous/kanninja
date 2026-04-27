@@ -3,6 +3,7 @@
 import { ProfileSection } from '@/components/settings/ProfileSection';
 import { SubscriptionSection } from '@/components/settings/SubscriptionSection';
 import { ApiKeysSection } from '@/components/settings/ApiKeysSection';
+import { ConnectedAgentsSection } from '@/components/settings/ConnectedAgentsSection';
 
 export default function SettingsPage() {
     return (
@@ -24,6 +25,7 @@ export default function SettingsPage() {
             <div className="space-y-8">
                 <ProfileSection />
                 <SubscriptionSection />
+                <ConnectedAgentsSection />
                 <ApiKeysSection />
             </div>
         </div>

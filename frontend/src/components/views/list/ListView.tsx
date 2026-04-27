@@ -9,12 +9,19 @@ import {
   faInbox,
   faListUl,
 } from '@fortawesome/free-solid-svg-icons';
+import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useBoard } from '@/hooks/use-boards';
 import { useBoardMembers } from '@/hooks/use-board-members';
+import { useBoardLabels } from '@/hooks/card-features/use-labels';
+import { useDojoPermissions } from '@/hooks/use-permissions';
 import { useBoardScheduledCards, type ScheduledCard } from '@/hooks/use-scheduled-cards';
 import { CardDetailModal } from '@/components/kanban/CardDetailModal';
+import { FilterBar } from '@/components/views/FilterBar';
+import { QuickAddCardDialog } from '@/components/views/QuickAddCardDialog';
 import { addDays, localDateKey } from '@/lib/calendar-dates';
 import { dueDateKey } from '@/lib/due-dates';
+import { applyFilters, emptyFilters, type CardFilters } from '@/lib/card-filters';
 import { ListSection } from './ListSection';
 
 type GroupMode = 'date' | 'list';
@@ -79,10 +86,14 @@ function bucketByDate(scheduled: ScheduledCard[], unscheduled: ScheduledCard[]):
 export function ListView({ boardId }: ListViewProps) {
   const { data: board } = useBoard(boardId);
   const { data: members } = useBoardMembers(boardId);
+  const { data: labels } = useBoardLabels(boardId);
   const { data, isLoading } = useBoardScheduledCards(boardId, { unscheduled: true });
 
   const [mode, setMode] = useState<GroupMode>('date');
+  const [filters, setFilters] = useState<CardFilters>(emptyFilters);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const { canEdit } = useDojoPermissions(boardId);
 
   const memberMap = useMemo(() => {
     const map = new Map<string, NonNullable<typeof members>[number]>();
@@ -90,20 +101,29 @@ export function ListView({ boardId }: ListViewProps) {
     return map;
   }, [members]);
 
+  const filteredScheduled = useMemo(
+    () => applyFilters(data?.scheduled ?? [], filters),
+    [data?.scheduled, filters],
+  );
+  const filteredUnscheduled = useMemo(
+    () => applyFilters(data?.unscheduled ?? [], filters),
+    [data?.unscheduled, filters],
+  );
+
   const buckets = useMemo(
-    () => bucketByDate(data?.scheduled ?? [], data?.unscheduled ?? []),
-    [data],
+    () => bucketByDate(filteredScheduled, filteredUnscheduled),
+    [filteredScheduled, filteredUnscheduled],
   );
 
   const byList = useMemo(() => {
     const map = new Map<string, ScheduledCard[]>();
-    for (const card of [...(data?.scheduled ?? []), ...(data?.unscheduled ?? [])]) {
+    for (const card of [...filteredScheduled, ...filteredUnscheduled]) {
       const existing = map.get(card.listId) ?? [];
       existing.push(card);
       map.set(card.listId, existing);
     }
     return map;
-  }, [data]);
+  }, [filteredScheduled, filteredUnscheduled]);
 
   const selectedCard =
     board?.lists.flatMap((l) => l.cards).find((c) => c.id === selectedCardId) ?? null;
@@ -122,7 +142,29 @@ export function ListView({ boardId }: ListViewProps) {
 
   return (
     <div className="max-w-3xl mx-auto pb-12">
-      <div className="flex items-center justify-end mb-6">
+      <FilterBar
+        filters={filters}
+        onChange={setFilters}
+        members={members}
+        labels={labels}
+      />
+      <div className="flex items-center justify-between my-6 gap-3">
+        {canEdit && mode === 'date' ? (
+          // By-date sections have no implicit list, so a top-level
+          // "Add" opens the dialog with a list picker. By-list mode
+          // has per-section inline quick-add (the list IS the section)
+          // so the top-level button is hidden to avoid two paths.
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={() => setQuickAddOpen(true)}
+          >
+            <FontAwesomeIcon icon={faPlus} aria-hidden="true" className="mr-2" />
+            Add a kata
+          </button>
+        ) : (
+          <span />
+        )}
         <div role="group" aria-label="Group cards by" className="join">
           <button
             type="button"
@@ -224,6 +266,13 @@ export function ListView({ boardId }: ListViewProps) {
         card={selectedCard}
         open={!!selectedCardId}
         onClose={() => setSelectedCardId(null)}
+      />
+
+      <QuickAddCardDialog
+        open={quickAddOpen}
+        onClose={() => setQuickAddOpen(false)}
+        boardId={boardId}
+        lists={board.lists.map((l) => ({ id: l.id, title: l.title }))}
       />
     </div>
   );

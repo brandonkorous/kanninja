@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { defineTool } from '../registry.js';
-import { callApi } from '../api-client.js';
 
 export const listTasksTool = defineTool({
   name: 'list_tasks',
@@ -8,9 +7,9 @@ export const listTasksTool = defineTool({
   inputSchema: z.object({
     boardId: z.string().uuid().describe('The board ID'),
   }),
-  async handler(args) {
+  async handler(args, ctx) {
     // get_board returns full board with lists and cards
-    const res = await callApi.get<{ data: unknown }>(`/api/v1/boards/${args.boardId}`);
+    const res = await ctx.callApi.get<{ data: unknown }>(`/api/v1/boards/${args.boardId}`);
     return res.data;
   },
 });

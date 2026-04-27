@@ -20,6 +20,9 @@ spec:
     - hosts:
         - api.kanninja.com
       secretName: api-kanninja-com-tls
+    - hosts:
+        - mcp.kanninja.com
+      secretName: mcp-kanninja-com-tls
   rules:
     - host: kanninja.com
       http:
@@ -49,5 +52,17 @@ spec:
             backend:
               service:
                 name: backend
+                port:
+                  number: 80
+    # MCP hosted remote (Phase 2b). Routes to a separate `mcp` Service
+    # so the new transport fails independently of the REST API.
+    - host: mcp.kanninja.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mcp
                 port:
                   number: 80

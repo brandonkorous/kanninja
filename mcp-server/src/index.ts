@@ -2,7 +2,7 @@
 import 'dotenv/config';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { initApiClient, callApi } from './api-client.js';
+import { createApiClient } from './api-client.js';
 import { registerAllTools } from './registry.js';
 import { allTools } from './tools/index.js';
 import type { McpContext } from './context.js';
@@ -16,7 +16,7 @@ if (!API_KEY) {
 }
 
 async function main() {
-    initApiClient(API_KEY!, API_URL);
+    const callApi = createApiClient(API_KEY!, API_URL);
 
     // Validate the API key on boot
     const { data } = await callApi.post<{
@@ -28,8 +28,8 @@ async function main() {
         displayName: data.displayName,
         email: data.email,
         tier: data.tier,
-        apiKey: API_KEY!,
         apiUrl: API_URL,
+        callApi,
     };
 
     const server = new Server(

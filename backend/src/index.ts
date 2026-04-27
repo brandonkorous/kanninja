@@ -4,6 +4,7 @@ import { corsPlugin } from './plugins/cors.js';
 import { errorHandlerPlugin } from './plugins/error-handler.js';
 import { rateLimitPlugin } from './plugins/rate-limit.js';
 import { authPlugin } from './plugins/auth.js';
+import { auditMcpPlugin } from './plugins/audit-mcp.js';
 import { healthRoutes } from './routes/health.js';
 import { clerkWebhookRoutes } from './routes/auth/webhooks.js';
 import { boardRoutes } from './routes/boards/index.js';
@@ -33,6 +34,7 @@ import { searchRoutes } from './routes/search/index.js';
 import { integrationRoutes } from './routes/integrations/index.js';
 import { integrationOAuthRoutes } from './routes/integrations/oauth.js';
 import { integrationWebhookRoutes } from './routes/integrations/webhooks.js';
+import { oauthRoutes } from './routes/oauth/index.js';
 import { registerProvider } from './integrations/registry.js';
 import { startTokenRefreshJob } from './integrations/token-refresh.js';
 // Integration providers
@@ -76,6 +78,7 @@ async function start() {
   await fastify.register(errorHandlerPlugin);
   await fastify.register(rateLimitPlugin);
   await fastify.register(authPlugin);
+  await fastify.register(auditMcpPlugin);
 
   // Routes
   await fastify.register(healthRoutes);
@@ -107,6 +110,7 @@ async function start() {
   await fastify.register(integrationRoutes);
   await fastify.register(integrationOAuthRoutes);
   await fastify.register(integrationWebhookRoutes);
+  await fastify.register(oauthRoutes);
 
   // Register integration providers
   registerProvider(googleCalendarProvider);

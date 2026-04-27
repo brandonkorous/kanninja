@@ -272,6 +272,28 @@ export default function McpPage() {
                 </div>
             </section>
 
+            {/* Cross-link — for non-developer users */}
+            <section className="border-t border-base-300 bg-base-100">
+                <div className="container mx-auto px-6 md:px-12 lg:px-16 py-16 lg:py-20">
+                    <div className="max-w-3xl flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                        <div>
+                            <p className="text-eyebrow font-mono uppercase tracking-widest text-base-content/50">
+                                Not a developer?
+                            </p>
+                            <p className="mt-3 font-display text-xl md:text-2xl font-medium tracking-tight">
+                                There&rsquo;s a one-click version for ChatGPT and Claude.
+                            </p>
+                        </div>
+                        <Link
+                            href="/mcp/for-everyone"
+                            className="btn btn-outline btn-secondary focus-visible:shadow-focus shrink-0"
+                        >
+                            See the easy path
+                        </Link>
+                    </div>
+                </div>
+            </section>
+
             {/* Closing CTA */}
             <section className="bg-neutral text-neutral-content">
                 <div className="container mx-auto px-6 md:px-12 lg:px-16 py-32 lg:py-40">

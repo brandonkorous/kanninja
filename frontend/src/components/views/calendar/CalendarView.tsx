@@ -9,6 +9,8 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { useBoard } from '@/hooks/use-boards';
+import { useBoardMembers } from '@/hooks/use-board-members';
+import { useBoardLabels } from '@/hooks/card-features/use-labels';
 import { useDojoPermissions } from '@/hooks/use-permissions';
 import {
   useBoardScheduledCards,
@@ -17,6 +19,8 @@ import {
 } from '@/hooks/use-scheduled-cards';
 import { CardDetailModal } from '@/components/kanban/CardDetailModal';
 import { UnscheduledCardsSidebar } from '@/components/views/UnscheduledCardsSidebar';
+import { FilterBar } from '@/components/views/FilterBar';
+import { applyFilters, emptyFilters, type CardFilters } from '@/lib/card-filters';
 import {
   addMonths,
   cardOverlapsDay,
@@ -28,6 +32,8 @@ import {
 } from '@/lib/calendar-dates';
 import { CalendarHeader } from './CalendarHeader';
 import { CalendarDayCell } from './CalendarDayCell';
+import { EmptyCalendarState } from './EmptyCalendarState';
+import { QuickAddCardDialog } from '@/components/views/QuickAddCardDialog';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -51,8 +57,12 @@ export function CalendarView({ boardId }: CalendarViewProps) {
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [filters, setFilters] = useState<CardFilters>(emptyFilters);
+  const [quickAddDay, setQuickAddDay] = useState<Date | null>(null);
 
   const { data: board } = useBoard(boardId);
+  const { data: members } = useBoardMembers(boardId);
+  const { data: labels } = useBoardLabels(boardId);
   const { canEdit } = useDojoPermissions(boardId);
   const range = useMemo(() => monthGridRange(month), [month]);
   const { data, isLoading } = useBoardScheduledCards(boardId, {
@@ -60,6 +70,15 @@ export function CalendarView({ boardId }: CalendarViewProps) {
     unscheduled: true,
   });
   const reschedule = useRescheduleCard();
+
+  const filteredScheduled = useMemo(
+    () => applyFilters(data?.scheduled ?? [], filters),
+    [data?.scheduled, filters],
+  );
+  const filteredUnscheduled = useMemo(
+    () => applyFilters(data?.unscheduled ?? [], filters),
+    [data?.unscheduled, filters],
+  );
 
   // dnd-kit's PointerSensor needs an activation distance so a quick
   // click on a pill doesn't trigger a drag — same pattern the kanban
@@ -75,13 +94,12 @@ export function CalendarView({ boardId }: CalendarViewProps) {
   // cardOverlapsDay for every cell.
   const cardsByDay = useMemo(() => {
     const map = new Map<string, ScheduledCard[]>();
-    if (!data?.scheduled) return map;
     for (const day of days) {
-      const matches = data.scheduled.filter((c) => cardOverlapsDay(c, day));
+      const matches = filteredScheduled.filter((c) => cardOverlapsDay(c, day));
       if (matches.length) map.set(localDateKey(day), matches);
     }
     return map;
-  }, [days, data]);
+  }, [days, filteredScheduled]);
 
   const selectedCard =
     board?.lists.flatMap((l) => l.cards).find((c) => c.id === selectedCardId) ?? null;
@@ -131,12 +149,18 @@ export function CalendarView({ boardId }: CalendarViewProps) {
         <div className="flex-1 flex flex-col min-w-0">
           <CalendarHeader
             month={month}
-            unscheduledCount={data?.unscheduled.length ?? 0}
+            unscheduledCount={filteredUnscheduled.length}
             isSidebarOpen={isSidebarOpen}
             onPrev={() => setMonth(addMonths(month, -1))}
             onNext={() => setMonth(addMonths(month, 1))}
             onToday={() => setMonth(startOfMonth(new Date()))}
             onToggleSidebar={() => setIsSidebarOpen((v) => !v)}
+          />
+          <FilterBar
+            filters={filters}
+            onChange={setFilters}
+            members={members}
+            labels={labels}
           />
 
           <div className="grid grid-cols-7 border-l border-t border-base-300 rounded-t-md overflow-hidden">
@@ -150,6 +174,12 @@ export function CalendarView({ boardId }: CalendarViewProps) {
             ))}
           </div>
 
+          {filteredScheduled.length === 0 && filteredUnscheduled.length === 0 && (
+            <EmptyCalendarState
+              primaryHref={`/dojo/${boardId}/board`}
+              primaryLabel="Open the board"
+            />
+          )}
           <div className="grid grid-cols-7 border-l border-base-300 flex-1 overflow-y-auto">
             {days.map((day) => (
               <CalendarDayCell
@@ -159,13 +189,14 @@ export function CalendarView({ boardId }: CalendarViewProps) {
                 isCurrentMonth={day.getMonth() === month.getMonth()}
                 canEdit={canEdit}
                 onCardClick={setSelectedCardId}
+                onAddClick={(d) => setQuickAddDay(d)}
               />
             ))}
           </div>
         </div>
 
         <UnscheduledCardsSidebar
-          cards={data?.unscheduled ?? []}
+          cards={filteredUnscheduled}
           isOpen={isSidebarOpen}
           canEdit={canEdit}
           onCardClick={setSelectedCardId}
@@ -178,6 +209,24 @@ export function CalendarView({ boardId }: CalendarViewProps) {
         card={selectedCard}
         open={!!selectedCardId}
         onClose={() => setSelectedCardId(null)}
+      />
+
+      <QuickAddCardDialog
+        open={!!quickAddDay}
+        onClose={() => setQuickAddDay(null)}
+        boardId={boardId}
+        lists={board.lists.map((l) => ({ id: l.id, title: l.title }))}
+        defaultDueDate={
+          // Anchor at noon local on the picked day so the new card
+          // unambiguously lands on that day's cell on first render.
+          quickAddDay
+            ? (() => {
+                const d = new Date(quickAddDay);
+                d.setHours(12, 0, 0, 0);
+                return d.toISOString();
+              })()
+            : undefined
+        }
       />
     </DndContext>
   );

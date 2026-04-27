@@ -6,6 +6,7 @@ import { AppError } from '../utils/errors.js';
 import { db } from '../db/index.js';
 import { profiles } from '../db/schema/profiles.js';
 import { apiKeyService } from '../services/api-key.service.js';
+import { oauthService } from '../services/oauth.service.js';
 
 const API_KEY_PREFIX = 'ninja_live_';
 
@@ -25,7 +26,23 @@ export async function requireAuth(request: FastifyRequest, _reply: FastifyReply)
     return;
   }
 
-  // Clerk JWT path — existing flow
+  // Two JWT paths share a prefix (eyJ...). Try MCP JWT first — local HMAC, no
+  // network — and fall through to Clerk on signature mismatch. Only Clerk
+  // gets the network round-trip.
+  if (env.MCP_JWT_SECRET && token.split('.').length === 3) {
+    try {
+      const claims = oauthService.verifyAccessToken(token);
+      request.profileId = claims.sub;
+      request.mcpScopes = claims.scopes;
+      request.mcpClientId = claims.aud;
+      request.mcpClientName = claims.client_name;
+      return;
+    } catch {
+      // Not an MCP JWT (signature/issuer mismatch) — fall through to Clerk.
+    }
+  }
+
+  // Clerk JWT path
   let clerkUserId: string;
   try {
     const payload = await verifyToken(token, {

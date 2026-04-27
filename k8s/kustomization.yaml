@@ -11,6 +11,8 @@ resources:
   - backend-service.yaml
   - frontend-deployment.yaml
   - frontend-service.yaml
+  - mcp-deployment.yaml
+  - mcp-service.yaml
   - ingress.yaml
 
 # Image tags are rewritten by the GitHub Actions deploy workflow
@@ -20,4 +22,6 @@ images:
   - name: ghcr.io/brandonkorous/kanninja-backend
     newTag: latest
   - name: ghcr.io/brandonkorous/kanninja-frontend
+    newTag: latest
+  - name: ghcr.io/brandonkorous/kanninja-mcp-remote
     newTag: latest

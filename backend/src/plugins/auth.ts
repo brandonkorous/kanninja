@@ -13,6 +13,9 @@ declare module 'fastify' {
     clerkUserId?: string;
     profileId?: string;
     apiKeyId?: string;
+    mcpScopes?: string[];
+    mcpClientId?: string;
+    mcpClientName?: string;
   }
 }
 
@@ -24,6 +27,9 @@ export const authPlugin = fp(async (fastify) => {
   fastify.decorateRequest('clerkUserId', undefined);
   fastify.decorateRequest('profileId', undefined);
   fastify.decorateRequest('apiKeyId', undefined);
+  fastify.decorateRequest('mcpScopes', undefined);
+  fastify.decorateRequest('mcpClientId', undefined);
+  fastify.decorateRequest('mcpClientName', undefined);
 });
 
 /** Resolves a Clerk user ID to a profiles.id UUID. */

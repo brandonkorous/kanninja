@@ -22,6 +22,15 @@ const envSchema = z.object({
   // Integration system
   INTEGRATION_ENCRYPTION_KEY: z.string().default(''),
 
+  // MCP OAuth — HMAC secret used to sign and verify MCP-issued access tokens.
+  // Shared with mcp-remote (which mints) and validated here (which both mints
+  // — via the consent S2S flow — and validates on every API request).
+  MCP_JWT_SECRET: z.string().default(''),
+
+  // Service-to-service token. mcp-remote sends this on the internal
+  // /authorize/issue-code endpoint to prove it's allowed to call back.
+  MCP_S2S_TOKEN: z.string().default(''),
+
   // Google (Calendar, Gmail, Drive, Docs — shared OAuth app)
   GOOGLE_CLIENT_ID: z.string().default(''),
   GOOGLE_CLIENT_SECRET: z.string().default(''),

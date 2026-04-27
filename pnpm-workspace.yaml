@@ -3,3 +3,4 @@ packages:
   - "backend"
   - "frontend"
   - "mcp-server"
+  - "mcp-remote"

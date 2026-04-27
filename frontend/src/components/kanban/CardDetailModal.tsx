@@ -23,6 +23,7 @@ interface CardDetailModalProps {
         description: string | null;
         priority: string;
         isCompleted: boolean;
+        startDate?: string | null;
         dueDate: string | null;
         estimatedHours: string | null;
         progress: number;
@@ -40,6 +41,7 @@ export function CardDetailModal({ boardId, card, open, onClose }: CardDetailModa
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [priority, setPriority] = useState<string>('none');
+    const [startDate, setStartDate] = useState('');
     const [dueDate, setDueDate] = useState('');
     const [isCompleted, setIsCompleted] = useState(false);
     const [assigneeId, setAssigneeId] = useState<string | null>(null);
@@ -57,6 +59,7 @@ export function CardDetailModal({ boardId, card, open, onClose }: CardDetailModa
             setTitle(card.title);
             setDescription(card.description ?? '');
             setPriority(card.priority);
+            setStartDate(card.startDate ? card.startDate.split('T')[0] : '');
             setDueDate(card.dueDate ? card.dueDate.split('T')[0] : '');
             setIsCompleted(card.isCompleted);
             setAssigneeId(card.assigneeId);
@@ -116,6 +119,14 @@ export function CardDetailModal({ boardId, card, open, onClose }: CardDetailModa
         setPriority(v);
         if (v !== card.priority) {
             commit({ priority: v as Priority });
+        }
+    };
+
+    const handleStartDateChange = (v: string) => {
+        setStartDate(v);
+        const currentIso = card.startDate ? card.startDate.split('T')[0] : '';
+        if (v !== currentIso) {
+            commit({ startDate: v ? new Date(v).toISOString() : null });
         }
     };
 
@@ -233,6 +244,7 @@ export function CardDetailModal({ boardId, card, open, onClose }: CardDetailModa
                                 title={title}
                                 description={description}
                                 priority={priority}
+                                startDate={startDate}
                                 dueDate={dueDate}
                                 isCompleted={isCompleted}
                                 assigneeId={assigneeId}
@@ -243,6 +255,7 @@ export function CardDetailModal({ boardId, card, open, onClose }: CardDetailModa
                                 onTitleChange={setTitle}
                                 onDescriptionChange={setDescription}
                                 onPriorityChange={handlePriorityChange}
+                                onStartDateChange={handleStartDateChange}
                                 onDueDateChange={handleDueDateChange}
                                 onCompletedChange={handleCompletedChange}
                                 onAssigneeChange={handleAssigneeChange}

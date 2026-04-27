@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { defineTool } from '../registry.js';
-import { callApi } from '../api-client.js';
 
 export const addLabelTool = defineTool({
   name: 'add_label',
@@ -10,8 +9,8 @@ export const addLabelTool = defineTool({
     cardId: z.string().uuid().describe('The card/task ID'),
     labelId: z.string().uuid().describe('The label ID to add'),
   }),
-  async handler(args) {
-    const res = await callApi.post<{ data: unknown }>(
+  async handler(args, ctx) {
+    const res = await ctx.callApi.post<{ data: unknown }>(
       `/api/v1/boards/${args.boardId}/cards/${args.cardId}/labels`,
       { labelId: args.labelId },
     );

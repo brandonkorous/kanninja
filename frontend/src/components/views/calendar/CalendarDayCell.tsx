@@ -1,6 +1,8 @@
 'use client';
 
 import { useDroppable } from '@dnd-kit/core';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import { isSameDay } from '@/lib/calendar-dates';
 import { CalendarCardPill } from './CalendarCardPill';
 import type { ScheduledCard } from '@/hooks/use-scheduled-cards';
@@ -14,6 +16,10 @@ interface CalendarDayCellProps {
   /** Forwarded to each CalendarCardPill — clan calendar sets it so
    *  pills grow a dojo-color stripe. */
   dojoAccent?: boolean;
+  /** Optional click handler for the hover-revealed "+ add" affordance.
+   *  When omitted, the affordance doesn't render — clan calendar omits
+   *  it because there's no implicit dojo to write to. */
+  onAddClick?: (day: Date) => void;
 }
 
 const TODAY = new Date();
@@ -33,6 +39,7 @@ export function CalendarDayCell({
   canEdit,
   onCardClick,
   dojoAccent,
+  onAddClick,
 }: CalendarDayCellProps) {
   const isToday = isSameDay(day, TODAY);
   const { setNodeRef, isOver } = useDroppable({
@@ -47,21 +54,36 @@ export function CalendarDayCell({
   return (
     <div
       ref={setNodeRef}
-      className={`relative min-h-[7rem] border-r border-b border-base-300 p-1.5 flex flex-col gap-1 transition-colors ${
+      className={`group relative min-h-[7rem] border-r border-b border-base-300 p-1.5 flex flex-col gap-1 transition-colors ${
         isCurrentMonth ? 'bg-base-100' : 'bg-base-200/40'
       } ${isOver ? 'bg-primary/5 ring-2 ring-primary/40 ring-inset' : ''}`}
     >
-      <span
-        className={`text-xs font-mono ${
-          isToday
-            ? 'inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-content'
-            : isCurrentMonth
-              ? 'text-base-content/70'
-              : 'text-base-content/30'
-        }`}
-      >
-        {day.getDate()}
-      </span>
+      <div className="flex items-center justify-between">
+        <span
+          className={`text-xs font-mono ${
+            isToday
+              ? 'inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-content'
+              : isCurrentMonth
+                ? 'text-base-content/70'
+                : 'text-base-content/30'
+          }`}
+        >
+          {day.getDate()}
+        </span>
+        {canEdit && onAddClick && (
+          <button
+            type="button"
+            aria-label={`Add a kata on ${day.toLocaleDateString()}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddClick(day);
+            }}
+            className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:!opacity-100 w-5 h-5 inline-flex items-center justify-center rounded-md text-xs text-base-content/40 hover:text-primary hover:bg-base-200 transition-opacity"
+          >
+            <FontAwesomeIcon icon={faPlus} aria-hidden="true" />
+          </button>
+        )}
+      </div>
 
       <div className="flex-1 space-y-1 overflow-hidden">
         {visible.map((card) => (

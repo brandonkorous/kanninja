@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { defineTool } from '../registry.js';
-import { callApi } from '../api-client.js';
 
 export const removeLabelTool = defineTool({
   name: 'remove_label',
@@ -10,8 +9,8 @@ export const removeLabelTool = defineTool({
     cardId: z.string().uuid().describe('The card/task ID'),
     labelId: z.string().uuid().describe('The label ID to remove'),
   }),
-  async handler(args) {
-    const res = await callApi.delete<{ data: unknown }>(
+  async handler(args, ctx) {
+    const res = await ctx.callApi.delete<{ data: unknown }>(
       `/api/v1/boards/${args.boardId}/cards/${args.cardId}/labels/${args.labelId}`,
     );
     return res.data;

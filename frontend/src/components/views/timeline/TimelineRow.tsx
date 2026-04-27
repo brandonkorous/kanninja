@@ -2,6 +2,8 @@
 
 import { useMemo } from 'react';
 import { useDroppable } from '@dnd-kit/core';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import { isSameDay } from '@/lib/calendar-dates';
 import { cardSpanInWindow, type CardSpan, type TimelineWindow } from '@/lib/timeline-dates';
 import { TimelineBar } from './TimelineBar';
@@ -19,6 +21,14 @@ interface TimelineRowProps {
   /** Forwarded to each TimelineBar — clan timelines pass `true` so
    *  bars grow a dojo-color stripe for cross-dojo disambiguation. */
   dojoAccent?: boolean;
+  /** When set, the lane gutter shows a "+" affordance that calls this
+   *  with the lane id. Dojo timeline wires it to open quick-add with
+   *  the list pre-selected; clan timeline omits it (no implicit
+   *  dojo). */
+  onAddClick?: (laneId: string) => void;
+  /** Forwarded to each TimelineBar. When omitted, edge-resize handles
+   *  are hidden. */
+  onResize?: (cardId: string, edge: 'start' | 'end', deltaDays: number) => void;
 }
 
 const TODAY = new Date();
@@ -119,6 +129,8 @@ export function TimelineRow({
   canEdit,
   onCardClick,
   dojoAccent,
+  onAddClick,
+  onResize,
 }: TimelineRowProps) {
   const { placed, stackHeight } = useMemo(() => packBars(cards, win), [cards, win]);
 
@@ -136,8 +148,18 @@ export function TimelineRow({
         minHeight,
       }}
     >
-      <div className="px-3 py-3 border-r border-base-300 bg-base-100 sticky left-0 z-[5] truncate text-sm font-medium">
-        {laneTitle}
+      <div className="group/lane px-3 py-3 border-r border-base-300 bg-base-100 sticky left-0 z-[5] flex items-center justify-between gap-2 text-sm font-medium">
+        <span className="truncate min-w-0">{laneTitle}</span>
+        {canEdit && onAddClick && (
+          <button
+            type="button"
+            aria-label={`Add a kata to ${laneTitle}`}
+            onClick={() => onAddClick(laneId)}
+            className="opacity-0 group-hover/lane:opacity-100 focus-visible:opacity-100 hover:!opacity-100 w-5 h-5 inline-flex items-center justify-center rounded-md text-xs text-base-content/40 hover:text-primary hover:bg-base-200 shrink-0 transition-opacity"
+          >
+            <FontAwesomeIcon icon={faPlus} aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       {days.map((day) => (
@@ -180,6 +202,7 @@ export function TimelineRow({
               canEdit={canEdit}
               onClick={() => onCardClick(card.id)}
               dojoAccent={dojoAccent}
+              onResize={onResize}
             />
           </div>
         ))}

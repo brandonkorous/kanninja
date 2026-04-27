@@ -7,14 +7,20 @@ import {
   faCalendarWeek,
   faCalendarPlus,
   faInbox,
+  faPlus,
 } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   useClanScheduledCards,
   type ScheduledCard,
 } from '@/hooks/use-scheduled-cards';
+import { useClanPermissions } from '@/hooks/use-permissions';
 import { CardDetailModal } from '@/components/kanban/CardDetailModal';
+import { FilterBar } from '@/components/views/FilterBar';
+import { ClanQuickAddCardDialog } from '@/components/views/ClanQuickAddCardDialog';
 import { addDays, localDateKey } from '@/lib/calendar-dates';
 import { dueDateKey } from '@/lib/due-dates';
+import { applyFilters, emptyFilters, type CardFilters } from '@/lib/card-filters';
 import { ListSection } from './ListSection';
 
 interface ClanListViewProps {
@@ -68,21 +74,34 @@ function bucketByDate(scheduled: ScheduledCard[], unscheduled: ScheduledCard[]):
  * Clan-aggregated List view. Same date buckets as the dojo version,
  * but each row carries a dojo-color stripe and the dojo title (since
  * cards span many dojos). No "by list" toggle — list-grouping doesn't
- * map cleanly across multiple boards. Quick-add is also off because
- * there's no implicit dojo to write to; that lands in Phase 8 with a
- * dojo + list picker.
+ * map cleanly across multiple boards. The "Add a kata" button opens
+ * a dojo + list picker (ClanQuickAddCardDialog) since neither is
+ * implicit at the clan level.
  */
 export function ClanListView({ clanId }: ClanListViewProps) {
   const { data, isLoading } = useClanScheduledCards(clanId, { unscheduled: true });
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [filters, setFilters] = useState<CardFilters>(emptyFilters);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const { role: clanRole } = useClanPermissions(clanId);
+  const canEdit = clanRole === 'admin' || clanRole === 'member';
   // Empty member map — clan views don't fetch board members per
   // dojo (would be N queries). Avatars degrade to the generic icon
   // placeholder. Phase 8 polish can add a clan-wide members fetch.
   const emptyMembers = useMemo(() => new Map(), []);
 
+  const filteredScheduled = useMemo(
+    () => applyFilters(data?.scheduled ?? [], filters),
+    [data?.scheduled, filters],
+  );
+  const filteredUnscheduled = useMemo(
+    () => applyFilters(data?.unscheduled ?? [], filters),
+    [data?.unscheduled, filters],
+  );
+
   const buckets = useMemo(
-    () => bucketByDate(data?.scheduled ?? [], data?.unscheduled ?? []),
-    [data],
+    () => bucketByDate(filteredScheduled, filteredUnscheduled),
+    [filteredScheduled, filteredUnscheduled],
   );
 
   const allCards = [...(data?.scheduled ?? []), ...(data?.unscheduled ?? [])];
@@ -109,7 +128,20 @@ export function ClanListView({ clanId }: ClanListViewProps) {
 
   return (
     <div className="max-w-3xl mx-auto pb-12">
-      <div className="space-y-8">
+      <FilterBar filters={filters} onChange={setFilters} />
+      {canEdit && (
+        <div className="flex items-center justify-start my-6">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={() => setQuickAddOpen(true)}
+          >
+            <FontAwesomeIcon icon={faPlus} aria-hidden="true" className="mr-2" />
+            Add a kata
+          </button>
+        </div>
+      )}
+      <div className="space-y-8 mt-6">
         {buckets.overdue.length > 0 && (
           <ListSection
             boardId={modalBoardId}
@@ -174,6 +206,12 @@ export function ClanListView({ clanId }: ClanListViewProps) {
         card={selectedCard}
         open={!!selectedCardId}
         onClose={() => setSelectedCardId(null)}
+      />
+
+      <ClanQuickAddCardDialog
+        open={quickAddOpen}
+        onClose={() => setQuickAddOpen(false)}
+        clanId={clanId}
       />
     </div>
   );

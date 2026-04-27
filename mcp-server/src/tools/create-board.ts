@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { defineTool } from '../registry.js';
-import { callApi } from '../api-client.js';
 
 export const createBoardTool = defineTool({
   name: 'create_board',
@@ -10,8 +9,8 @@ export const createBoardTool = defineTool({
     description: z.string().max(2000).optional().describe('Board description'),
     clanId: z.string().uuid().optional().describe('Clan ID to attach the board to'),
   }),
-  async handler(args) {
-    const res = await callApi.post<{ data: unknown }>('/api/v1/boards', args);
+  async handler(args, ctx) {
+    const res = await ctx.callApi.post<{ data: unknown }>('/api/v1/boards', args);
     return res.data;
   },
 });

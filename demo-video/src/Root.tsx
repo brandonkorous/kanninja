@@ -10,6 +10,9 @@ import {
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Full pitch film — 9:16 portrait for TikTok/Reels/Shorts.
+          Landing/features hero + kata loops are real product captures
+          via scripts/capture-hero.mjs (CDP), not Remotion compositions. */}
       <Composition
         id="DemoVideo"
         component={DemoVideo}

@@ -17,6 +17,11 @@ export function useCreateCard(boardId: string) {
       api.post(`/api/v1/boards/${boardId}/cards`, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['boards', boardId] });
+      // Also drop the scheduled-cards cache so calendar / timeline /
+      // list views reflect the new kata immediately. Clan views in
+      // particular don't subscribe to this board's realtime channel,
+      // so the broadcast wouldn't reach them otherwise.
+      queryClient.invalidateQueries({ queryKey: ['scheduled-cards'] });
       toast.success('Kata added.');
     },
     onError: (err) => toast.error(getToastErrorMessage(err)),

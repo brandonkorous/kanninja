@@ -6,7 +6,8 @@
   "scripts": {
     "studio": "remotion studio src/index.ts",
     "render": "remotion render src/index.ts DemoVideo out/demo.mp4",
-    "preview": "remotion preview src/index.ts"
+    "preview": "remotion preview src/index.ts",
+    "capture:hero": "node scripts/capture-hero.mjs"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +25,7 @@
     "typescript": "^6.0.2"
   },
   "devDependencies": {
-    "@remotion/bundler": "^4.0.447"
+    "@remotion/bundler": "^4.0.447",
+    "playwright": "^1.59.1"
   }
 }

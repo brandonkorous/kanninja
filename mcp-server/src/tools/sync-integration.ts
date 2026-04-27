@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { defineTool } from '../registry.js';
-import { callApi } from '../api-client.js';
 
 export const syncIntegrationTool = defineTool({
   name: 'sync_integration',
@@ -14,8 +13,8 @@ export const syncIntegrationTool = defineTool({
         'The integration connection ID (from list_connected_integrations).',
       ),
   }),
-  async handler(args) {
-    const res = await callApi.post<{ data: unknown }>(
+  async handler(args, ctx) {
+    const res = await ctx.callApi.post<{ data: unknown }>(
       `/api/v1/integrations/connections/${args.connectionId}/sync`,
     );
     return res.data;

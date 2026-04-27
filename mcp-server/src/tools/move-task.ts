@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { defineTool } from '../registry.js';
-import { callApi } from '../api-client.js';
 
 export const moveTaskTool = defineTool({
   name: 'move_task',
@@ -11,9 +10,9 @@ export const moveTaskTool = defineTool({
     listId: z.string().uuid().describe('Target column/list ID'),
     orderIndex: z.string().describe('Fractional index for ordering'),
   }),
-  async handler(args) {
+  async handler(args, ctx) {
     const { boardId, cardId, ...body } = args;
-    const res = await callApi.post<{ data: unknown }>(
+    const res = await ctx.callApi.post<{ data: unknown }>(
       `/api/v1/boards/${boardId}/cards/${cardId}/move`,
       body,
     );

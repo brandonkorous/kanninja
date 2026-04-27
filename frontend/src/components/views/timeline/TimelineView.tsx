@@ -9,6 +9,8 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { useBoard } from '@/hooks/use-boards';
+import { useBoardMembers } from '@/hooks/use-board-members';
+import { useBoardLabels } from '@/hooks/card-features/use-labels';
 import { useDojoPermissions } from '@/hooks/use-permissions';
 import {
   useBoardScheduledCards,
@@ -17,7 +19,10 @@ import {
 } from '@/hooks/use-scheduled-cards';
 import { CardDetailModal } from '@/components/kanban/CardDetailModal';
 import { UnscheduledCardsSidebar } from '@/components/views/UnscheduledCardsSidebar';
-import { shiftCardDates, startOfDay } from '@/lib/calendar-dates';
+import { FilterBar } from '@/components/views/FilterBar';
+import { QuickAddCardDialog } from '@/components/views/QuickAddCardDialog';
+import { applyFilters, emptyFilters, type CardFilters } from '@/lib/card-filters';
+import { resizeCardDates, shiftCardDates, startOfDay } from '@/lib/calendar-dates';
 import {
   buildWindow,
   shiftWindow,
@@ -50,18 +55,31 @@ export function TimelineView({ boardId }: TimelineViewProps) {
   const [windowStart, setWindowStart] = useState(() => startOfDay(new Date()));
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [filters, setFilters] = useState<CardFilters>(emptyFilters);
+  const [quickAddListId, setQuickAddListId] = useState<string | null>(null);
 
   const win = useMemo(() => buildWindow(windowStart, zoom), [windowStart, zoom]);
   const days = useMemo(() => windowDays(win), [win]);
   const range = useMemo(() => windowRange(win), [win]);
 
   const { data: board } = useBoard(boardId);
+  const { data: members } = useBoardMembers(boardId);
+  const { data: labels } = useBoardLabels(boardId);
   const { canEdit } = useDojoPermissions(boardId);
   const { data, isLoading } = useBoardScheduledCards(boardId, {
     ...range,
     unscheduled: true,
   });
   const reschedule = useRescheduleCard();
+
+  const filteredScheduled = useMemo(
+    () => applyFilters(data?.scheduled ?? [], filters),
+    [data?.scheduled, filters],
+  );
+  const filteredUnscheduled = useMemo(
+    () => applyFilters(data?.unscheduled ?? [], filters),
+    [data?.unscheduled, filters],
+  );
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
@@ -70,13 +88,13 @@ export function TimelineView({ boardId }: TimelineViewProps) {
   // cards we'll actually render as bars.
   const cardsByList = useMemo(() => {
     const map = new Map<string, ScheduledCard[]>();
-    for (const card of data?.scheduled ?? []) {
+    for (const card of filteredScheduled) {
       const existing = map.get(card.listId) ?? [];
       existing.push(card);
       map.set(card.listId, existing);
     }
     return map;
-  }, [data]);
+  }, [filteredScheduled]);
 
   const selectedCard =
     board?.lists.flatMap((l) => l.cards).find((c) => c.id === selectedCardId) ?? null;
@@ -108,6 +126,14 @@ export function TimelineView({ boardId }: TimelineViewProps) {
     }
   };
 
+  const handleResize = (cardId: string, edge: 'start' | 'end', deltaDays: number) => {
+    const card = filteredScheduled.find((c) => c.id === cardId);
+    if (!card) return;
+    const update = resizeCardDates(card, edge, deltaDays);
+    if (!update) return;
+    reschedule.mutate({ cardId, boardId: card.boardId, ...update });
+  };
+
   const handleZoomChange = (next: TimelineZoom) => {
     setZoom(next);
     // Re-anchor the window on today when changing zoom so the user
@@ -134,13 +160,19 @@ export function TimelineView({ boardId }: TimelineViewProps) {
           <TimelineHeader
             win={win}
             zoom={zoom}
-            unscheduledCount={data?.unscheduled.length ?? 0}
+            unscheduledCount={filteredUnscheduled.length}
             isSidebarOpen={isSidebarOpen}
             onPrev={() => setWindowStart(shiftWindow(win, -1).start)}
             onNext={() => setWindowStart(shiftWindow(win, 1).start)}
             onToday={() => setWindowStart(startOfDay(new Date()))}
             onZoomChange={handleZoomChange}
             onToggleSidebar={() => setIsSidebarOpen((v) => !v)}
+          />
+          <FilterBar
+            filters={filters}
+            onChange={setFilters}
+            members={members}
+            labels={labels}
           />
 
           <div className="flex-1 overflow-auto border border-base-300 rounded-md">
@@ -156,13 +188,15 @@ export function TimelineView({ boardId }: TimelineViewProps) {
                 laneGutterWidth={LANE_GUTTER}
                 canEdit={canEdit}
                 onCardClick={setSelectedCardId}
+                onAddClick={(id) => setQuickAddListId(id)}
+                onResize={handleResize}
               />
             ))}
           </div>
         </div>
 
         <UnscheduledCardsSidebar
-          cards={data?.unscheduled ?? []}
+          cards={filteredUnscheduled}
           isOpen={isSidebarOpen}
           canEdit={canEdit}
           onCardClick={setSelectedCardId}
@@ -175,6 +209,14 @@ export function TimelineView({ boardId }: TimelineViewProps) {
         card={selectedCard}
         open={!!selectedCardId}
         onClose={() => setSelectedCardId(null)}
+      />
+
+      <QuickAddCardDialog
+        open={!!quickAddListId}
+        onClose={() => setQuickAddListId(null)}
+        boardId={boardId}
+        lists={board.lists.map((l) => ({ id: l.id, title: l.title }))}
+        defaultListId={quickAddListId ?? undefined}
       />
     </DndContext>
   );

@@ -11,3 +11,4 @@ export * from './analytics';
 export * from './api-keys';
 export * from './integrations';
 export * from './stripe-events';
+export * from './oauth';

@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { defineTool } from '../registry.js';
-import { callApi } from '../api-client.js';
 
 export const addCommentTool = defineTool({
   name: 'add_comment',
@@ -10,9 +9,9 @@ export const addCommentTool = defineTool({
     cardId: z.string().uuid().describe('The card/task ID'),
     content: z.string().min(1).max(5000).describe('Comment text'),
   }),
-  async handler(args) {
+  async handler(args, ctx) {
     const { boardId, cardId, ...body } = args;
-    const res = await callApi.post<{ data: unknown }>(
+    const res = await ctx.callApi.post<{ data: unknown }>(
       `/api/v1/boards/${boardId}/cards/${cardId}/comments`,
       body,
     );

@@ -16,7 +16,7 @@ import {
 import { useClanPermissions } from '@/hooks/use-permissions';
 import { CardDetailModal } from '@/components/kanban/CardDetailModal';
 import { UnscheduledCardsSidebar } from '@/components/views/UnscheduledCardsSidebar';
-import { shiftCardDates, startOfDay } from '@/lib/calendar-dates';
+import { resizeCardDates, shiftCardDates, startOfDay } from '@/lib/calendar-dates';
 import {
   buildWindow,
   shiftWindow,
@@ -27,6 +27,9 @@ import {
 import { TimelineHeader } from './TimelineHeader';
 import { TimelineAxis } from './TimelineAxis';
 import { TimelineRow } from './TimelineRow';
+import { FilterBar } from '@/components/views/FilterBar';
+import { applyFilters, emptyFilters, type CardFilters } from '@/lib/card-filters';
+import { ClanQuickAddCardDialog } from '@/components/views/ClanQuickAddCardDialog';
 
 const LANE_GUTTER = '12rem';
 
@@ -51,6 +54,8 @@ export function ClanTimelineView({ clanId }: ClanTimelineViewProps) {
   const [windowStart, setWindowStart] = useState(() => startOfDay(new Date()));
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [filters, setFilters] = useState<CardFilters>(emptyFilters);
+  const [quickAddBoardId, setQuickAddBoardId] = useState<string | null>(null);
 
   const win = useMemo(() => buildWindow(windowStart, zoom), [windowStart, zoom]);
   const days = useMemo(() => windowDays(win), [win]);
@@ -60,6 +65,15 @@ export function ClanTimelineView({ clanId }: ClanTimelineViewProps) {
     ...range,
     unscheduled: true,
   });
+
+  const filteredScheduled = useMemo(
+    () => applyFilters(data?.scheduled ?? [], filters),
+    [data?.scheduled, filters],
+  );
+  const filteredUnscheduled = useMemo(
+    () => applyFilters(data?.unscheduled ?? [], filters),
+    [data?.unscheduled, filters],
+  );
   const { role: clanRole } = useClanPermissions(clanId);
   const canEdit = clanRole === 'admin' || clanRole === 'member';
   const reschedule = useRescheduleCard();
@@ -71,7 +85,7 @@ export function ClanTimelineView({ clanId }: ClanTimelineViewProps) {
   // visits (otherwise lane order would shift with the data).
   const lanes = useMemo<DojoLane[]>(() => {
     const map = new Map<string, DojoLane>();
-    for (const card of data?.scheduled ?? []) {
+    for (const card of filteredScheduled) {
       const lane = map.get(card.boardId);
       if (lane) {
         lane.cards.push(card);
@@ -84,7 +98,7 @@ export function ClanTimelineView({ clanId }: ClanTimelineViewProps) {
       }
     }
     return Array.from(map.values()).sort((a, b) => a.boardTitle.localeCompare(b.boardTitle));
-  }, [data]);
+  }, [filteredScheduled]);
 
   const allCards = [...(data?.scheduled ?? []), ...(data?.unscheduled ?? [])];
   const selectedCard = allCards.find((c) => c.id === selectedCardId) ?? null;
@@ -101,6 +115,14 @@ export function ClanTimelineView({ clanId }: ClanTimelineViewProps) {
     const fromDay = new Date(active.data.current?.fromDay as string);
     const update = shiftCardDates(card, fromDay, targetDay);
     reschedule.mutate({ cardId: card.id, boardId: card.boardId, ...update });
+  };
+
+  const handleResize = (cardId: string, edge: 'start' | 'end', deltaDays: number) => {
+    const card = filteredScheduled.find((c) => c.id === cardId);
+    if (!card) return;
+    const update = resizeCardDates(card, edge, deltaDays);
+    if (!update) return;
+    reschedule.mutate({ cardId, boardId: card.boardId, ...update });
   };
 
   const handleZoomChange = (next: TimelineZoom) => {
@@ -127,7 +149,7 @@ export function ClanTimelineView({ clanId }: ClanTimelineViewProps) {
           <TimelineHeader
             win={win}
             zoom={zoom}
-            unscheduledCount={data?.unscheduled.length ?? 0}
+            unscheduledCount={filteredUnscheduled.length}
             isSidebarOpen={isSidebarOpen}
             onPrev={() => setWindowStart(shiftWindow(win, -1).start)}
             onNext={() => setWindowStart(shiftWindow(win, 1).start)}
@@ -135,6 +157,7 @@ export function ClanTimelineView({ clanId }: ClanTimelineViewProps) {
             onZoomChange={handleZoomChange}
             onToggleSidebar={() => setIsSidebarOpen((v) => !v)}
           />
+          <FilterBar filters={filters} onChange={setFilters} />
 
           <div className="flex-1 overflow-auto border border-base-300 rounded-md">
             <TimelineAxis days={days} laneGutterWidth={LANE_GUTTER} />
@@ -155,6 +178,8 @@ export function ClanTimelineView({ clanId }: ClanTimelineViewProps) {
                   canEdit={canEdit}
                   onCardClick={setSelectedCardId}
                   dojoAccent
+                  onResize={handleResize}
+                  onAddClick={canEdit ? (laneId) => setQuickAddBoardId(laneId) : undefined}
                 />
               ))
             )}
@@ -162,7 +187,7 @@ export function ClanTimelineView({ clanId }: ClanTimelineViewProps) {
         </div>
 
         <UnscheduledCardsSidebar
-          cards={data?.unscheduled ?? []}
+          cards={filteredUnscheduled}
           isOpen={isSidebarOpen}
           canEdit={false}
           onCardClick={setSelectedCardId}
@@ -175,6 +200,13 @@ export function ClanTimelineView({ clanId }: ClanTimelineViewProps) {
         card={selectedCard}
         open={!!selectedCardId}
         onClose={() => setSelectedCardId(null)}
+      />
+
+      <ClanQuickAddCardDialog
+        open={!!quickAddBoardId}
+        onClose={() => setQuickAddBoardId(null)}
+        clanId={clanId}
+        defaultBoardId={quickAddBoardId ?? undefined}
       />
     </DndContext>
   );

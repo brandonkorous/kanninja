@@ -57,6 +57,13 @@
       "when": 1777276124789,
       "tag": "0007_dizzy_kitty_pryde",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1777282666613,
+      "tag": "0008_modern_cobalt_man",
+      "breakpoints": true
     }
   ]
 }

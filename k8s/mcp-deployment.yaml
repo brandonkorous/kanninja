@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp
+  namespace: kanninja
+  labels:
+    app.kubernetes.io/name: mcp
+    app.kubernetes.io/part-of: kanninja
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mcp
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mcp
+        app.kubernetes.io/part-of: kanninja
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+      containers:
+        - name: mcp
+          image: ghcr.io/brandonkorous/kanninja-mcp-remote:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3002
+          # mcp-secrets carries the JWT signing key (shared with backend so the
+          # same token validates in both services) and the service-to-service
+          # token used to call backend's internal /api/v1/oauth/* endpoints.
+          # mcp-config carries the public URLs and runtime knobs.
+          envFrom:
+            - secretRef:
+                name: mcp-secrets
+            - configMapRef:
+                name: mcp-config
+          resources:
+            requests:
+              cpu: '50m'
+              memory: '128Mi'
+            limits:
+              cpu: '500m'
+              memory: '512Mi'
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 5
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop: ['ALL']
+            readOnlyRootFilesystem: true
+      terminationGracePeriodSeconds: 30

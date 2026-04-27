@@ -8,6 +8,7 @@ import {
 import type { Metadata } from 'next';
 import { KataCard } from '@/components/marketing/KataCard';
 import { FourRefusalsSection } from '@/components/marketing/FourRefusalsSection';
+import { HankoVideo } from '@/components/marketing/HankoVideo';
 import { buildPageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = buildPageMetadata({
@@ -31,36 +32,48 @@ export const metadata: Metadata = buildPageMetadata({
 export default function LandingPage() {
     return (
         <>
-            {/* Hero — left-aligned, generous breathing room. One stamp. */}
+            {/* Hero — left-aligned text, video alongside on lg+. Stacks on mobile. */}
             <section className="relative overflow-hidden">
                 <div className="container mx-auto px-6 md:px-12 lg:px-16 pt-24 pb-32 lg:pt-32 lg:pb-40">
-                    <div className="max-w-4xl">
-                        <p className="hanko-rise hanko-eyebrow text-eyebrow font-mono uppercase text-primary">
-                            wizeworks · kanNINJA
-                        </p>
-                        <h1 className="hanko-rise hanko-rise-1 mt-12 font-display text-5xl md:text-7xl lg:text-display font-medium tracking-tight text-base-content">
-                            Discipline,
-                            <br />
-                            <span className="hanko-brush italic text-primary">made visible.</span>
-                        </h1>
-                        <p className="hanko-rise hanko-rise-2 mt-10 max-w-2xl text-lg leading-relaxed text-base-content/70">
-                            A kanban that respects your attention. The work in front of you,
-                            in the order you'll finish it. Nothing else asking to be looked at.
-                        </p>
-                        <div className="hanko-rise hanko-rise-3 mt-12 flex flex-wrap items-center gap-8">
-                            <Link
-                                href="/sign-up"
-                                className="hanko-stamp btn btn-primary focus-visible:shadow-focus"
-                            >
-                                Start a kata
-                            </Link>
-                            <Link
-                                href="/features"
-                                className="text-sm font-mono uppercase tracking-widest text-base-content/60 hover:text-base-content focus-visible:shadow-focus rounded-sm px-2 py-2 transition-colors"
-                            >
-                                See the dojo
-                            </Link>
+                    <div className="grid grid-cols-1 lg:grid-cols-12 items-center gap-16 lg:gap-12 xl:gap-20">
+                        <div className="lg:col-span-5">
+                            <p className="hanko-rise hanko-eyebrow text-eyebrow font-mono uppercase text-primary">
+                                wizeworks · kanNINJA
+                            </p>
+                            <h1 className="hanko-rise hanko-rise-1 mt-12 font-display text-5xl md:text-7xl lg:text-display font-medium tracking-tight text-base-content">
+                                Discipline,
+                                <br />
+                                <span className="hanko-brush italic text-primary">made visible.</span>
+                            </h1>
+                            <p className="hanko-rise hanko-rise-2 mt-10 max-w-2xl text-lg leading-relaxed text-base-content/70">
+                                A kanban that respects your attention. The work in front of you,
+                                in the order you'll finish it. Nothing else asking to be looked at.
+                            </p>
+                            <div className="hanko-rise hanko-rise-3 mt-12 flex flex-wrap items-center gap-8">
+                                <Link
+                                    href="/sign-up"
+                                    className="hanko-stamp btn btn-primary focus-visible:shadow-focus"
+                                >
+                                    Start a kata
+                                </Link>
+                                <Link
+                                    href="/features"
+                                    className="text-sm font-mono uppercase tracking-widest text-base-content/60 hover:text-base-content focus-visible:shadow-focus rounded-sm px-2 py-2 transition-colors"
+                                >
+                                    See the dojo
+                                </Link>
+                            </div>
                         </div>
+
+                        {/* The work, in motion — real Agile Sprint board, two card moves.
+                            Silent autoplay, poster-only for prefers-reduced-motion. */}
+                        <HankoVideo
+                            sources={{ mp4: '/videos/hero.mp4' }}
+                            poster="/videos/hero.jpg"
+                            alt="The Agile Sprint board: a card moves from To Do to In Progress, then another from In Progress to Review."
+                            aspect="16:9"
+                            className="hanko-rise hanko-rise-4 lg:col-span-7"
+                        />
                     </div>
                 </div>
             </section>

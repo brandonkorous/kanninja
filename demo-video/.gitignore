@@ -1,0 +1,4 @@
+node_modules
+out
+captures
+.auth-state.json

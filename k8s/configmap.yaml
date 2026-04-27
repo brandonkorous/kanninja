@@ -18,3 +18,16 @@ data:
   NODE_ENV: "production"
   HOSTNAME: "0.0.0.0"
   PORT: "3000"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-config
+  namespace: kanninja
+data:
+  NODE_ENV: "production"
+  HOST: "0.0.0.0"
+  PORT: "3002"
+  KANNINJA_API_URL: "https://api.kanninja.com"
+  MCP_PUBLIC_URL: "https://mcp.kanninja.com"
+  CONSENT_BASE_URL: "https://kanninja.com/oauth/consent"

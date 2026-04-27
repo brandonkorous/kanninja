@@ -1,0 +1,31 @@
+# syntax=docker/dockerfile:1.7
+# MCP remote — the hosted Streamable-HTTP MCP server reachable from
+# Claude.ai and ChatGPT. Listens on :3002, proxies tool calls through to
+# api.kanninja.com using the user's bearer token.
+
+# ---------- build (deps + compile) ----------
+FROM node:22-alpine AS build
+RUN corepack enable && corepack prepare pnpm@10.9.0 --activate
+WORKDIR /app
+
+COPY . .
+
+RUN pnpm install --frozen-lockfile
+# Topological build: shared → kanninja-mcp → mcp-remote
+RUN pnpm -r --filter @kanninja/mcp-remote... run build
+RUN pnpm --filter @kanninja/mcp-remote deploy --prod --legacy /out
+
+# ---------- runtime ----------
+# No KANNINJA_API_KEY here — every MCP request brings its own bearer token
+# (a per-user `ninja_live_*` API key) which the server validates on the fly.
+FROM node:22-alpine AS runtime
+WORKDIR /app
+ENV NODE_ENV=production \
+    PORT=3002 \
+    HOST=0.0.0.0 \
+    KANNINJA_API_URL=https://api.kanninja.com
+COPY --from=build /out/dist ./dist
+COPY --from=build /out/node_modules ./node_modules
+COPY --from=build /out/package.json ./package.json
+EXPOSE 3002
+CMD ["node", "dist/index.js"]

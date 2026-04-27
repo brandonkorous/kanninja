@@ -132,3 +132,57 @@ export function shiftCardDates(
   }
   return out;
 }
+
+/**
+ * Compute the new start/due dates after resizing a card from one of
+ * its edges. Used by the timeline-bar edge handles.
+ *
+ * - Multi-day card (both dates): the dragged edge moves; the other
+ *   edge stays put. Returns null if the new edge would invert the
+ *   span (caller no-ops the mutation).
+ * - Single-day card (only one date set): the dragged edge anchors
+ *   the card into a span. Right-handle outward → set startDate to the
+ *   current single-date and push dueDate by delta. Left-handle
+ *   outward → set dueDate to the current single-date and pull
+ *   startDate by delta. Inward (would shrink below a single day) is
+ *   ignored.
+ */
+export function resizeCardDates(
+  card: { startDate: string | null; dueDate: string | null },
+  edge: 'start' | 'end',
+  deltaDays: number,
+): { startDate?: string; dueDate?: string } | null {
+  if (deltaDays === 0) return null;
+  const deltaMs = deltaDays * 24 * 60 * 60 * 1000;
+
+  // Single-day card: only one date set, so resizing has to PROMOTE
+  // the card into a span by adding the missing edge.
+  const isSingle = !card.startDate !== !card.dueDate;
+  if (isSingle) {
+    const anchor = card.dueDate ?? card.startDate;
+    if (!anchor) return null;
+    if (edge === 'end' && deltaDays > 0) {
+      const newDue = new Date(new Date(anchor).getTime() + deltaMs);
+      return { startDate: anchor, dueDate: newDue.toISOString() };
+    }
+    if (edge === 'start' && deltaDays < 0) {
+      const newStart = new Date(new Date(anchor).getTime() + deltaMs);
+      return { startDate: newStart.toISOString(), dueDate: anchor };
+    }
+    return null;
+  }
+
+  if (edge === 'start') {
+    const newStart = new Date(new Date(card.startDate!).getTime() + deltaMs);
+    if (startOfDay(newStart).getTime() > startOfDay(new Date(card.dueDate!)).getTime()) {
+      return null;
+    }
+    return { startDate: newStart.toISOString() };
+  }
+
+  const newDue = new Date(new Date(card.dueDate!).getTime() + deltaMs);
+  if (startOfDay(newDue).getTime() < startOfDay(new Date(card.startDate!)).getTime()) {
+    return null;
+  }
+  return { dueDate: newDue.toISOString() };
+}

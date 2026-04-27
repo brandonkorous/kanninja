@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { defineTool } from '../registry.js';
-import { callApi } from '../api-client.js';
 
 export const updateTaskTool = defineTool({
   name: 'update_task',
@@ -16,9 +15,9 @@ export const updateTaskTool = defineTool({
     estimatedHours: z.number().nonnegative().nullable().optional(),
     progress: z.number().min(0).max(100).optional(),
   }),
-  async handler(args) {
+  async handler(args, ctx) {
     const { boardId, cardId, ...body } = args;
-    const res = await callApi.patch<{ data: unknown }>(
+    const res = await ctx.callApi.patch<{ data: unknown }>(
       `/api/v1/boards/${boardId}/cards/${cardId}`,
       body,
     );

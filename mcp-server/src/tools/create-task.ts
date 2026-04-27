@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { defineTool } from '../registry.js';
-import { callApi } from '../api-client.js';
 
 export const createTaskTool = defineTool({
   name: 'create_task',
@@ -15,9 +14,12 @@ export const createTaskTool = defineTool({
     dueDate: z.string().datetime().optional().describe('Due date in ISO format'),
     estimatedHours: z.number().nonnegative().optional(),
   }),
-  async handler(args) {
+  async handler(args, ctx) {
     const { boardId, ...body } = args;
-    const res = await callApi.post<{ data: unknown }>(`/api/v1/boards/${boardId}/cards`, body);
+    const res = await ctx.callApi.post<{ data: unknown }>(
+      `/api/v1/boards/${boardId}/cards`,
+      body,
+    );
     return res.data;
   },
 });
