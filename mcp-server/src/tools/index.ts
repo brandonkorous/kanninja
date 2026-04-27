@@ -13,6 +13,10 @@ import { addLabelTool } from './add-label.js';
 import { removeLabelTool } from './remove-label.js';
 import { setDueDateTool } from './set-due-date.js';
 import { createBoardTool } from './create-board.js';
+import { listConnectedIntegrationsTool } from './list-connected-integrations.js';
+import { listAvailableProvidersTool } from './list-available-providers.js';
+import { getIntegrationEventsTool } from './get-integration-events.js';
+import { syncIntegrationTool } from './sync-integration.js';
 import type { ToolDefinition } from '../registry.js';
 
 export const allTools: ToolDefinition[] = [
@@ -33,4 +37,9 @@ export const allTools: ToolDefinition[] = [
   removeLabelTool,
   setDueDateTool,
   createBoardTool,
+  // Integrations
+  listConnectedIntegrationsTool,
+  listAvailableProvidersTool,
+  getIntegrationEventsTool,
+  syncIntegrationTool,
 ];
