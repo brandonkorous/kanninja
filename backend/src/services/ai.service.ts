@@ -19,6 +19,57 @@ async function logInteraction(userId: string, query: string, responseType: strin
   });
 }
 
+// The model is bad at date arithmetic but great at lookups. So instead of
+// asking it to compute "what date is Thursday from today", we hand it a
+// 14-day weekday-to-date table and tell it to look up. Used by every method
+// that resolves user-supplied relative dates.
+function buildDateScaffold(): string {
+  const now = new Date();
+  const y = now.getUTCFullYear();
+  const m = now.getUTCMonth();
+  const d = now.getUTCDate();
+  const base = Date.UTC(y, m, d);
+  const DAY = 86400000;
+
+  const fmt = (ms: number) => new Date(ms).toISOString().split('T')[0];
+  const weekday = (ms: number) =>
+    new Date(ms).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+
+  const todayDow = new Date(base).getUTCDay();
+  const daysToFri = (5 - todayDow + 7) % 7 || 7; // if today IS Friday, "this Friday" means a week out
+  const thisFri = base + daysToFri * DAY;
+  const nextFri = thisFri + 7 * DAY;
+  const eom = Date.UTC(y, m + 1, 0);
+  const eonm = Date.UTC(y, m + 2, 0);
+
+  const lines: string[] = [`Today is ${weekday(base)}, ${fmt(base)}.`, ''];
+  lines.push('Reference dates (look up; do not compute):');
+  for (let i = 0; i <= 13; i += 1) {
+    const ms = base + i * DAY;
+    const name = weekday(ms);
+    let label: string;
+    if (i === 0) label = `Today (${name})`;
+    else if (i === 1) label = `Tomorrow (${name})`;
+    else if (i <= 6) label = `This ${name}`;
+    else label = `Next ${name}`;
+    lines.push(`- ${label}: ${fmt(ms)}`);
+  }
+  lines.push('');
+  lines.push(`End of this week (Friday): ${fmt(thisFri)}`);
+  lines.push(`End of next week (Friday): ${fmt(nextFri)}`);
+  lines.push(`End of this month: ${fmt(eom)}`);
+  lines.push(`End of next month: ${fmt(eonm)}`);
+  lines.push('');
+  lines.push('Date resolution rules:');
+  lines.push('- "<weekday>" or "by <weekday>" → use the "This <weekday>" entry.');
+  lines.push('- "next <weekday>" → use the "Next <weekday>" entry.');
+  lines.push('- "tomorrow" → Tomorrow\'s date.');
+  lines.push('- "EOW" or "end of week" → End of this week.');
+  lines.push('- "EOM" or "end of month" → End of this month.');
+  lines.push('- Always look up the date from the list above. Never compute or guess.');
+  return lines.join('\n');
+}
+
 async function callJSON<T>(systemPrompt: string, userPrompt: string): Promise<T> {
   const response = await openai.chat.completions.create({
     model: MODEL,
@@ -44,6 +95,11 @@ export const aiService = {
   // === Phase 1: Task intelligence ===
 
   async parseTask(userId: string, text: string) {
+    const systemPrompt = [
+      'You are a task parser. Extract structured task data from natural language.',
+      buildDateScaffold(),
+      'Respond with JSON containing: title (required), description, priority (low/medium/high/urgent), due_date (YYYY-MM-DD; look up from the reference table — do not compute), estimated_hours, tags (array), subtasks (array of titles).',
+    ].join('\n\n');
     const result = await callJSON<{
       title: string;
       description?: string;
@@ -52,10 +108,7 @@ export const aiService = {
       estimated_hours?: number;
       tags?: string[];
       subtasks?: string[];
-    }>(
-      'You are a task parser. Extract structured task data from natural language. Respond with JSON containing: title (required), description, priority (low/medium/high/urgent), due_date (ISO), estimated_hours, tags (array), subtasks (array of titles).',
-      text,
-    );
+    }>(systemPrompt, text);
     await logInteraction(userId, text, 'task_parse');
     return result;
   },
@@ -78,7 +131,7 @@ export const aiService = {
       board_description: string;
       lists: Array<{ title: string; cards: Array<{ title: string; description?: string; priority?: string }> }>;
     }>(
-      `You are a project template generator. Create a complete kanban board template for "${templateType}". Respond with JSON: {board_title, board_description, lists: [{title, cards: [{title, description, priority}]}]}. Include 3-5 lists with 2-5 cards each.`,
+      `You are a project template generator. Create a complete kanban board template for "${templateType}". Respond with JSON: {board_title, board_description, lists: [{title, cards: [{title, description, priority}]}]}. Include 3-5 lists with 2-5 cards each. Priority MUST be lowercase and exactly one of: "low", "medium", "high", "urgent" — never capitalized, never any other value. Omit the priority field rather than guess.`,
       customRequest ?? `Standard ${templateType} template`,
     );
     await logInteraction(userId, templateType, 'template_generate', { customRequest });
@@ -125,6 +178,59 @@ export const aiService = {
     return result;
   },
 
+  async reviewCard(
+    userId: string,
+    input: { title: string; description: string | null; priority: string; estimatedHours: number | null },
+  ) {
+    // Holistic card review for the "Review with AI" panel on the card
+    // detail modal. Only proposes a change when the current value is
+    // materially worse than what the model would write — silence is
+    // the right answer for fields that are already fine. Title is
+    // intentionally out of scope: it's the user's voice and surprise-
+    // renaming feels invasive.
+    const systemPrompt = [
+      'Review this kata and propose improvements ONLY where the current value is materially worse than what you would write.',
+      'Stay silent on fields that are already fine — do not suggest stylistic micro-edits or rephrasings of existing text.',
+      'Eligible fields: description, priority, estimatedHours. Title is out of scope; never propose a title change.',
+      'For description: if missing, write 2–3 sentences clarifying purpose and scope; if present and weak, propose a clearer version. Skip if already clear.',
+      'For priority: propose only when current is "none" and the kata has clear urgency signals, OR current strongly mismatches the apparent stakes.',
+      'For estimatedHours: propose only when missing or wildly off; round to 0.5h increments.',
+      'Each proposal includes a one-sentence reasoning grounded in what the user already wrote — not generic project-management advice.',
+      'Respond with JSON: {suggestions: {description?: {proposed: string, reasoning: string}, priority?: {proposed: "low"|"medium"|"high"|"urgent", reasoning: string}, estimatedHours?: {proposed: number, reasoning: string}}}.',
+      'Only include keys for fields you are actually suggesting a change to. Empty {suggestions: {}} is valid and expected for solid kata.',
+    ].join(' ');
+
+    const result = await callJSON<{
+      suggestions: {
+        description?: { proposed: string; reasoning: string };
+        priority?: { proposed: 'low' | 'medium' | 'high' | 'urgent'; reasoning: string };
+        estimatedHours?: { proposed: number; reasoning: string };
+      };
+    }>(systemPrompt, JSON.stringify(input));
+    await logInteraction(userId, input.title, 'card_review');
+    return result;
+  },
+
+  async generateChecklist(
+    userId: string,
+    input: { title: string; description?: string; priority?: string; estimatedHours?: number },
+  ) {
+    // Inline assist on the card-detail Checklist tab. Used only when the
+    // list is empty, so the prompt is tuned to "break a kata into steps"
+    // rather than to expand on existing items. Steps are short imperatives
+    // (5–8 words) so they read like a real checklist, not a description.
+    const systemPrompt = [
+      'Break this kata into 3–7 concrete, actionable steps a person can check off as they work.',
+      'Each step is a short imperative (5–8 words), starts with a verb, and represents real progress — not a status update.',
+      'Order the steps roughly chronologically. Skip generic filler like "plan the work" or "review when done".',
+      'Respond with JSON: {steps: string[]}.',
+    ].join(' ');
+
+    const result = await callJSON<{ steps: string[] }>(systemPrompt, JSON.stringify(input));
+    await logInteraction(userId, input.title, 'checklist_generate');
+    return result;
+  },
+
   async smartDueDate(userId: string, input: { title: string; description?: string; estimatedHours?: number }) {
     // Fetch calendar events to avoid scheduling conflicts
     const calendarEvents = await getCalendarEvents(userId).catch(() => []);
@@ -154,12 +260,15 @@ export const aiService = {
   },
 
   async decomposeGoal(userId: string, input: { goal: string; timeframe?: string }) {
+    const systemPrompt = [
+      'Decompose this goal into 5-10 actionable tasks with dependencies.',
+      buildDateScaffold(),
+      'When the goal mentions a deadline ("by end of month", "by Friday"), use the reference table to size estimated_hours and ordering accordingly.',
+      'Respond with JSON: {tasks: [{title, description, priority (low/medium/high/urgent), estimated_hours, dependencies (indices of prerequisite tasks)}]}',
+    ].join('\n\n');
     const result = await callJSON<{
       tasks: Array<{ title: string; description: string; priority: string; estimated_hours: number; dependencies: number[] }>;
-    }>(
-      'Decompose this goal into 5-10 actionable tasks with dependencies. Respond with JSON: {tasks: [{title, description, priority, estimated_hours, dependencies (indices of prerequisite tasks)}]}',
-      JSON.stringify(input),
-    );
+    }>(systemPrompt, JSON.stringify(input));
     await logInteraction(userId, input.goal, 'goal_decompose');
     return result;
   },
@@ -220,15 +329,17 @@ export const aiService = {
   },
 
   async analyzeMeeting(userId: string, transcript: string, boardId?: string) {
+    const systemPrompt = [
+      'Extract action items, decisions, and questions from this meeting transcript.',
+      buildDateScaffold(),
+      'Respond with JSON: {summary, action_items: [{title, assignee, priority (low/medium/high/urgent), due_date (YYYY-MM-DD; look up from the reference table — do not compute)}], decisions: [...], questions: [...]}',
+    ].join('\n\n');
     const result = await callJSON<{
       summary: string;
       action_items: Array<{ title: string; assignee?: string; priority: string; due_date?: string }>;
       decisions: string[];
       questions: string[];
-    }>(
-      'Extract action items, decisions, and questions from this meeting transcript. Respond with JSON: {summary, action_items: [{title, assignee, priority, due_date}], decisions: [...], questions: [...]}',
-      transcript,
-    );
+    }>(systemPrompt, transcript);
     await logInteraction(userId, 'meeting', 'meeting_analyze', { boardId });
     return result;
   },
@@ -270,12 +381,17 @@ export const aiService = {
     };
 
     const systemPrompt = [
-      `Generate a ${type} briefing. Respond with JSON: {briefing (paragraph), highlights (3-5 bullets), recommendations (3 actionable items)}.`,
+      `Generate a ${type} briefing.`,
+      'highlights = 3–5 short imperative actions to take TODAY. Each starts with a verb ("Ship", "Prep", "Unblock", "Review", "Decide"). Concrete, specific to actual cards or events from the context, ≤12 words. Never restate stats and never describe state — only direct actions the user can take today.',
+      'recommendations = 2–3 longer-horizon nudges or systemic patterns that are NOT already in highlights. Cover this week / next, or recurring patterns (e.g. "Three demo prep tasks have slipped twice — break them down further"). Skip if nothing new to say.',
+      'briefing = one short paragraph of prose context. Stats and overdue counts belong here, not in highlights.',
+      'Highlights and recommendations must not overlap or restate each other. If you cannot produce 3 distinct, actionable highlights, return fewer.',
+      'Respond with JSON: {briefing (paragraph), highlights (string[]), recommendations (string[])}.',
       integrations?.connectedServices.length
-        ? `The user has these integrations connected: ${integrations.connectedServices.join(', ')}. Reference relevant integration activity in your briefing.`
+        ? `The user has these integrations connected: ${integrations.connectedServices.join(', ')}. Reference relevant integration activity in the briefing paragraph.`
         : '',
       calendarEvents?.length
-        ? 'Calendar events are included — mention scheduling conflicts or busy periods.'
+        ? 'Calendar events are included — surface scheduling conflicts as imperative highlights when there is a concrete action.'
         : '',
     ].filter(Boolean).join(' ');
 

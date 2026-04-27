@@ -57,6 +57,40 @@ export async function aiRoutes(fastify: FastifyInstance) {
   );
 
   fastify.post(
+    '/api/v1/ai/review-card',
+    { preHandler: aiPreHandler },
+    async (request) => {
+      const input = z
+        .object({
+          title: z.string().min(1),
+          description: z.string().nullable(),
+          priority: z.string(),
+          estimatedHours: z.number().nullable(),
+        })
+        .parse(request.body);
+      const result = await aiService.reviewCard(request.profileId!, input);
+      return { data: result };
+    },
+  );
+
+  fastify.post(
+    '/api/v1/ai/generate-checklist',
+    { preHandler: aiPreHandler },
+    async (request) => {
+      const input = z
+        .object({
+          title: z.string().min(1),
+          description: z.string().optional(),
+          priority: z.string().optional(),
+          estimatedHours: z.number().optional(),
+        })
+        .parse(request.body);
+      const result = await aiService.generateChecklist(request.profileId!, input);
+      return { data: result };
+    },
+  );
+
+  fastify.post(
     '/api/v1/ai/smart-due-date',
     { preHandler: aiPreHandler },
     async (request) => {

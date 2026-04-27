@@ -115,6 +115,18 @@ export default function KataPage() {
         });
     };
 
+    // Title autosaves on blur — separate from the page's Save button so
+    // the inline-edit feels live, even though the rest of the form is
+    // still batch-save. Only commits the title; doesn't flush other
+    // pending field edits (those still go through the Save button).
+    const handleTitleBlur = async () => {
+        if (!card || !canEdit) return;
+        const trimmed = title.trim();
+        if (trimmed && trimmed !== card.title) {
+            await updateCard.mutateAsync({ cardId: card.id, title: trimmed });
+        }
+    };
+
     const handleConfirmDelete = async () => {
         await deleteCard.mutateAsync(card.id);
         setShowDeleteDialog(false);
@@ -137,9 +149,30 @@ export default function KataPage() {
                     <p className="mt-6 text-eyebrow font-mono uppercase tracking-widest text-primary">
                         Kata
                     </p>
-                    <h1 className="mt-3 font-display text-3xl md:text-4xl font-medium tracking-tight">
-                        {card.title}
-                    </h1>
+                    {/* Inline-editable title — same pattern as the modal
+                      * header. Autosaves on blur (separate from the page
+                      * Save button), Enter commits, Escape reverts. */}
+                    <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        onBlur={handleTitleBlur}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                (e.target as HTMLInputElement).blur();
+                            }
+                            if (e.key === 'Escape') {
+                                e.preventDefault();
+                                setTitle(card.title);
+                                (e.target as HTMLInputElement).blur();
+                            }
+                        }}
+                        disabled={!canEdit}
+                        placeholder="Untitled kata"
+                        aria-label="Kata title"
+                        className="mt-3 w-full font-display text-3xl md:text-4xl font-medium tracking-tight bg-transparent border-0 outline-none px-2 -mx-2 py-1 -my-1 rounded-md transition-colors hover:bg-base-200 focus:bg-base-100 focus:shadow-focus disabled:hover:bg-transparent disabled:cursor-default"
+                    />
                 </header>
 
                 {/* Tab bar reuses the same component as the modal */}
@@ -157,6 +190,9 @@ export default function KataPage() {
                         // every input for viewers without threading a
                         // readOnly prop down through DetailsTab.
                         <fieldset disabled={!canEdit} className="contents">
+                            {/* Title is inline-edited in the page hero, so
+                              * we omit onTitleChange to gate off DetailsTab's
+                              * Title field. */}
                             <DetailsTab
                                 boardId={dojoId}
                                 title={title}
@@ -170,7 +206,6 @@ export default function KataPage() {
                                 createdBy={card.createdBy}
                                 createdAt={card.createdAt}
                                 updatedAt={card.updatedAt}
-                                onTitleChange={setTitle}
                                 onDescriptionChange={setDescription}
                                 onPriorityChange={setPriority}
                                 onStartDateChange={setStartDate}
@@ -182,7 +217,17 @@ export default function KataPage() {
                         </fieldset>
                     )}
                     {activeTab === 'comments' && <CommentsTab boardId={dojoId} cardId={card.id} />}
-                    {activeTab === 'checklist' && <ChecklistTab boardId={dojoId} cardId={card.id} />}
+                    {activeTab === 'checklist' && (
+                        <ChecklistTab
+                            boardId={dojoId}
+                            cardId={card.id}
+                            cardTitle={card.title}
+                            cardDescription={card.description}
+                            cardPriority={card.priority}
+                            cardEstimatedHours={card.estimatedHours}
+                            canEdit={canEdit}
+                        />
+                    )}
                     {activeTab === 'labels' && <LabelsTab boardId={dojoId} cardId={card.id} />}
                     {activeTab === 'time' && <TimeTab boardId={dojoId} cardId={card.id} />}
                     {activeTab === 'attachments' && <AttachmentsTab boardId={dojoId} cardId={card.id} />}

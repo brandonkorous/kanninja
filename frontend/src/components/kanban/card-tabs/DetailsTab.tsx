@@ -35,6 +35,8 @@ export function DetailsTab({
     onDescriptionBlur,
 }: {
     boardId: string;
+    /** Title is still required — Suggest start date sends it as anchor
+     * context to the AI even when the Title field itself is hidden. */
     title: string;
     description: string;
     priority: string;
@@ -46,7 +48,7 @@ export function DetailsTab({
     createdBy: string;
     createdAt: string;
     updatedAt: string;
-    onTitleChange: (v: string) => void;
+    onTitleChange?: (v: string) => void;
     onDescriptionChange: (v: string) => void;
     onPriorityChange: (v: string) => void;
     onStartDateChange: (v: string) => void;
@@ -80,14 +82,16 @@ export function DetailsTab({
 
     return (
         <div className="space-y-6">
-            <Field label="Title" htmlFor="card-title-input">
-                <Input
-                    id="card-title-input"
-                    value={title}
-                    onChange={(e) => onTitleChange(e.target.value)}
-                    onBlur={onTitleBlur}
-                />
-            </Field>
+            {onTitleChange && (
+                <Field label="Title" htmlFor="card-title-input">
+                    <Input
+                        id="card-title-input"
+                        value={title}
+                        onChange={(e) => onTitleChange(e.target.value)}
+                        onBlur={onTitleBlur}
+                    />
+                </Field>
+            )}
             <Field label="Description" htmlFor="card-desc-input" optional>
                 <Textarea
                     id="card-desc-input"

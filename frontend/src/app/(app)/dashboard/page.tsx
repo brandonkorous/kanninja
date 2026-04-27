@@ -5,6 +5,7 @@ import { useBoards } from '@/hooks/use-boards';
 import { BoardCard } from '@/components/board/BoardCard';
 import { BoardCardSkeleton } from '@/components/board/BoardCardSkeleton';
 import { CreateBoardModal } from '@/components/board/CreateBoardModal';
+import { PinnedHighlights } from '@/components/dashboard/PinnedHighlights';
 
 export default function DashboardPage() {
     const { data: boards, isLoading, error, refetch, isFetching } = useBoards();
@@ -30,6 +31,8 @@ export default function DashboardPage() {
                 </div>
                 <CreateBoardModal />
             </div>
+
+            <PinnedHighlights />
 
             <section aria-label="Your dojos">
                 {/* Loading — skeleton grid */}

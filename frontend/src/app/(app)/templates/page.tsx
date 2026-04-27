@@ -18,6 +18,18 @@ interface Template {
     lists: string[];
 }
 
+const PRIORITIES = ['none', 'low', 'medium', 'high', 'urgent'] as const;
+type Priority = (typeof PRIORITIES)[number];
+
+// The AI is loose with priority casing — we've seen "Medium", "High", etc.
+// even when the prompt asks for lowercase. Normalize here before sending
+// to the apply endpoint, which validates against a strict lowercase enum.
+// Unknown values fall back to 'none' rather than failing the whole import.
+function normalizePriority(raw: string | null | undefined): Priority {
+    const lower = (raw ?? '').toLowerCase();
+    return (PRIORITIES as readonly string[]).includes(lower) ? (lower as Priority) : 'none';
+}
+
 type ApplyInput = {
     title: string;
     description?: string;
@@ -26,7 +38,7 @@ type ApplyInput = {
         cards: {
             title: string;
             description?: string;
-            priority?: 'none' | 'low' | 'medium' | 'high' | 'urgent';
+            priority?: Priority;
         }[];
     }[];
 };
@@ -163,15 +175,13 @@ export default function TemplatesPage() {
                 onGenerated={(result) => {
                     applyTemplate.mutate({
                         title: result.board_title,
-                        description: result.board_description,
+                        description: result.board_description ?? undefined,
                         lists: result.lists.map((l) => ({
                             title: l.title,
                             cards: l.cards.map((c) => ({
                                 title: c.title,
-                                description: c.description,
-                                priority:
-                                    (c.priority as 'none' | 'low' | 'medium' | 'high' | 'urgent') ??
-                                    'none',
+                                description: c.description ?? undefined,
+                                priority: normalizePriority(c.priority),
                             })),
                         })),
                     });
