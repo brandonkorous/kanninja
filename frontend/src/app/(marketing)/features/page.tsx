@@ -2,17 +2,24 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { KataDeepdiveSection } from '@/components/marketing/KataDeepdiveSection';
 import { AiTechniquesSection } from '@/components/marketing/AiTechniquesSection';
+import { buildPageMetadata } from '@/lib/seo';
+import { JsonLd, breadcrumbLd } from '@/components/seo/JsonLd';
 
-export const metadata: Metadata = {
-    title: 'kanNINJA — Features',
+export const metadata: Metadata = buildPageMetadata({
+    title: 'Features',
     description:
-        'Four disciplines. Twenty-eight features. Grouped by kata so you can find what you came for.',
-    openGraph: {
-        title: 'kanNINJA — Features',
-        description: 'Every feature, grouped by kata.',
-        type: 'website',
-    },
-};
+        'Four disciplines. Twenty-eight features. Grouped by kata so you can find what you came for. Real-time presence, AI suggestions, honest analytics.',
+    path: '/features',
+    ogTitle: 'Every feature, grouped by kata.',
+    ogEyebrow: 'kanNINJA · Features',
+    keywords: [
+        'kanban features',
+        'kanban with AI',
+        'real-time kanban',
+        'kanban with time tracking',
+        'kanban with custom fields',
+    ],
+});
 
 const KATA_01_FEATURES = [
     {
@@ -90,6 +97,12 @@ const KATA_04_FEATURES = [
 export default function FeaturesPage() {
     return (
         <>
+            <JsonLd
+                data={breadcrumbLd([
+                    { name: 'Home', path: '/' },
+                    { name: 'Features', path: '/features' },
+                ])}
+            />
             {/* Hero */}
             <section className="relative overflow-hidden">
                 <div className="container mx-auto px-6 md:px-12 lg:px-16 pt-24 pb-24 lg:pt-32 lg:pb-32">
@@ -164,7 +177,7 @@ export default function FeaturesPage() {
                         </div>
                         <img
                             src="/brand/nin-icon.svg"
-                            alt=""
+                            alt="kanNINJA vermillion 忍 seal — the brand stamp"
                             width={288}
                             height={288}
                             className="hidden md:block h-48 w-48 lg:h-64 lg:w-64 xl:h-72 xl:w-72"

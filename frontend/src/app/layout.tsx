@@ -10,6 +10,19 @@ import { CookieBanner } from '@/components/legal/CookieBanner';
 import { CookiePreferencesDialog } from '@/components/legal/CookiePreferencesDialog';
 import { ClarityScript } from '@/components/legal/ClarityScript';
 import { GoogleAnalyticsScript } from '@/components/legal/GoogleAnalyticsScript';
+import {
+    JsonLd,
+    organizationLd,
+    softwareApplicationLd,
+    websiteLd,
+} from '@/components/seo/JsonLd';
+import {
+    SITE_URL,
+    SITE_NAME,
+    SITE_DESCRIPTION,
+    TWITTER_HANDLE,
+    ogImageUrl,
+} from '@/lib/seo';
 import './globals.css';
 
 // Hanko brand fonts. Variable names must match the consumers in
@@ -34,9 +47,57 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-    title: 'kanNINJA - AI-Powered Kanban Board',
-    description:
-        'Supercharge your project management with AI-powered kanban boards, real-time collaboration, and intelligent task automation.',
+    metadataBase: new URL(SITE_URL),
+    title: {
+        default: `${SITE_NAME} — Discipline, made visible.`,
+        template: `%s · ${SITE_NAME}`,
+    },
+    description: SITE_DESCRIPTION,
+    applicationName: SITE_NAME,
+    authors: [{ name: 'wizeworks', url: SITE_URL }],
+    creator: 'wizeworks',
+    publisher: 'wizeworks',
+    formatDetection: { email: false, address: false, telephone: false },
+    alternates: { canonical: SITE_URL },
+    openGraph: {
+        type: 'website',
+        url: SITE_URL,
+        siteName: SITE_NAME,
+        title: `${SITE_NAME} — Discipline, made visible.`,
+        description: SITE_DESCRIPTION,
+        images: [
+            {
+                url: ogImageUrl({
+                    title: 'Discipline, made visible.',
+                    eyebrow: 'wizeworks · kanNINJA',
+                    subtitle: SITE_DESCRIPTION,
+                }),
+                width: 1200,
+                height: 630,
+                alt: `${SITE_NAME} — Discipline, made visible.`,
+            },
+        ],
+    },
+    twitter: {
+        card: 'summary_large_image',
+        site: TWITTER_HANDLE,
+        creator: TWITTER_HANDLE,
+        title: `${SITE_NAME} — Discipline, made visible.`,
+        description: SITE_DESCRIPTION,
+        images: [
+            ogImageUrl({
+                title: 'Discipline, made visible.',
+                eyebrow: 'wizeworks · kanNINJA',
+                subtitle: SITE_DESCRIPTION,
+            }),
+        ],
+    },
+    icons: {
+        icon: '/brand/nin-glyph.svg',
+        shortcut: '/brand/nin-icon.svg',
+        apple: '/brand/nin-icon.svg',
+    },
+    robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -49,6 +110,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable}`}
             >
                 <body>
+                    <JsonLd data={organizationLd()} />
+                    <JsonLd data={websiteLd()} />
+                    <JsonLd data={softwareApplicationLd()} />
                     <ThemeProvider>
                         <FontAwesomeProvider>
                             <QueryProvider>

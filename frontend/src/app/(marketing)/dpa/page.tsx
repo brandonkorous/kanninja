@@ -1,12 +1,16 @@
 import type { Metadata } from 'next';
 import { LegalLayout } from '@/components/marketing/LegalLayout';
 import { dpaSections } from './sections';
+import { buildPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-    title: 'kanNINJA — Data Processing Addendum',
+export const metadata: Metadata = buildPageMetadata({
+    title: 'Data Processing Addendum',
     description:
         'CCPA service-provider terms for kanNINJA business customers.',
-};
+    path: '/dpa',
+    ogTitle: 'Data Processing Addendum',
+    ogEyebrow: 'kanNINJA · DPA',
+});
 
 export default function DPAPage() {
     return (

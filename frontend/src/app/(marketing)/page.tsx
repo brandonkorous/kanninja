@@ -8,18 +8,25 @@ import {
 import type { Metadata } from 'next';
 import { KataCard } from '@/components/marketing/KataCard';
 import { FourRefusalsSection } from '@/components/marketing/FourRefusalsSection';
+import { buildPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-    title: 'kanNINJA — Discipline, made visible',
+export const metadata: Metadata = buildPageMetadata({
+    title: 'kanNINJA — Discipline, made visible.',
+    absoluteTitle: true,
     description:
-        'A kanban that respects your attention. The work in front of you, in the order you will finish it.',
-    openGraph: {
-        title: 'kanNINJA — Discipline, made visible',
-        description:
-            'A kanban that respects your attention. The work in front of you, in the order you will finish it.',
-        type: 'website',
-    },
-};
+        'A kanban that respects your attention. The work in front of you, in the order you will finish it. Built by wizeworks.',
+    path: '/',
+    ogTitle: 'Discipline, made visible.',
+    ogEyebrow: 'wizeworks · kanNINJA',
+    keywords: [
+        'kanban board',
+        'AI kanban',
+        'project management',
+        'task management',
+        'real-time kanban',
+        'kanNINJA',
+    ],
+});
 
 export default function LandingPage() {
     return (
@@ -171,7 +178,7 @@ export default function LandingPage() {
                         </div>
                         <img
                             src="/brand/nin-icon.svg"
-                            alt=""
+                            alt="kanNINJA vermillion 忍 seal — the brand stamp"
                             width={288}
                             height={288}
                             className="hidden md:block h-48 w-48 lg:h-64 lg:w-64 xl:h-72 xl:w-72"

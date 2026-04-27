@@ -1,12 +1,16 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { LegalLayout } from '@/components/marketing/LegalLayout';
+import { buildPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-    title: 'kanNINJA — Cookie Policy',
+export const metadata: Metadata = buildPageMetadata({
+    title: 'Cookie Policy',
     description:
-        'The cookies we use, what they do, and how to opt out. Short and specific.',
-};
+        'The cookies kanNINJA uses, what they do, and how to opt out. Short and specific.',
+    path: '/cookies',
+    ogTitle: 'Cookie Policy',
+    ogEyebrow: 'kanNINJA · Cookies',
+});
 
 export default function CookiesPage() {
     return (

@@ -3,10 +3,15 @@ import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
-export const metadata: Metadata = {
-    title: 'kanNINJA — Changelog',
-    description: 'What changed, when, and why.',
-};
+import { buildPageMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = buildPageMetadata({
+    title: 'Changelog',
+    description: 'What changed in kanNINJA, when, and why. Honest about the slope.',
+    path: '/changelog',
+    ogTitle: 'What changed, when, and why.',
+    ogEyebrow: 'kanNINJA · Changelog',
+});
 
 // Each entry is a real release — date, version, a short title, and a few
 // bullet changes. We write the "why" plainly. No marketing-speak, no

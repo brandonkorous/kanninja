@@ -2,12 +2,16 @@ import type { Metadata } from 'next';
 import { LegalLayout } from '@/components/marketing/LegalLayout';
 import { privacySections } from './sections';
 import { privacyRightsSections } from './sections-rights';
+import { buildPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-    title: 'kanNINJA — Privacy Policy',
+export const metadata: Metadata = buildPageMetadata({
+    title: 'Privacy Policy',
     description:
         'How kanNINJA collects, uses, and protects your information. Plain English. No fine print.',
-};
+    path: '/privacy',
+    ogTitle: 'Privacy Policy',
+    ogEyebrow: 'kanNINJA · Privacy',
+});
 
 export default function PrivacyPage() {
     return (

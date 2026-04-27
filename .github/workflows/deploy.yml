@@ -120,6 +120,8 @@ jobs:
                       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
                       NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
                       NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+                      NEXT_PUBLIC_GA_MEASUREMENT_ID=G-2XYLPDDZ9K
+                      NEXT_PUBLIC_CLARITY_PROJECT_ID=wh11efmbfb
 
     # ------------------------------------------------------------------
     # Build & push MCP server image (published only — NOT deployed to AKS)
@@ -222,58 +224,58 @@ jobs:
                   # --- Backend core ---
                   # CLERK_PUBLISHABLE_KEY isn't read by backend code, only
                   # frontend at build time — omitted from this block.
-                  SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
+                  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
                   SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-                  DATABASE_URL:              ${{ secrets.DATABASE_URL }}
-                  CLERK_SECRET_KEY:          ${{ secrets.CLERK_SECRET_KEY }}
-                  CLERK_WEBHOOK_SECRET:      ${{ secrets.CLERK_WEBHOOK_SECRET }}
-                  STRIPE_SECRET_KEY:         ${{ secrets.STRIPE_SECRET_KEY }}
-                  STRIPE_WEBHOOK_SECRET:     ${{ secrets.STRIPE_WEBHOOK_SECRET }}
-                  OPENAI_API_KEY:            ${{ secrets.OPENAI_API_KEY }}
+                  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+                  CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+                  CLERK_WEBHOOK_SECRET: ${{ secrets.CLERK_WEBHOOK_SECRET }}
+                  STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+                  STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+                  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
                   INTEGRATION_ENCRYPTION_KEY: ${{ secrets.INTEGRATION_ENCRYPTION_KEY }}
 
                   # --- Optional: OAuth provider integrations ---
-                  GOOGLE_CLIENT_ID:          ${{ secrets.GOOGLE_CLIENT_ID }}
-                  GOOGLE_CLIENT_SECRET:      ${{ secrets.GOOGLE_CLIENT_SECRET }}
-                  SLACK_CLIENT_ID:           ${{ secrets.SLACK_CLIENT_ID }}
-                  SLACK_CLIENT_SECRET:       ${{ secrets.SLACK_CLIENT_SECRET }}
-                  SLACK_SIGNING_SECRET:      ${{ secrets.SLACK_SIGNING_SECRET }}
-                  GH_APP_CLIENT_ID:          ${{ secrets.GH_APP_CLIENT_ID }}
-                  GH_APP_CLIENT_SECRET:      ${{ secrets.GH_APP_CLIENT_SECRET }}
-                  GH_APP_WEBHOOK_SECRET:     ${{ secrets.GH_APP_WEBHOOK_SECRET }}
-                  MICROSOFT_CLIENT_ID:       ${{ secrets.MICROSOFT_CLIENT_ID }}
-                  MICROSOFT_CLIENT_SECRET:   ${{ secrets.MICROSOFT_CLIENT_SECRET }}
-                  MICROSOFT_TENANT_ID:       ${{ secrets.MICROSOFT_TENANT_ID }}
-                  ATLASSIAN_CLIENT_ID:       ${{ secrets.ATLASSIAN_CLIENT_ID }}
-                  ATLASSIAN_CLIENT_SECRET:   ${{ secrets.ATLASSIAN_CLIENT_SECRET }}
-                  GITLAB_CLIENT_ID:          ${{ secrets.GITLAB_CLIENT_ID }}
-                  GITLAB_CLIENT_SECRET:      ${{ secrets.GITLAB_CLIENT_SECRET }}
-                  GITLAB_INSTANCE_URL:       ${{ secrets.GITLAB_INSTANCE_URL }}
-                  DISCORD_CLIENT_ID:         ${{ secrets.DISCORD_CLIENT_ID }}
-                  DISCORD_CLIENT_SECRET:     ${{ secrets.DISCORD_CLIENT_SECRET }}
-                  DISCORD_BOT_TOKEN:         ${{ secrets.DISCORD_BOT_TOKEN }}
-                  DISCORD_PUBLIC_KEY:        ${{ secrets.DISCORD_PUBLIC_KEY }}
-                  NOTION_CLIENT_ID:          ${{ secrets.NOTION_CLIENT_ID }}
-                  NOTION_CLIENT_SECRET:      ${{ secrets.NOTION_CLIENT_SECRET }}
-                  FIGMA_CLIENT_ID:           ${{ secrets.FIGMA_CLIENT_ID }}
-                  FIGMA_CLIENT_SECRET:       ${{ secrets.FIGMA_CLIENT_SECRET }}
-                  LINEAR_CLIENT_ID:          ${{ secrets.LINEAR_CLIENT_ID }}
-                  LINEAR_CLIENT_SECRET:      ${{ secrets.LINEAR_CLIENT_SECRET }}
-                  DROPBOX_CLIENT_ID:         ${{ secrets.DROPBOX_CLIENT_ID }}
-                  DROPBOX_CLIENT_SECRET:     ${{ secrets.DROPBOX_CLIENT_SECRET }}
-                  LOOM_CLIENT_ID:            ${{ secrets.LOOM_CLIENT_ID }}
-                  LOOM_CLIENT_SECRET:        ${{ secrets.LOOM_CLIENT_SECRET }}
-                  ZENDESK_CLIENT_ID:         ${{ secrets.ZENDESK_CLIENT_ID }}
-                  ZENDESK_CLIENT_SECRET:     ${{ secrets.ZENDESK_CLIENT_SECRET }}
-                  INTERCOM_CLIENT_ID:        ${{ secrets.INTERCOM_CLIENT_ID }}
-                  INTERCOM_CLIENT_SECRET:    ${{ secrets.INTERCOM_CLIENT_SECRET }}
-                  HUBSPOT_CLIENT_ID:         ${{ secrets.HUBSPOT_CLIENT_ID }}
-                  HUBSPOT_CLIENT_SECRET:     ${{ secrets.HUBSPOT_CLIENT_SECRET }}
-                  SALESFORCE_CLIENT_ID:      ${{ secrets.SALESFORCE_CLIENT_ID }}
-                  SALESFORCE_CLIENT_SECRET:  ${{ secrets.SALESFORCE_CLIENT_SECRET }}
+                  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+                  GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+                  SLACK_CLIENT_ID: ${{ secrets.SLACK_CLIENT_ID }}
+                  SLACK_CLIENT_SECRET: ${{ secrets.SLACK_CLIENT_SECRET }}
+                  SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
+                  GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
+                  GH_APP_CLIENT_SECRET: ${{ secrets.GH_APP_CLIENT_SECRET }}
+                  GH_APP_WEBHOOK_SECRET: ${{ secrets.GH_APP_WEBHOOK_SECRET }}
+                  MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
+                  MICROSOFT_CLIENT_SECRET: ${{ secrets.MICROSOFT_CLIENT_SECRET }}
+                  MICROSOFT_TENANT_ID: ${{ secrets.MICROSOFT_TENANT_ID }}
+                  ATLASSIAN_CLIENT_ID: ${{ secrets.ATLASSIAN_CLIENT_ID }}
+                  ATLASSIAN_CLIENT_SECRET: ${{ secrets.ATLASSIAN_CLIENT_SECRET }}
+                  GITLAB_CLIENT_ID: ${{ secrets.GITLAB_CLIENT_ID }}
+                  GITLAB_CLIENT_SECRET: ${{ secrets.GITLAB_CLIENT_SECRET }}
+                  GITLAB_INSTANCE_URL: ${{ secrets.GITLAB_INSTANCE_URL }}
+                  DISCORD_CLIENT_ID: ${{ secrets.DISCORD_CLIENT_ID }}
+                  DISCORD_CLIENT_SECRET: ${{ secrets.DISCORD_CLIENT_SECRET }}
+                  DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+                  DISCORD_PUBLIC_KEY: ${{ secrets.DISCORD_PUBLIC_KEY }}
+                  NOTION_CLIENT_ID: ${{ secrets.NOTION_CLIENT_ID }}
+                  NOTION_CLIENT_SECRET: ${{ secrets.NOTION_CLIENT_SECRET }}
+                  FIGMA_CLIENT_ID: ${{ secrets.FIGMA_CLIENT_ID }}
+                  FIGMA_CLIENT_SECRET: ${{ secrets.FIGMA_CLIENT_SECRET }}
+                  LINEAR_CLIENT_ID: ${{ secrets.LINEAR_CLIENT_ID }}
+                  LINEAR_CLIENT_SECRET: ${{ secrets.LINEAR_CLIENT_SECRET }}
+                  DROPBOX_CLIENT_ID: ${{ secrets.DROPBOX_CLIENT_ID }}
+                  DROPBOX_CLIENT_SECRET: ${{ secrets.DROPBOX_CLIENT_SECRET }}
+                  LOOM_CLIENT_ID: ${{ secrets.LOOM_CLIENT_ID }}
+                  LOOM_CLIENT_SECRET: ${{ secrets.LOOM_CLIENT_SECRET }}
+                  ZENDESK_CLIENT_ID: ${{ secrets.ZENDESK_CLIENT_ID }}
+                  ZENDESK_CLIENT_SECRET: ${{ secrets.ZENDESK_CLIENT_SECRET }}
+                  INTERCOM_CLIENT_ID: ${{ secrets.INTERCOM_CLIENT_ID }}
+                  INTERCOM_CLIENT_SECRET: ${{ secrets.INTERCOM_CLIENT_SECRET }}
+                  HUBSPOT_CLIENT_ID: ${{ secrets.HUBSPOT_CLIENT_ID }}
+                  HUBSPOT_CLIENT_SECRET: ${{ secrets.HUBSPOT_CLIENT_SECRET }}
+                  SALESFORCE_CLIENT_ID: ${{ secrets.SALESFORCE_CLIENT_ID }}
+                  SALESFORCE_CLIENT_SECRET: ${{ secrets.SALESFORCE_CLIENT_SECRET }}
 
                   # --- GHCR App for the pull-token rotator ---
-                  GHCR_APP_PRIVATE_KEY:      ${{ secrets.GHCR_APP_PRIVATE_KEY }}
+                  GHCR_APP_PRIVATE_KEY: ${{ secrets.GHCR_APP_PRIVATE_KEY }}
               run: |
                   set -euo pipefail
                   NS=${{ env.NAMESPACE }}

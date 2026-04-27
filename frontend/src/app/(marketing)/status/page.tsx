@@ -3,10 +3,15 @@ import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faCircleCheck } from '@fortawesome/free-solid-svg-icons';
 
-export const metadata: Metadata = {
-    title: 'kanNINJA — Status',
-    description: 'Is kanNINJA working? Check here.',
-};
+import { buildPageMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = buildPageMetadata({
+    title: 'Status',
+    description: 'Is kanNINJA working? Check the live status of the marketing site, app, API, and MCP server.',
+    path: '/status',
+    ogTitle: 'Is kanNINJA working?',
+    ogEyebrow: 'kanNINJA · Status',
+});
 
 // Simple static status page. When we have real uptime monitoring this will
 // read from the monitoring service — for now it reports "all systems go"

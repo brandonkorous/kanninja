@@ -2,12 +2,16 @@ import type { Metadata } from 'next';
 import { LegalLayout } from '@/components/marketing/LegalLayout';
 import { termsAccountSections } from './sections-account';
 import { termsConductSections } from './sections-conduct';
+import { buildPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-    title: 'kanNINJA — Terms of Service',
+export const metadata: Metadata = buildPageMetadata({
+    title: 'Terms of Service',
     description:
         'The contract between you and kanNINJA. Plain English. No surprises.',
-};
+    path: '/terms',
+    ogTitle: 'Terms of Service',
+    ogEyebrow: 'kanNINJA · Terms',
+});
 
 export default function TermsPage() {
     return (

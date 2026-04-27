@@ -1,16 +1,17 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/lib/seo';
+import { JsonLd, breadcrumbLd } from '@/components/seo/JsonLd';
 
-export const metadata: Metadata = {
-    title: 'kanNINJA — MCP integration',
+export const metadata: Metadata = buildPageMetadata({
+    title: 'MCP integration',
     description:
-        'kanNINJA speaks the Model Context Protocol. Wire it into the agent you already use.',
-    openGraph: {
-        title: 'kanNINJA — MCP integration',
-        description: 'Manage your dojo from any agent.',
-        type: 'website',
-    },
-};
+        'kanNINJA speaks the Model Context Protocol. Wire it into Claude, Cursor, or any agent that speaks MCP.',
+    path: '/mcp',
+    ogTitle: 'Manage your dojo from any agent.',
+    ogEyebrow: 'kanNINJA · MCP',
+    keywords: ['MCP server', 'kanban MCP', 'Model Context Protocol kanban', 'Claude kanban'],
+});
 
 const READ_TOOLS = [
     { name: 'list_boards.', body: 'Every dojo you can see, on demand.' },
@@ -53,6 +54,12 @@ const CLIENTS = [
 export default function McpPage() {
     return (
         <>
+            <JsonLd
+                data={breadcrumbLd([
+                    { name: 'Home', path: '/' },
+                    { name: 'MCP integration', path: '/mcp' },
+                ])}
+            />
             {/* Hero */}
             <section className="relative overflow-hidden">
                 <div className="container mx-auto px-6 md:px-12 lg:px-16 pt-24 pb-24 lg:pt-32 lg:pb-32">
@@ -289,7 +296,7 @@ export default function McpPage() {
                         </div>
                         <img
                             src="/brand/nin-icon.svg"
-                            alt=""
+                            alt="kanNINJA vermillion 忍 seal — the brand stamp"
                             width={288}
                             height={288}
                             className="hidden md:block h-48 w-48 lg:h-64 lg:w-64 xl:h-72 xl:w-72"

@@ -1,12 +1,16 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { LegalLayout } from '@/components/marketing/LegalLayout';
+import { buildPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-    title: 'kanNINJA — Acceptable Use Policy',
+export const metadata: Metadata = buildPageMetadata({
+    title: 'Acceptable Use Policy',
     description:
         'What you can and cannot do with kanNINJA. The short list of things that get accounts suspended.',
-};
+    path: '/aup',
+    ogTitle: 'Acceptable Use Policy',
+    ogEyebrow: 'kanNINJA · AUP',
+});
 
 export default function AcceptableUsePage() {
     return (

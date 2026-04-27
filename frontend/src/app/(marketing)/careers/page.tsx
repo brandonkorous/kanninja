@@ -1,10 +1,15 @@
 import type { Metadata } from 'next';
 import { ComingSoonPage } from '@/components/marketing/ComingSoonPage';
 
-export const metadata: Metadata = {
-    title: 'kanNINJA — Careers',
-    description: 'We are not hiring yet. When we are, it will be here.',
-};
+import { buildPageMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = buildPageMetadata({
+    title: 'Careers',
+    description: 'kanNINJA is not hiring yet. When we open a role, the work will be described plainly here.',
+    path: '/careers',
+    ogTitle: 'Not hiring yet.',
+    ogEyebrow: 'kanNINJA · Careers',
+});
 
 export default function CareersPage() {
     return (

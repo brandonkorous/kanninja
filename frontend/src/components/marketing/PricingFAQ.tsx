@@ -1,8 +1,11 @@
 // Pricing FAQ. Real questions, honest answers. Each answer admits something
 // the corporate voice would hide — that's how trust gets built. The questions
 // are sentences, not labels (per the hanko-voice rule on section headers).
+//
+// Exported so the pricing page can render the same Q&As as FAQPage JSON-LD,
+// keeping the on-page text and the structured data in sync.
 
-const FAQS: { q: string; a: string }[] = [
+export const PRICING_FAQS: { q: string; a: string }[] = [
     {
         q: 'What happens when I hit my seat limit?',
         a: "Add seats by upgrading the tier. Your boards stay where they are. Nobody loses access mid-week.",
@@ -42,7 +45,7 @@ export function PricingFAQ() {
                     </h2>
                 </div>
                 <dl className="hanko-scroll-rise grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12 max-w-5xl">
-                    {FAQS.map((item) => (
+                    {PRICING_FAQS.map((item) => (
                         <div key={item.q}>
                             <dt className="font-display text-xl md:text-2xl font-medium tracking-tight">
                                 {item.q}

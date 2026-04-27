@@ -2,22 +2,35 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { TierCardsSection } from '@/components/marketing/TierCardsSection';
 import { FeatureComparisonTable } from '@/components/marketing/FeatureComparisonTable';
-import { PricingFAQ } from '@/components/marketing/PricingFAQ';
+import { PricingFAQ, PRICING_FAQS } from '@/components/marketing/PricingFAQ';
+import { buildPageMetadata } from '@/lib/seo';
+import { JsonLd, faqLd, breadcrumbLd } from '@/components/seo/JsonLd';
 
-export const metadata: Metadata = {
-    title: 'kanNINJA — Pricing',
+export const metadata: Metadata = buildPageMetadata({
+    title: 'Pricing',
     description:
-        'Five tiers. The first is free, forever. The others wait until the work earns them.',
-    openGraph: {
-        title: 'kanNINJA — Pricing',
-        description: 'Free until you outgrow it. Most people never do.',
-        type: 'website',
-    },
-};
+        'Five tiers. The first is free, forever. The others wait until the work earns them. Two months free if you pay yearly.',
+    path: '/pricing',
+    ogTitle: 'Pay when it earns it.',
+    ogEyebrow: 'kanNINJA · Pricing',
+    keywords: [
+        'kanban pricing',
+        'kanNINJA pricing',
+        'free kanban board',
+        'kanban for teams pricing',
+    ],
+});
 
 export default function PricingPage() {
     return (
         <>
+            <JsonLd data={faqLd(PRICING_FAQS)} />
+            <JsonLd
+                data={breadcrumbLd([
+                    { name: 'Home', path: '/' },
+                    { name: 'Pricing', path: '/pricing' },
+                ])}
+            />
             {/* Hero — left-aligned, generous breathing room */}
             <section className="relative overflow-hidden">
                 <div className="container mx-auto px-6 md:px-12 lg:px-16 pt-24 pb-24 lg:pt-32 lg:pb-32">
@@ -70,7 +83,7 @@ export default function PricingPage() {
                         </div>
                         <img
                             src="/brand/nin-icon.svg"
-                            alt=""
+                            alt="kanNINJA vermillion 忍 seal — the brand stamp"
                             width={288}
                             height={288}
                             className="hidden md:block h-48 w-48 lg:h-64 lg:w-64 xl:h-72 xl:w-72"

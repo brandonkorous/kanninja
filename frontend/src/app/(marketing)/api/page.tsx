@@ -1,10 +1,15 @@
 import type { Metadata } from 'next';
 import { ComingSoonPage } from '@/components/marketing/ComingSoonPage';
 
-export const metadata: Metadata = {
-    title: 'kanNINJA — API',
-    description: 'A public API is coming. Not yet.',
-};
+import { buildPageMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = buildPageMetadata({
+    title: 'API',
+    description: 'A public REST API for kanNINJA. Not yet — for now, the MCP server covers most agentic use cases.',
+    path: '/api',
+    ogTitle: 'The public API — coming.',
+    ogEyebrow: 'kanNINJA · API',
+});
 
 export default function APIPage() {
     return (

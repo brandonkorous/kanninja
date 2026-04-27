@@ -1,12 +1,16 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { LegalLayout } from '@/components/marketing/LegalLayout';
+import { buildPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-    title: 'kanNINJA — Refund Policy',
+export const metadata: Metadata = buildPageMetadata({
+    title: 'Refund Policy',
     description:
         'kanNINJA does not refund partial periods. The short list of when we do issue refunds.',
-};
+    path: '/refund',
+    ogTitle: 'Refund Policy',
+    ogEyebrow: 'kanNINJA · Refunds',
+});
 
 export default function RefundPage() {
     return (

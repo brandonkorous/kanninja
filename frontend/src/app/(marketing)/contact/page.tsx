@@ -3,10 +3,15 @@ import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEnvelope, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
-export const metadata: Metadata = {
-    title: 'kanNINJA — Contact',
-    description: 'How to reach us. One email, real humans.',
-};
+import { buildPageMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = buildPageMetadata({
+    title: 'Contact',
+    description: 'How to reach kanNINJA. One email, real humans. hello@kanninja.com.',
+    path: '/contact',
+    ogTitle: 'One email, real humans.',
+    ogEyebrow: 'kanNINJA · Contact',
+});
 
 export default function ContactPage() {
     return (

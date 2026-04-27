@@ -3,10 +3,15 @@ import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faDownload } from '@fortawesome/free-solid-svg-icons';
 
-export const metadata: Metadata = {
-    title: 'kanNINJA — Brand',
-    description: 'The kanNINJA brand: one stamp, three fonts, a few rules.',
-};
+import { buildPageMetadata } from '@/lib/seo';
+
+export const metadata: Metadata = buildPageMetadata({
+    title: 'Brand',
+    description: 'The kanNINJA brand kit: one vermillion stamp, three fonts, warm neutrals, a few rules.',
+    path: '/brand',
+    ogTitle: 'One stamp. One thousand uses.',
+    ogEyebrow: 'kanNINJA · Brand',
+});
 
 // Quick-reference brand page. Not the full Hanko design system — that lives
 // in Paper and in the SKILL.md. This is the public-facing version: the seal,

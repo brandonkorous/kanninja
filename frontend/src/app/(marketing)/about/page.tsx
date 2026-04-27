@@ -1,17 +1,17 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { FourPrinciplesSection } from '@/components/marketing/FourPrinciplesSection';
+import { buildPageMetadata } from '@/lib/seo';
+import { JsonLd, breadcrumbLd } from '@/components/seo/JsonLd';
 
-export const metadata: Metadata = {
-    title: 'kanNINJA — About',
+export const metadata: Metadata = buildPageMetadata({
+    title: 'About',
     description:
         'We started kanNINJA because the boards we used at our last jobs were honest about everything except how much our work was hurting.',
-    openGraph: {
-        title: 'kanNINJA — About',
-        description: 'Built by people who needed it.',
-        type: 'website',
-    },
-};
+    path: '/about',
+    ogTitle: 'Built by people who needed it.',
+    ogEyebrow: 'kanNINJA · About',
+});
 
 const TODAY_WORKING = [
     'The kanban itself, the way it should work',
@@ -30,6 +30,12 @@ const TODAY_NOT_YET = [
 export default function AboutPage() {
     return (
         <>
+            <JsonLd
+                data={breadcrumbLd([
+                    { name: 'Home', path: '/' },
+                    { name: 'About', path: '/about' },
+                ])}
+            />
             {/* Hero */}
             <section className="relative overflow-hidden">
                 <div className="container mx-auto px-6 md:px-12 lg:px-16 pt-24 pb-24 lg:pt-32 lg:pb-32">
@@ -160,7 +166,7 @@ export default function AboutPage() {
                         </div>
                         <img
                             src="/brand/nin-icon.svg"
-                            alt=""
+                            alt="kanNINJA vermillion 忍 seal — the brand stamp"
                             width={288}
                             height={288}
                             className="hidden md:block h-48 w-48 lg:h-64 lg:w-64 xl:h-72 xl:w-72"

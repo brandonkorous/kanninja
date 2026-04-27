@@ -2,12 +2,16 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { LegalLayout } from '@/components/marketing/LegalLayout';
 import { SubprocessorList, type Subprocessor } from './SubprocessorList';
+import { buildPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-    title: 'kanNINJA — Subprocessors',
+export const metadata: Metadata = buildPageMetadata({
+    title: 'Subprocessors',
     description:
         'The third-party services kanNINJA uses to deliver its product. What each one does, what data it sees, where it operates.',
-};
+    path: '/subprocessors',
+    ogTitle: 'Subprocessors',
+    ogEyebrow: 'kanNINJA · Subprocessors',
+});
 
 // The current subprocessor list. Update this when adding or removing a vendor
 // and bump the lastUpdatedISO date below. Customers on the DPA are entitled

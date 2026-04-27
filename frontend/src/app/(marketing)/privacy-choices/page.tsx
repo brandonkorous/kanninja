@@ -2,12 +2,16 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { LegalLayout } from '@/components/marketing/LegalLayout';
 import { PrivacyChoicesPanel } from '@/components/legal/PrivacyChoicesPanel';
+import { buildPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-    title: 'kanNINJA — Your privacy choices',
+export const metadata: Metadata = buildPageMetadata({
+    title: 'Your privacy choices',
     description:
         'Opt out of analytics and session replay. We do not sell or share personal information for cross-context behavioral advertising.',
-};
+    path: '/privacy-choices',
+    ogTitle: 'Your privacy choices',
+    ogEyebrow: 'kanNINJA · Privacy choices',
+});
 
 export default function PrivacyChoicesPage() {
     return (
