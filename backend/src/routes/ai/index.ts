@@ -73,6 +73,23 @@ export async function aiRoutes(fastify: FastifyInstance) {
   );
 
   fastify.post(
+    '/api/v1/ai/smart-start-date',
+    { preHandler: aiPreHandler },
+    async (request) => {
+      const input = z
+        .object({
+          title: z.string().min(1),
+          description: z.string().optional(),
+          dueDate: z.string().datetime(),
+          estimatedHours: z.number().optional(),
+        })
+        .parse(request.body);
+      const result = await aiService.smartStartDate(request.profileId!, input);
+      return { data: result };
+    },
+  );
+
+  fastify.post(
     '/api/v1/ai/decompose-goal',
     { preHandler: aiPreHandler },
     async (request) => {

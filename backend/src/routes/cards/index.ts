@@ -27,7 +27,7 @@ export async function cardRoutes(fastify: FastifyInstance) {
       await realtimeService.cardCreated(request.params.boardId, card.id);
       dispatchEvent(request.profileId!, {
         type: 'card.created', boardId: request.params.boardId, cardId: card.id,
-        data: { title: card.title, description: card.description, dueDate: card.dueDate },
+        data: { title: card.title, description: card.description, startDate: card.startDate, dueDate: card.dueDate },
         userId: request.profileId!, timestamp: new Date(),
       }).catch(() => {});
       return reply.status(201).send({ data: card });
@@ -47,7 +47,7 @@ export async function cardRoutes(fastify: FastifyInstance) {
       await realtimeService.cardUpdated(request.params.boardId, request.params.cardId);
       dispatchEvent(request.profileId!, {
         type: 'card.updated', boardId: request.params.boardId, cardId: request.params.cardId,
-        data: { title: card.title, description: card.description, dueDate: card.dueDate },
+        data: { title: card.title, description: card.description, startDate: card.startDate, dueDate: card.dueDate },
         userId: request.profileId!, timestamp: new Date(),
       }).catch(() => {});
       return { data: card };

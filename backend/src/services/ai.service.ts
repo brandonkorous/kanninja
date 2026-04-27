@@ -87,6 +87,44 @@ export const aiService = {
 
   // === Phase 2: Execution & automation ===
 
+  async smartStartDate(
+    userId: string,
+    input: { title: string; description?: string; dueDate: string; estimatedHours?: number },
+  ) {
+    // Calendar-aware start date suggestion. The naive answer is
+    // dueDate - estimatedHours, which the frontend can compute itself
+    // for free. This endpoint exists for the smarter case: factoring
+    // in the user's calendar so we don't suggest a start day they're
+    // already booked solid, plus a buffer for risk on complex tasks.
+    const calendarEvents = await getCalendarEvents(userId).catch(() => []);
+
+    const context = {
+      ...input,
+      today: new Date().toISOString().split('T')[0],
+      ...(calendarEvents?.length && { upcomingCalendarEvents: calendarEvents.slice(0, 15) }),
+    };
+
+    const systemPrompt = [
+      'Analyze this task and suggest a realistic start date that gives the user enough working time to complete it before the due date.',
+      'The naive answer is dueDate - estimatedHours; improve on it by adding buffer for complex tasks and avoiding days the user is heavily booked.',
+      calendarEvents?.length
+        ? 'Calendar events are provided — avoid start dates where the first working day would land on a heavy-meeting day.'
+        : '',
+      'Respond with JSON: {suggested_start_date (ISO date), working_days_needed, buffer_days, reasoning}.',
+    ]
+      .filter(Boolean)
+      .join(' ');
+
+    const result = await callJSON<{
+      suggested_start_date: string;
+      working_days_needed: number;
+      buffer_days: number;
+      reasoning: string;
+    }>(systemPrompt, JSON.stringify(context));
+    await logInteraction(userId, input.title, 'smart_start_date');
+    return result;
+  },
+
   async smartDueDate(userId: string, input: { title: string; description?: string; estimatedHours?: number }) {
     // Fetch calendar events to avoid scheduling conflicts
     const calendarEvents = await getCalendarEvents(userId).catch(() => []);

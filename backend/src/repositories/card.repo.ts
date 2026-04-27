@@ -19,6 +19,7 @@ export const cardRepo = {
     description?: string;
     priority?: string;
     assigneeId?: string;
+    startDate?: string;
     dueDate?: string;
     estimatedHours?: number;
     createdBy: string;
@@ -43,6 +44,7 @@ export const cardRepo = {
         description: data.description ?? null,
         priority: (data.priority as 'none' | 'low' | 'medium' | 'high' | 'urgent') ?? 'none',
         assigneeId: data.assigneeId ?? null,
+        startDate: data.startDate ? new Date(data.startDate) : null,
         dueDate: data.dueDate ? new Date(data.dueDate) : null,
         estimatedHours: data.estimatedHours?.toString() ?? null,
         createdBy: data.createdBy,
@@ -60,6 +62,7 @@ export const cardRepo = {
       description: string | null;
       priority: 'none' | 'low' | 'medium' | 'high' | 'urgent';
       assigneeId: string | null;
+      startDate: Date | null;
       dueDate: Date | null;
       isCompleted: boolean;
       completedAt: Date | null;

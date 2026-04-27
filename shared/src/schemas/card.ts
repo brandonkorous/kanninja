@@ -9,6 +9,7 @@ export const createCardSchema = z.object({
   description: z.string().max(10000).optional(),
   priority: z.enum(priorityValues).optional(),
   assigneeId: z.string().uuid().optional(),
+  startDate: z.string().datetime().optional(),
   dueDate: z.string().datetime().optional(),
   estimatedHours: z.number().nonnegative().optional(),
 });
@@ -18,6 +19,7 @@ export const updateCardSchema = z.object({
   description: z.string().max(10000).nullable().optional(),
   priority: z.enum(priorityValues).optional(),
   assigneeId: z.string().uuid().nullable().optional(),
+  startDate: z.string().datetime().nullable().optional(),
   dueDate: z.string().datetime().nullable().optional(),
   isCompleted: z.boolean().optional(),
   estimatedHours: z.number().nonnegative().nullable().optional(),
@@ -37,6 +39,7 @@ export const cardSchema = z.object({
   priority: z.enum(priorityValues),
   assigneeId: z.string().uuid().nullable(),
   createdBy: z.string().uuid(),
+  startDate: z.string().datetime().nullable(),
   dueDate: z.string().datetime().nullable(),
   orderIndex: z.string(),
   isCompleted: z.boolean(),

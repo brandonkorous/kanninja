@@ -28,6 +28,7 @@ import { userRoutes } from './routes/users/index.js';
 import { apiKeyRoutes } from './routes/auth/api-keys.js';
 import { verifyKeyRoutes } from './routes/auth/verify-key.js';
 import { myWorkRoutes } from './routes/cards/my-work.js';
+import { scheduledCardRoutes } from './routes/cards/scheduled.js';
 import { searchRoutes } from './routes/search/index.js';
 import { integrationRoutes } from './routes/integrations/index.js';
 import { integrationOAuthRoutes } from './routes/integrations/oauth.js';
@@ -101,6 +102,7 @@ async function start() {
   await fastify.register(apiKeyRoutes);
   await fastify.register(verifyKeyRoutes);
   await fastify.register(myWorkRoutes);
+  await fastify.register(scheduledCardRoutes);
   await fastify.register(searchRoutes);
   await fastify.register(integrationRoutes);
   await fastify.register(integrationOAuthRoutes);

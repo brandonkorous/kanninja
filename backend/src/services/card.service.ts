@@ -23,6 +23,7 @@ export const cardService = {
       description: input.description,
       priority: input.priority,
       assigneeId: input.assigneeId,
+      startDate: input.startDate,
       dueDate: input.dueDate,
       estimatedHours: input.estimatedHours,
       createdBy: userId,
@@ -40,6 +41,8 @@ export const cardService = {
     if (input.priority !== undefined)
       updateData.priority = input.priority as 'none' | 'low' | 'medium' | 'high' | 'urgent';
     if (input.assigneeId !== undefined) updateData.assigneeId = input.assigneeId;
+    if (input.startDate !== undefined)
+      updateData.startDate = input.startDate ? new Date(input.startDate) : null;
     if (input.dueDate !== undefined)
       updateData.dueDate = input.dueDate ? new Date(input.dueDate) : null;
     if (input.estimatedHours !== undefined)
