@@ -36,6 +36,7 @@ export interface BoardWithChildren extends Board {
       priority: string;
       assigneeId: string | null;
       createdBy: string;
+      startDate: string | null;
       dueDate: string | null;
       orderIndex: string;
       isCompleted: boolean;

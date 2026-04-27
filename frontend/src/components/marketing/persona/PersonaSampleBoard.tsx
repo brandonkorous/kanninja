@@ -18,32 +18,40 @@ export function PersonaSampleBoard({ title, columns }: Props) {
                     </h2>
                 </div>
 
-                <div
-                    className="hanko-scroll-rise mt-16 grid gap-6"
-                    style={{
-                        gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))`,
-                    }}
-                >
-                    {columns.map((column) => (
-                        <div
-                            key={column.name}
-                            className="bg-base-100 rounded-lg shadow-e1 p-5 min-w-0"
-                        >
-                            <p className="text-eyebrow font-mono uppercase tracking-widest text-base-content/40">
-                                {column.name}
-                            </p>
-                            <ul className="mt-6 space-y-3">
-                                {column.cards.map((card, idx) => (
-                                    <li
-                                        key={idx}
-                                        className="bg-base-200 rounded-md p-4 text-sm text-base-content leading-snug"
-                                    >
-                                        {card}
-                                    </li>
-                                ))}
-                            </ul>
+                {/* Horizontally scrolling board, mirrors the real product on mobile.
+                  * The negative margins + matching padding let the lane bleed to
+                  * the viewport edge so the snap-scroll feels right on a phone.
+                  * The right-edge fade is a quiet hint there's more to the right —
+                  * hidden at lg+ where 3-4 columns fit without overflow. */}
+                <div className="hanko-scroll-rise mt-16 relative">
+                    <div className="overflow-x-auto snap-x snap-mandatory pb-4 -mx-6 md:-mx-12 lg:-mx-16 px-6 md:px-12 lg:px-16">
+                        <div className="flex gap-6 min-w-max">
+                            {columns.map((column) => (
+                                <div
+                                    key={column.name}
+                                    className="w-72 shrink-0 snap-start bg-base-100 rounded-lg shadow-e1 p-5"
+                                >
+                                    <p className="text-eyebrow font-mono uppercase tracking-widest text-base-content/40">
+                                        {column.name}
+                                    </p>
+                                    <ul className="mt-6 space-y-3">
+                                        {column.cards.map((card, idx) => (
+                                            <li
+                                                key={idx}
+                                                className="bg-base-200 rounded-md p-4 text-sm text-base-content leading-snug"
+                                            >
+                                                {card}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ))}
                         </div>
-                    ))}
+                    </div>
+                    <div
+                        aria-hidden="true"
+                        className="lg:hidden pointer-events-none absolute top-0 right-0 bottom-4 w-12 bg-gradient-to-l from-base-200 to-transparent"
+                    />
                 </div>
                 <p className="mt-8 text-sm text-base-content/50 max-w-xl">
                     A real board, not a screenshot. Yours will look different — that&rsquo;s the
