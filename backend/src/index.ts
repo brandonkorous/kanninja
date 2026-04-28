@@ -35,6 +35,7 @@ import { integrationRoutes } from './routes/integrations/index.js';
 import { integrationOAuthRoutes } from './routes/integrations/oauth.js';
 import { integrationWebhookRoutes } from './routes/integrations/webhooks.js';
 import { oauthRoutes } from './routes/oauth/index.js';
+import { compositeRoutes } from './routes/composite/index.js';
 import { registerProvider } from './integrations/registry.js';
 import { startTokenRefreshJob } from './integrations/token-refresh.js';
 // Integration providers
@@ -111,6 +112,7 @@ async function start() {
   await fastify.register(integrationOAuthRoutes);
   await fastify.register(integrationWebhookRoutes);
   await fastify.register(oauthRoutes);
+  await fastify.register(compositeRoutes);
 
   // Register integration providers
   registerProvider(googleCalendarProvider);
