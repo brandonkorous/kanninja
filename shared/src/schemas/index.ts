@@ -10,3 +10,4 @@ export * from './subscription.js';
 export * from './time-entry.js';
 export * from './user.js';
 export * from './api-key.js';
+export * from './composite.js';

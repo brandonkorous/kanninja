@@ -35,6 +35,11 @@ import { listConnectedIntegrationsTool } from './list-connected-integrations.js'
 import { listAvailableProvidersTool } from './list-available-providers.js';
 import { getIntegrationEventsTool } from './get-integration-events.js';
 import { syncIntegrationTool } from './sync-integration.js';
+import { createBoardWithStructureTool } from './create-board-with-structure.js';
+import { applyTemplateToBoardTool } from './apply-template-to-board.js';
+import { bulkCreateTasksTool } from './bulk-create-tasks.js';
+import { bulkUpdateTasksTool } from './bulk-update-tasks.js';
+import { duplicateCardTool } from './duplicate-card.js';
 import type { ToolDefinition } from '../registry.js';
 
 export const allTools: ToolDefinition[] = [
@@ -78,6 +83,12 @@ export const allTools: ToolDefinition[] = [
   deleteLabelTool,
   addLabelTool,
   removeLabelTool,
+  // Composite (transactional, multi-resource — one call replaces a chain of CRUD)
+  createBoardWithStructureTool,
+  applyTemplateToBoardTool,
+  bulkCreateTasksTool,
+  bulkUpdateTasksTool,
+  duplicateCardTool,
   // Integrations
   listConnectedIntegrationsTool,
   listAvailableProvidersTool,
