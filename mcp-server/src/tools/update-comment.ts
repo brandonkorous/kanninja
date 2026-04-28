@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const updateCommentTool = defineTool({
   name: 'update_comment',
+  title: 'Edit Comment',
   description: 'Edit the text of a comment. Only the comment author can edit.',
   inputSchema: z.object({
     boardId: z.string().uuid().describe('The board ID'),

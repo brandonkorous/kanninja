@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const updateLabelTool = defineTool({
   name: 'update_label',
+  title: 'Update Label',
   description: 'Rename a label or change its color.',
   inputSchema: z.object({
     labelId: z.string().uuid().describe('The label ID'),

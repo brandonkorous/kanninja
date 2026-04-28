@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const syncIntegrationTool = defineTool({
   name: 'sync_integration',
+  title: 'Sync Integration',
   description:
     'Manually trigger a sync for a specific integration connection. Use this when integration data appears stale (e.g. calendar events missing, GitHub PRs not reflected). Returns the sync result including how many items were processed.',
   inputSchema: z.object({

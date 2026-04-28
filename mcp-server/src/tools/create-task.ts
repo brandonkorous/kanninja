@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const createTaskTool = defineTool({
   name: 'create_task',
+  title: 'Create Kata',
   description: 'Create a new task (card) on a board. Requires the listId of the column to place it in.',
   inputSchema: z.object({
     boardId: z.string().uuid().describe('The board ID'),

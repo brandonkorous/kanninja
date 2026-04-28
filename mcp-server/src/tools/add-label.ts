@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const addLabelTool = defineTool({
   name: 'add_label',
+  title: 'Add Label to Kata',
   description: 'Add a label to a task.',
   inputSchema: z.object({
     boardId: z.string().uuid().describe('The board ID'),

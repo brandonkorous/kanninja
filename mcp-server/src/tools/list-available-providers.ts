@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const listAvailableProvidersTool = defineTool({
   name: 'list_available_providers',
+  title: 'List Available Integrations',
   description:
     'List all integration providers available in kanNINJA, with their tier requirements, categories, and whether the user can access them based on their subscription. Useful for suggesting integrations the user might benefit from connecting.',
   inputSchema: z.object({}),

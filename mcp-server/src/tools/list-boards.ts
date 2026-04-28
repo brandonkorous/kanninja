@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const listBoardsTool = defineTool({
   name: 'list_boards',
+  title: 'List Dojos',
   description: 'List all dojos (boards) visible to the authenticated user.',
   inputSchema: z.object({}),
   async handler(_args, ctx) {

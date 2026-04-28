@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const moveTaskTool = defineTool({
   name: 'move_task',
+  title: 'Move Kata',
   description: 'Move a task to a different column or change its order within a column.',
   inputSchema: z.object({
     boardId: z.string().uuid().describe('The board ID'),

@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const createListTool = defineTool({
   name: 'create_list',
+  title: 'Add Column',
   description: 'Create a new list (column) on a board.',
   inputSchema: z.object({
     boardId: z.string().uuid().describe('The board ID'),

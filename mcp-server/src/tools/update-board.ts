@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const updateBoardTool = defineTool({
   name: 'update_board',
+  title: 'Update Dojo',
   description: 'Update a dojo (board) — title, description, color, or financial-tracking settings.',
   inputSchema: z.object({
     boardId: z.string().uuid().describe('The board ID'),

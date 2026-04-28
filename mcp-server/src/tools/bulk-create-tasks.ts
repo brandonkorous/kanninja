@@ -8,6 +8,7 @@ const inputSchema = bulkCreateCardsSchema.extend({
 
 export const bulkCreateTasksTool = defineTool({
   name: 'bulk_create_tasks',
+  title: 'Bulk Create Kata',
   description:
     'Create up to 100 tasks (cards) across one or more lists on a board in a single transactional call. Faster and cheaper than a loop of create_task calls when an LLM has parsed e.g. a meeting transcript into tasks. Every listId must belong to the given board.',
   inputSchema,

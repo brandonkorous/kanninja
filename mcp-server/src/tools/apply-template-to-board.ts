@@ -8,6 +8,7 @@ const inputSchema = applyStructureToBoardSchema.extend({
 
 export const applyTemplateToBoardTool = defineTool({
   name: 'apply_template_to_board',
+  title: 'Apply Template to Dojo',
   description:
     'Append a structured template (lists + cards + checklist items + labels) to an existing board. New lists are added to the right of any existing ones — existing data is never modified. Transactional: the whole append succeeds or none of it does. Card label references resolve to existing user/board labels first, then to any new labels created in the same call.',
   inputSchema,

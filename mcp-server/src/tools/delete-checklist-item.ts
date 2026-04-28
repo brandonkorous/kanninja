@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const deleteChecklistItemTool = defineTool({
   name: 'delete_checklist_item',
+  title: 'Delete Checklist Item',
   description: 'Delete a checklist item from a task.',
   inputSchema: z.object({
     boardId: z.string().uuid().describe('The board ID'),

@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const listTasksTool = defineTool({
   name: 'list_tasks',
+  title: 'List Kata',
   description: 'List all tasks (cards) on a board, organized by column.',
   inputSchema: z.object({
     boardId: z.string().uuid().describe('The board ID'),

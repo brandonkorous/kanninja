@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const assignTaskTool = defineTool({
   name: 'assign_task',
+  title: 'Assign Kata',
   description: 'Assign a task to a user, or unassign by passing null.',
   inputSchema: z.object({
     boardId: z.string().uuid().describe('The board ID'),

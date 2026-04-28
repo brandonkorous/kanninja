@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const updateTaskTool = defineTool({
   name: 'update_task',
+  title: 'Update Kata',
   description: 'Update a task — title, description, priority, due date, progress, or completion status.',
   inputSchema: z.object({
     boardId: z.string().uuid().describe('The board ID'),
