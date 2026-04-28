@@ -14,36 +14,7 @@ const data: PersonaData = {
     },
     intro:
         'Real estate runs on deadlines that do not move. Inspection contingencies, financing periods, closing dates. Most CRMs in the industry are bloated and expensive — and yet a deal still slips because somebody forgot to file the addendum. kanNINJA gives you a board per transaction, and the calendar gets honest.',
-    sampleBoard: {
-        title: 'A board for an active transaction.',
-        columns: [
-            {
-                name: 'Contract to closing',
-                cards: [
-                    'Inspection — Wed Mar 12',
-                    'Appraisal — Mon Mar 17',
-                    'Final walkthrough — Tue Mar 25',
-                    'Closing — Fri Mar 28 at 10am',
-                ],
-            },
-            {
-                name: 'Documents',
-                cards: [
-                    'Buyer earnest money received',
-                    'Seller disclosure signed',
-                    'Title commitment requested',
-                ],
-            },
-            {
-                name: 'Communications',
-                cards: [
-                    'Email lender — appraisal scheduled',
-                    'Call seller — repairs response',
-                    'Update buyer — financing on track',
-                ],
-            },
-        ],
-    },
+    // Sample board lives in @kanninja/shared (templates/personas/realtors.ts).
     useCases: [
         {
             title: 'A board per transaction.',

@@ -14,36 +14,7 @@ const data: PersonaData = {
     },
     intro:
         "Most student to-do lists are forty things in a Notes app, half of them duplicates. kanNINJA gives you a column for each class, a column for the project, a column for the week. The next assignment is always one drag away. The semester stops feeling like a wall and starts feeling like a list.",
-    sampleBoard: {
-        title: 'A board for the semester.',
-        columns: [
-            {
-                name: 'This week',
-                cards: [
-                    'Bio reading: chapters 7–9',
-                    'CS problem set #4 (due Friday)',
-                    'History essay outline (due Tuesday)',
-                    'Office hours — Prof. Liu',
-                ],
-            },
-            {
-                name: 'In progress',
-                cards: [
-                    'Lit review for thesis',
-                    'Group project — slides for Marco',
-                    'Lab writeup #3',
-                ],
-            },
-            {
-                name: 'Done',
-                cards: [
-                    'Bio quiz #2',
-                    'Calc problem set #3',
-                    'Stats midterm',
-                ],
-            },
-        ],
-    },
+    // Sample board lives in @kanninja/shared (templates/personas/students.ts).
     useCases: [
         {
             title: 'A column per class.',

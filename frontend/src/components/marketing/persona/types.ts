@@ -32,8 +32,14 @@ export interface PersonaData {
     };
     /** A second-paragraph intro that grounds the persona in a real moment. */
     intro: string;
-    /** Sample board — 3 to 4 columns of plausible kata for this persona. */
-    sampleBoard: {
+    /**
+     * Sample board — 3 to 4 columns of plausible kata for this persona.
+     * Optional: when omitted, PersonaPage looks up the persona's template in
+     * @kanninja/shared (getTemplateByPersonaSlug) and derives the columns
+     * from its lists. New persona pages should prefer the shared registry
+     * so /templates and /for/<slug> stay in sync.
+     */
+    sampleBoard?: {
         title: string;
         columns: PersonaSampleColumn[];
     };

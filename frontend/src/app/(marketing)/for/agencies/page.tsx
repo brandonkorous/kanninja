@@ -14,41 +14,7 @@ const data: PersonaData = {
     },
     intro:
         'Agencies live in a constant interleave of client work, internal work, and the next pitch. We built kanNINJA so the project management does not become its own client. A board per engagement, a clan for the people on it, time tracked where the work happens. Less meta-work, more ship.',
-    sampleBoard: {
-        title: 'A board for a client retainer.',
-        columns: [
-            {
-                name: 'Backlog',
-                cards: [
-                    'Q2 social campaign concepts',
-                    'Email automation revamp',
-                    'New blog post: industry trends',
-                ],
-            },
-            {
-                name: 'This week',
-                cards: [
-                    'Landing page copy round 2',
-                    'Brand assets export — handoff',
-                    'Weekly status sync',
-                ],
-            },
-            {
-                name: 'Client review',
-                cards: [
-                    'Logo concepts (sent Tue)',
-                    'Q1 report (sent Mon)',
-                ],
-            },
-            {
-                name: 'Shipped',
-                cards: [
-                    'Homepage redesign (live Mar 14)',
-                    'Q1 retainer billed',
-                ],
-            },
-        ],
-    },
+    // Sample board lives in @kanninja/shared (templates/personas/agencies.ts).
     useCases: [
         {
             title: 'A board per client.',

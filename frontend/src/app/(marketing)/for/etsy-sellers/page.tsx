@@ -14,41 +14,7 @@ const data: PersonaData = {
     },
     intro:
         "Selling on Etsy is a one-person factory. Orders come in. Materials run out. The custom listing needs a conversation. The holiday rush is closer than it feels. kanNINJA gives the maker a board so the orders stop hiding in the inbox and the restock list stops hiding in your head.",
-    sampleBoard: {
-        title: 'A board for a small Etsy shop.',
-        columns: [
-            {
-                name: 'New orders',
-                cards: [
-                    'Order #4521 — custom name necklace',
-                    'Order #4522 — gold ring (size 7)',
-                    'Order #4523 — bridal earrings (rush)',
-                ],
-            },
-            {
-                name: 'In progress',
-                cards: [
-                    'Order #4519 — solder, polish',
-                    'Order #4518 — engrave initials',
-                ],
-            },
-            {
-                name: 'Ready to ship',
-                cards: [
-                    'Order #4517 — packed, label printed',
-                    'Order #4516 — ready, awaiting USPS pickup',
-                ],
-            },
-            {
-                name: 'Restock',
-                cards: [
-                    'Sterling silver wire — 1mm',
-                    '14k gold-fill chain — 18 inch',
-                    'Jewelry boxes (50)',
-                ],
-            },
-        ],
-    },
+    // Sample board lives in @kanninja/shared (templates/personas/etsy-sellers.ts).
     useCases: [
         {
             title: 'Orders, end to end.',

@@ -14,38 +14,7 @@ const data: PersonaData = {
     },
     intro:
         "Travel planning lives in twelve browser tabs. kanNINJA collapses them onto one board — the flights, the hotels, the activities, the reservations someone has to make six months in advance. Then the trip itself becomes a board of its own: day by day, hour by hour, the things you actually want to see.",
-    sampleBoard: {
-        title: 'A board for a two-week trip to Japan.',
-        columns: [
-            {
-                name: 'Booked',
-                cards: [
-                    'Flight — SFO to NRT (May 2)',
-                    'Hotel — Tokyo, Park Hyatt',
-                    'Hotel — Kyoto, Hoshinoya',
-                    'JR Pass purchased',
-                ],
-            },
-            {
-                name: 'To book',
-                cards: [
-                    'Sushi reservation — Sushi Saito',
-                    'Tea ceremony in Kyoto',
-                    'Day trip to Hakone',
-                    'Hotel — Osaka (1 night)',
-                ],
-            },
-            {
-                name: 'Day by day',
-                cards: [
-                    'May 3 — Tokyo: Asakusa, Senso-ji, dinner Shinjuku',
-                    'May 4 — Tokyo: TeamLab, Shibuya, ramen',
-                    'May 5 — Day trip to Nikko',
-                    'May 6 — Train to Kyoto',
-                ],
-            },
-        ],
-    },
+    // Sample board lives in @kanninja/shared (templates/personas/travel-planning.ts).
     useCases: [
         {
             title: 'Flights and hotels in one place.',

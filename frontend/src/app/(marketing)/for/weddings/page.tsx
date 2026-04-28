@@ -14,51 +14,11 @@ const data: PersonaData = {
     },
     intro:
         "Wedding planning is one big project that breaks into a hundred small ones. The dress, the venue, the guest list, the floral mock-up, the rehearsal dinner, the ceremony script, the day-of timeline. A spreadsheet works until it doesn't. A wedding planner app makes you live in their world. kanNINJA gives you a board and gets out of the way.",
-    sampleBoard: {
-        title: 'A board for the year of planning.',
-        columns: [
-            {
-                name: '12+ months out',
-                cards: [
-                    'Set the date',
-                    'Book the venue',
-                    'Lock the photographer',
-                    'Send save-the-dates',
-                ],
-            },
-            {
-                name: '6 months out',
-                cards: [
-                    'Order invitations',
-                    'Choose flowers — first meeting',
-                    'Tasting at the caterer',
-                    'Cake vendor',
-                ],
-            },
-            {
-                name: '1 month out',
-                cards: [
-                    'Final RSVP count to caterer',
-                    'Seating chart locked',
-                    'Pickup tuxes',
-                    'Rehearsal dinner timing',
-                ],
-            },
-            {
-                name: 'Day of',
-                cards: [
-                    'Bouquets delivered 9am',
-                    'Hair + makeup 11am',
-                    'First look 3pm',
-                    'Ceremony 5pm',
-                ],
-            },
-        ],
-    },
+    // Sample board lives in @kanninja/shared (templates/personas/weddings.ts).
     useCases: [
         {
-            title: 'The 12-month timeline.',
-            body: 'A column per phase. Drag cards as the date gets closer. The whole year visible on one board, no scrolling through a spreadsheet.',
+            title: 'Every decision, in the right state.',
+            body: 'Researching, booked, confirmed, done. A vendor moves from deciding to deposit paid to everything locked for the day. The state lives on the column; the date sits on the card.',
         },
         {
             title: 'Vendor management.',

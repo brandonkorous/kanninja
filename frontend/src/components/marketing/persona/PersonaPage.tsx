@@ -1,3 +1,4 @@
+import { getTemplateByPersonaSlug } from '@kanninja/shared';
 import { JsonLd, faqLd, breadcrumbLd } from '@/components/seo/JsonLd';
 import { SITE_URL } from '@/lib/seo';
 import { PersonaHero } from './PersonaHero';
@@ -6,7 +7,7 @@ import { PersonaSampleBoard } from './PersonaSampleBoard';
 import { PersonaUseCases } from './PersonaUseCases';
 import { PersonaFAQSection } from './PersonaFAQSection';
 import { PersonaClose } from './PersonaClose';
-import type { PersonaData } from './types';
+import type { PersonaData, PersonaSampleColumn } from './types';
 
 interface Props {
     slug: string;
@@ -20,6 +21,21 @@ interface Props {
  */
 export function PersonaPage({ slug, data }: Props) {
     const url = `${SITE_URL}/for/${slug}`;
+
+    // Sample board comes from one of two sources, in this order:
+    //   1. The shared template registry (preferred — keeps /templates and
+    //      /for/<slug> from drifting once the persona has been migrated).
+    //   2. Inline data.sampleBoard (legacy — for personas not yet in shared).
+    const sharedTemplate = getTemplateByPersonaSlug(slug);
+    const sampleBoard = sharedTemplate
+        ? {
+              title: `${sharedTemplate.name}.`,
+              columns: sharedTemplate.lists.map<PersonaSampleColumn>((l) => ({
+                  name: l.title,
+                  cards: l.cards.map((c) => c.title),
+              })),
+          }
+        : data.sampleBoard;
 
     const webPageLd = {
         '@context': 'https://schema.org',
@@ -49,10 +65,12 @@ export function PersonaPage({ slug, data }: Props) {
                 subtitle={data.hero.subtitle}
             />
             <PersonaIntro intro={data.intro} />
-            <PersonaSampleBoard
-                title={data.sampleBoard.title}
-                columns={data.sampleBoard.columns}
-            />
+            {sampleBoard && (
+                <PersonaSampleBoard
+                    title={sampleBoard.title}
+                    columns={sampleBoard.columns}
+                />
+            )}
             <PersonaUseCases label={data.label} useCases={data.useCases} />
             <PersonaFAQSection label={data.label} faqs={data.faqs} />
             <PersonaClose

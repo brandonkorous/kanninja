@@ -14,42 +14,7 @@ const data: PersonaData = {
     },
     intro:
         "Most YouTubers run a small studio inside their head. Ideas, scripts, shoots, edits, thumbnails, descriptions, scheduled uploads. We built kanNINJA so the channel has a real backlog instead of a Notes app — and so the editor and the producer can finally see the same picture.",
-    sampleBoard: {
-        title: 'A board for the channel.',
-        columns: [
-            {
-                name: 'Ideas',
-                cards: [
-                    'How I built my home studio',
-                    'Reaction: trending tool of the week',
-                    'Long-form: history of [topic]',
-                    'Tutorial: setup guide',
-                ],
-            },
-            {
-                name: 'Scripting',
-                cards: [
-                    'Episode 47 — outline',
-                    'Episode 48 — script v2 (need callback rewrite)',
-                ],
-            },
-            {
-                name: 'Shooting / editing',
-                cards: [
-                    'Ep 46 — first cut (editor: Jamie)',
-                    'Ep 45 — color pass',
-                    'Thumbnail v3',
-                ],
-            },
-            {
-                name: 'Scheduled',
-                cards: [
-                    'Ep 44 — scheduled Tue 9am',
-                    'Ep 43 — published',
-                ],
-            },
-        ],
-    },
+    // Sample board lives in @kanninja/shared (templates/personas/youtubers.ts).
     useCases: [
         {
             title: 'The idea backlog.',

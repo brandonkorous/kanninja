@@ -14,37 +14,7 @@ const data: PersonaData = {
     },
     intro:
         "We built kanNINJA so the things you said you'd handle actually have somewhere to live. The lawn, the garage, the trip to the dump. The Saturday project that becomes a six-week project. The kid's science fair. The car maintenance schedule that everyone forgets except for the day it matters. Cards on a board — done is a real column you can see.",
-    sampleBoard: {
-        title: 'A board for the dad jobs.',
-        columns: [
-            {
-                name: 'This weekend',
-                cards: [
-                    'Mow the lawn',
-                    'Help Theo build the bird feeder',
-                    'Replace the smoke detector batteries',
-                    'Trip to the hardware store',
-                ],
-            },
-            {
-                name: 'Backlog',
-                cards: [
-                    'Re-stain the deck',
-                    'Clean out the garage',
-                    'Fix the bathroom faucet',
-                    'Schedule oil change',
-                ],
-            },
-            {
-                name: 'Done',
-                cards: [
-                    'Built the new shelves in the garage',
-                    'Cleaned the gutters',
-                    'Got the snow tires off',
-                ],
-            },
-        ],
-    },
+    // Sample board lives in @kanninja/shared (templates/personas/dads.ts).
     useCases: [
         {
             title: 'The honey-do list.',

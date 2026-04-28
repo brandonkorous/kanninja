@@ -14,55 +14,15 @@ const data: PersonaData = {
     },
     intro:
         "An event is a project where the deadline is also the show. Vendors, contracts, the run-of-show, the morning-of fire drill. We built kanNINJA so the planner can see all of it at once — and so the assistant, the venue, and the AV team can all see the same plan.",
-    sampleBoard: {
-        title: 'A board for a 200-person conference.',
-        columns: [
-            {
-                name: '8 weeks out',
-                cards: [
-                    'Lock the venue contract',
-                    'Confirm caterer — first menu draft',
-                    'Send invites — first wave',
-                    'AV walkthrough — schedule',
-                ],
-            },
-            {
-                name: 'Run of show',
-                cards: [
-                    '8:30 — Doors open, registration',
-                    '9:00 — Keynote',
-                    '10:30 — Coffee break',
-                    '11:00 — Panel #1',
-                ],
-            },
-            {
-                name: 'Vendors',
-                cards: [
-                    'Caterer — final headcount due Friday',
-                    'AV — load-in 6am Saturday',
-                    'Florist — drop-off 8am',
-                    'Photographer — confirmed',
-                ],
-            },
-            {
-                name: 'Day of',
-                cards: [
-                    'Setup 6am — assistant + me',
-                    'Mic check 7:30',
-                    'Speaker green room — water, snacks',
-                    'Tear down 5pm',
-                ],
-            },
-        ],
-    },
+    // Sample board lives in @kanninja/shared (templates/personas/event-planners.ts).
     useCases: [
         {
             title: 'The vendor matrix.',
             body: 'Every vendor as a card. Contract status, payment status, load-in time. The morning of the event, the vendor list IS the schedule.',
         },
         {
-            title: 'The run of show.',
-            body: 'A column dedicated to the timeline. Each segment is a card with the time, the speaker, the AV cue. The whole event readable in one scroll.',
+            title: 'The run of show, on its own board.',
+            body: 'Day-of has a different shape — a board where each segment is a card, ordered by the clock: time, speaker, AV cue. The planning board stays a kanban; the run of show is a timeline. Same product, different board.',
         },
         {
             title: 'Multiple events at once.',

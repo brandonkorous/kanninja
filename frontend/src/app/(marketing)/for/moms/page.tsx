@@ -14,36 +14,8 @@ const data: PersonaData = {
     },
     intro:
         "Most kanban tools were built for software teams. We built kanNINJA so it works just as well for the person running a household. One board for the kids, one for the house, one for everything you swore you'd remember and didn't. The columns are yours. The cards are yours. The mental load goes on paper — finally.",
-    sampleBoard: {
-        title: 'A board for the household.',
-        columns: [
-            {
-                name: 'This week',
-                cards: [
-                    'Pediatrician — Theo (Tuesday 2pm)',
-                    'Field-trip permission slip — Maya',
-                    'Buy birthday gift for Sam (party Saturday)',
-                    'Pick up dry cleaning',
-                ],
-            },
-            {
-                name: 'Waiting on',
-                cards: [
-                    'School portrait order confirmation',
-                    'Dentist to call back about insurance',
-                    'Mom group RSVPs for Thursday',
-                ],
-            },
-            {
-                name: 'Done this week',
-                cards: [
-                    'Kids’ haircuts',
-                    'Renewed library cards',
-                    'Made the casserole for the new neighbor',
-                ],
-            },
-        ],
-    },
+    // Sample board lives in @kanninja/shared (templates/personas/moms.ts) so
+    // /for/moms and /templates render the same starting point.
     useCases: [
         {
             title: 'The household to-do list.',

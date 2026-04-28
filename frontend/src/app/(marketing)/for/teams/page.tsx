@@ -14,43 +14,7 @@ const data: PersonaData = {
     },
     intro:
         'Most kanban tools were either built for one person or scaled past you to enterprise. kanNINJA is built for the team in between — the duo, the squad, the small product or ops team where every seat is doing real work. The features feel ready on day one, and they stay sharp at thirty seats.',
-    sampleBoard: {
-        title: 'A board for a small product team.',
-        columns: [
-            {
-                name: 'Backlog',
-                cards: [
-                    'Onboarding redesign — research',
-                    'Billing page accessibility audit',
-                    'Push notifications — investigate',
-                    'New customer testimonial collection',
-                ],
-            },
-            {
-                name: 'This week',
-                cards: [
-                    'Ship dark mode (Maya)',
-                    'Customer interview synthesis (Theo)',
-                    'Pricing page A/B test (Jules)',
-                ],
-            },
-            {
-                name: 'In review',
-                cards: [
-                    'Auth refactor — code review',
-                    'New onboarding email — copy review',
-                ],
-            },
-            {
-                name: 'Done this week',
-                cards: [
-                    'Stripe webhook fix',
-                    'Quarterly retro doc',
-                    'Customer support macro updates',
-                ],
-            },
-        ],
-    },
+    // Sample board lives in @kanninja/shared (templates/personas/teams.ts).
     useCases: [
         {
             title: 'A clan per team.',

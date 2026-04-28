@@ -16,10 +16,17 @@ export function useParseTask() {
   return useMutation({
     mutationFn: (text: string) =>
       api
-        .post<{ data: { title: string; description?: string; priority?: string; due_date?: string; subtasks?: string[] } }>(
-          '/api/v1/ai/parse-task',
-          { text },
-        )
+        .post<{
+          data: {
+            title: string;
+            description?: string;
+            priority?: string;
+            due_date?: string;
+            estimated_hours?: number;
+            tags?: string[];
+            subtasks?: string[];
+          };
+        }>('/api/v1/ai/parse-task', { text })
         .then((r) => r.data),
     onError: (err) => toast.error(getToastErrorMessage(err)),
   });

@@ -14,53 +14,11 @@ const data: PersonaData = {
     },
     intro:
         "Startups die from the wrong things being done well, not the right things being done badly. We built kanNINJA so the founder and the early team can keep the actual priorities visible — and so the work that just feels productive (the inbox, the busywork, the sixth tweak to the deck) does not crowd out the work that actually moves the company.",
-    sampleBoard: {
-        title: 'A board for an early-stage startup.',
-        columns: [
-            {
-                name: 'This quarter',
-                cards: [
-                    'Hit $20k MRR',
-                    'Close lead investor on seed',
-                    'Hire first full-time engineer',
-                    'Ship v1 of the API',
-                ],
-            },
-            {
-                name: 'This week',
-                cards: [
-                    'Customer interviews — 5 done by Friday',
-                    'Update fundraising deck',
-                    'Onboard new pilot customer',
-                    'Bug triage — top 3 from feedback',
-                ],
-            },
-            {
-                name: 'Needs founder',
-                cards: [
-                    'Approve hire — engineering',
-                    'Sign vendor contract — Stripe enterprise',
-                    'Investor reply — follow-up due',
-                ],
-            },
-            {
-                name: 'Shipped this week',
-                cards: [
-                    'Landing page test #3',
-                    'New onboarding flow',
-                    'Customer interview deck',
-                ],
-            },
-        ],
-    },
+    // Sample board lives in @kanninja/shared (templates/personas/startups.ts).
     useCases: [
         {
-            title: 'A "this quarter" column that does not move.',
-            body: 'The quarterly priorities sit at the top of the board. They do not get re-discussed every Monday. The quarter stays visible — and the busywork loses the war for attention.',
-        },
-        {
-            title: 'A "needs founder" column.',
-            body: 'The team flags work that requires founder approval, signature, or judgment. The founder bottleneck becomes visible — not theoretical.',
+            title: '"Needs founder" is a real column.',
+            body: 'The team flags work that requires founder approval, signature, or judgment. The bottleneck becomes visible, not theoretical. Quarterly OKRs live in a strategy doc and on labels; the kanban is for what is moving today.',
         },
         {
             title: 'Customer interviews and feedback as cards.',

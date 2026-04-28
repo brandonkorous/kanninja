@@ -14,42 +14,8 @@ const data: PersonaData = {
     },
     intro:
         "Freelance work means you are the project manager and the operator. The good news: nobody schedules a meeting to plan the meeting. The hard part: there is nobody to remind you the contract is unsigned. We built kanNINJA so the work is always one drag away from done — and the bookkeeping no longer hides at the bottom of the list.",
-    sampleBoard: {
-        title: 'A board for a freelance week.',
-        columns: [
-            {
-                name: 'This week',
-                cards: [
-                    'Acme — landing page round 2 (due Thursday)',
-                    'Globex — final invoice',
-                    'Pitch deck for new client',
-                    'Quarterly taxes',
-                ],
-            },
-            {
-                name: 'In progress',
-                cards: [
-                    'Initech — onboarding deck',
-                    'Acme — copy revisions',
-                ],
-            },
-            {
-                name: 'Waiting on client',
-                cards: [
-                    'Globex — feedback on hero',
-                    'Initech — brand assets',
-                ],
-            },
-            {
-                name: 'Done this week',
-                cards: [
-                    'Sent invoice — Acme',
-                    'Logged hours — Globex',
-                    'Wrote weekly update',
-                ],
-            },
-        ],
-    },
+    // Sample board lives in @kanninja/shared (templates/personas/freelancers.ts)
+    // so /for/freelancers and /templates render the same starting point.
     useCases: [
         {
             title: 'A board per client.',

@@ -14,41 +14,7 @@ const data: PersonaData = {
     },
     intro:
         "Remote work fails when the work depends on people being online at the same time. kanNINJA is built so the board holds the context — the comments, the decisions, the next move — even when half the team is asleep. When someone wakes up, the board tells them what happened. When they go offline, the board carries the work forward.",
-    sampleBoard: {
-        title: 'A board for a 6-person remote team.',
-        columns: [
-            {
-                name: 'For overnight (Asia / EU)',
-                cards: [
-                    'Onboarding email copy review',
-                    'Bug triage — backlog',
-                    'Customer interviews summary',
-                ],
-            },
-            {
-                name: 'In progress',
-                cards: [
-                    'Auth refactor (Maya, US-PT)',
-                    'Pricing page test (Theo, EU-CET)',
-                    'Mobile menu fix (Aki, JP-JST)',
-                ],
-            },
-            {
-                name: 'Needs review',
-                cards: [
-                    'PR #428 — reviewers: Maya, Theo',
-                    'Design — homepage hero',
-                ],
-            },
-            {
-                name: 'Shipped',
-                cards: [
-                    'Stripe upgrade',
-                    'Docs site refresh',
-                ],
-            },
-        ],
-    },
+    // Sample board lives in @kanninja/shared (templates/personas/remote-teams.ts).
     useCases: [
         {
             title: 'Async-friendly comments.',

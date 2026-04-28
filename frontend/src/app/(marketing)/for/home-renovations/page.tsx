@@ -14,45 +14,7 @@ const data: PersonaData = {
     },
     intro:
         "Renovations always take longer and cost more than the spreadsheet said. kanNINJA does not fix that — but it makes the slope visible. Every contractor, every quote, every change order, every dump run. The room that’s done. The room that is not. The day the tile finally arrives.",
-    sampleBoard: {
-        title: 'A board for the renovation.',
-        columns: [
-            {
-                name: 'Planning',
-                cards: [
-                    'Architect — first meeting',
-                    'Pull permit (city)',
-                    'Get three quotes — general contractor',
-                    'Tile selection at showroom',
-                ],
-            },
-            {
-                name: 'Active',
-                cards: [
-                    'Demo — kitchen (Mon-Wed)',
-                    'Plumber rough-in (Thu)',
-                    'Electrician (Fri)',
-                    'Order cabinets — 6-week lead time',
-                ],
-            },
-            {
-                name: 'Waiting on',
-                cards: [
-                    'Inspector — Friday morning',
-                    'Tile shipment — week of Mar 15',
-                    'Final paint approval — partner',
-                ],
-            },
-            {
-                name: 'Done',
-                cards: [
-                    'Demo complete',
-                    'Rough plumbing approved',
-                    'Drywall up',
-                ],
-            },
-        ],
-    },
+    // Sample board lives in @kanninja/shared (templates/personas/home-renovations.ts).
     useCases: [
         {
             title: 'The contractor list.',

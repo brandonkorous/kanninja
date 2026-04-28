@@ -14,50 +14,11 @@ const data: PersonaData = {
     },
     intro:
         "Moving is the single most stressful project most people take on. The to-do list is real and it has a deadline. We built kanNINJA so the move stops living in your head — and so the partner who said they would handle the utilities can prove it.",
-    sampleBoard: {
-        title: 'A board for the move.',
-        columns: [
-            {
-                name: '8 weeks out',
-                cards: [
-                    'Choose movers — get three quotes',
-                    'Notify landlord (or list current home)',
-                    'Start packing the basement',
-                    'Make a school-transfer list (kids)',
-                ],
-            },
-            {
-                name: '2 weeks out',
-                cards: [
-                    'Transfer utilities — gas, electric, internet',
-                    'Forward mail with USPS',
-                    'Update insurance',
-                    'Confirm movers',
-                ],
-            },
-            {
-                name: 'Move week',
-                cards: [
-                    'Pack the kitchen',
-                    'Defrost the fridge',
-                    'Vet appointment for the cat',
-                    'Final walkthrough',
-                ],
-            },
-            {
-                name: 'After',
-                cards: [
-                    'Update driver license',
-                    'Update voter registration',
-                    'Find a new pediatrician',
-                ],
-            },
-        ],
-    },
+    // Sample board lives in @kanninja/shared (templates/personas/moving.ts).
     useCases: [
         {
-            title: 'The 8-week timeline.',
-            body: "A column per phase. Cards drift right as the date gets closer. The whole move visible on one board, not lost in a Google Doc.",
+            title: 'Every task, with its own date.',
+            body: 'Columns hold the state — to do, scheduled, waiting on a third party, done. Card due dates handle the timeline. The two-week-out reminders surface on their own.',
         },
         {
             title: 'Address changes that nobody remembers.',

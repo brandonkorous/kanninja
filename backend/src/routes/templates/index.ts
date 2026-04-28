@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
+import { BOARD_TEMPLATES } from '@kanninja/shared';
 import { requireAuth } from '../../middleware/require-auth.js';
 import { db } from '../../db/index.js';
 import { boards } from '../../db/schema/boards.js';
@@ -29,46 +30,14 @@ const applyTemplateSchema = z.object({
   ),
 });
 
-const BUILT_IN_TEMPLATES = [
-  {
-    id: 'agile-sprint',
-    name: 'Agile Sprint',
-    description: 'Standard agile sprint board with backlog, in-progress, review, and done',
-    lists: ['Backlog', 'To Do', 'In Progress', 'Review', 'Done'],
-  },
-  {
-    id: 'simple-kanban',
-    name: 'Simple Kanban',
-    description: 'Three-column kanban for any workflow',
-    lists: ['To Do', 'Doing', 'Done'],
-  },
-  {
-    id: 'content-pipeline',
-    name: 'Content Pipeline',
-    description: 'For blog posts, videos, or social content',
-    lists: ['Ideas', 'Drafting', 'Editing', 'Scheduled', 'Published'],
-  },
-  {
-    id: 'bug-tracker',
-    name: 'Bug Tracker',
-    description: 'Track bug reports through resolution',
-    lists: ['Reported', 'Triaged', 'In Progress', 'Testing', 'Resolved'],
-  },
-  {
-    id: 'product-launch',
-    name: 'Product Launch',
-    description: 'Coordinate a product launch across teams',
-    lists: ['Planning', 'Development', 'Marketing', 'QA', 'Launch', 'Post-launch'],
-  },
-];
-
 export async function templateRoutes(fastify: FastifyInstance) {
-  // List built-in templates
+  // List built-in templates. Source of truth is @kanninja/shared so the same
+  // entries power /for/<persona> sample boards on the marketing site.
   fastify.get(
     '/api/v1/templates/boards',
     { preHandler: [requireAuth] },
     async () => {
-      return { data: BUILT_IN_TEMPLATES };
+      return { data: BOARD_TEMPLATES };
     },
   );
 

@@ -14,38 +14,7 @@ const data: PersonaData = {
     },
     intro:
         'Hosting is a project that pretends not to be one. The shopping list, the menu, the room the cousins are sleeping in, the present you keep meaning to wrap. kanNINJA gives the host a board so the spiral happens on paper instead of in the back of your mind on Tuesday at 11pm.',
-    sampleBoard: {
-        title: 'A board for hosting Thanksgiving for twelve.',
-        columns: [
-            {
-                name: '2 weeks out',
-                cards: [
-                    'Send the menu to the gluten-free guest',
-                    'Order the turkey',
-                    'Confirm guest count',
-                    'Buy place cards and napkins',
-                ],
-            },
-            {
-                name: 'Week of',
-                cards: [
-                    'Grocery run #1 (non-perishables)',
-                    'Make the cranberry sauce',
-                    'Brine the turkey (Tuesday)',
-                    'Set the table (Wednesday night)',
-                ],
-            },
-            {
-                name: 'Day of',
-                cards: [
-                    'Turkey in the oven 11am',
-                    'Prep stuffing 1pm',
-                    'Sides going at 2pm',
-                    'Guests arrive 4pm',
-                ],
-            },
-        ],
-    },
+    // Sample board lives in @kanninja/shared (templates/personas/holidays.ts).
     useCases: [
         {
             title: 'The menu, broken down.',
