@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const getTaskTool = defineTool({
   name: 'get_task',
+  title: 'Get Kata',
   description: 'Get full detail for a single task including comments and history.',
   inputSchema: z.object({
     boardId: z.string().uuid().describe('The board ID'),

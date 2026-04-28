@@ -10,6 +10,11 @@ import type { McpContext } from './context.js';
 
 export interface ToolDefinition {
   name: string;
+  // Human-readable title surfaced by hosts that respect the MCP spec
+  // 2025-06-18 `title` field (Claude.ai, etc.). Lets us show kanNINJA
+  // brand vocabulary ("Create Kata") without renaming the underlying
+  // tool identifier ("create_task") that integrators have wired up.
+  title?: string;
   description: string;
   inputSchema: z.ZodObject<z.ZodRawShape>;
   handler: (args: Record<string, unknown>, ctx: McpContext) => Promise<unknown>;
@@ -27,6 +32,7 @@ export function registerAllTools(
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: tools.map((t) => ({
       name: t.name,
+      ...(t.title ? { title: t.title } : {}),
       description: t.description,
       inputSchema: zodToJsonSchema(t.inputSchema),
     })),

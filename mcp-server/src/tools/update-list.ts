@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const updateListTool = defineTool({
   name: 'update_list',
+  title: 'Rename Column',
   description: 'Rename a list (column) on a board.',
   inputSchema: z.object({
     boardId: z.string().uuid().describe('The board ID'),

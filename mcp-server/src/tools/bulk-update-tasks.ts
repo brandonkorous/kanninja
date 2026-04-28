@@ -8,6 +8,7 @@ const inputSchema = bulkUpdateCardsSchema.extend({
 
 export const bulkUpdateTasksTool = defineTool({
   name: 'bulk_update_tasks',
+  title: 'Bulk Update Kata',
   description:
     'Update up to 100 tasks at once — close a sprint, retag/reprioritize many cards, mass-complete done items. Single transaction; any update failing rolls back the whole call. Every cardId must belong to the given board.',
   inputSchema,

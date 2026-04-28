@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const listLabelsTool = defineTool({
   name: 'list_labels',
+  title: 'List Labels',
   description:
     'List labels available on a board. Includes the user\'s global labels plus any board-scoped ones.',
   inputSchema: z.object({

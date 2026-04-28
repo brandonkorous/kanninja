@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const deleteLabelTool = defineTool({
   name: 'delete_label',
+  title: 'Delete Label',
   description:
     'Delete a label. Removes it from any cards it was attached to. Only the label\'s creator can delete.',
   inputSchema: z.object({

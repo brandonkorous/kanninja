@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const createLabelTool = defineTool({
   name: 'create_label',
+  title: 'Create Label',
   description:
     'Create a new label. Omit boardId for a personal/global label that can be used across boards; pass a boardId to scope it to a single board.',
   inputSchema: z.object({

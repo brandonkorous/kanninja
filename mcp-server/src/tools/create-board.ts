@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const createBoardTool = defineTool({
   name: 'create_board',
+  title: 'Create Dojo',
   description: 'Create a new dojo (board). Optionally attach it to a clan.',
   inputSchema: z.object({
     title: z.string().min(1).max(200).describe('Board title'),

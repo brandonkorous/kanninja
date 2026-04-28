@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const reorderListsTool = defineTool({
   name: 'reorder_lists',
+  title: 'Reorder Columns',
   description: 'Reorder the lists (columns) on a board. Pass the list IDs in the desired order.',
   inputSchema: z.object({
     boardId: z.string().uuid().describe('The board ID'),

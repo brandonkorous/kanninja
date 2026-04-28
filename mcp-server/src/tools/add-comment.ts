@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const addCommentTool = defineTool({
   name: 'add_comment',
+  title: 'Add Comment',
   description: 'Add a comment to a task. Posts as the authenticated user.',
   inputSchema: z.object({
     boardId: z.string().uuid().describe('The board ID'),

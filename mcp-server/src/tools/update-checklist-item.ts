@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const updateChecklistItemTool = defineTool({
   name: 'update_checklist_item',
+  title: 'Update Checklist Item',
   description: 'Update a checklist item — rename it, mark it complete, or both.',
   inputSchema: z.object({
     boardId: z.string().uuid().describe('The board ID'),

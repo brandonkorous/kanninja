@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const removeLabelTool = defineTool({
   name: 'remove_label',
+  title: 'Remove Label from Kata',
   description: 'Remove a label from a task.',
   inputSchema: z.object({
     boardId: z.string().uuid().describe('The board ID'),

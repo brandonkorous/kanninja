@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const deleteListTool = defineTool({
   name: 'delete_list',
+  title: 'Delete Column',
   description: 'Delete a list (column) from a board. All cards in the list are also removed.',
   inputSchema: z.object({
     boardId: z.string().uuid().describe('The board ID'),

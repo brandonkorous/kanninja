@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const duplicateCardTool = defineTool({
   name: 'duplicate_card',
+  title: 'Duplicate Kata',
   description:
     'Clone a task. Copies title, description, priority, dates, and (by default) checklist items + label attachments to a new card. Use targetListId to drop the clone in a different column; otherwise it lands at the bottom of the source list.',
   inputSchema: z.object({
