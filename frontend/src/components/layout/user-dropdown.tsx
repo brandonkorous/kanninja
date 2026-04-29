@@ -15,7 +15,15 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useConsent } from '@/providers/ConsentProvider';
 
-export function UserDropdown({ compact = false }: { compact?: boolean }) {
+type Placement = 'top-start' | 'bottom-end';
+
+export function UserDropdown({
+  compact = false,
+  placement = 'top-start',
+}: {
+  compact?: boolean;
+  placement?: Placement;
+}) {
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
   const { openPreferences } = useConsent();
@@ -133,11 +141,13 @@ export function UserDropdown({ compact = false }: { compact?: boolean }) {
       {open && (
         <div
           id="user-menu-panel"
-          className={
-            compact
-              ? 'absolute bottom-full left-0 mb-2 min-w-56 bg-base-100 border border-base-300 rounded-lg shadow-e3 overflow-hidden z-50'
-              : 'absolute bottom-full left-0 right-0 mb-2 bg-base-100 border border-base-300 rounded-lg shadow-e3 overflow-hidden z-50'
-          }
+          className={`absolute z-50 min-w-56 bg-base-100 border border-base-300 rounded-lg shadow-e3 overflow-hidden ${
+            placement === 'bottom-end'
+              ? 'top-full right-0 mt-2'
+              : compact
+                ? 'bottom-full left-0 mb-2'
+                : 'bottom-full left-0 right-0 mb-2'
+          }`}
         >
           <ul className="menu p-2 w-full">
             <li>

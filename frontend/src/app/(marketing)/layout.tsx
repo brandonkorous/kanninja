@@ -1,6 +1,7 @@
 import Link from 'next/link';
-import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
+import { SignedIn, SignedOut } from '@clerk/nextjs';
 import { Wordmark } from '@/components/layout/wordmark';
+import { UserDropdown } from '@/components/layout/user-dropdown';
 
 const navLinkClass =
     'text-sm font-mono uppercase tracking-widest text-base-content/60 hover:text-base-content focus-visible:shadow-focus rounded-sm px-3 py-2 transition-colors';
@@ -96,7 +97,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
                                 Dashboard
                             </Link>
                             <div className="ml-2 flex items-center">
-                                <UserButton afterSignOutUrl="/" />
+                                <UserDropdown compact placement="bottom-end" />
                             </div>
                         </SignedIn>
                     </nav>
