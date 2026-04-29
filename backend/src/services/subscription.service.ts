@@ -131,6 +131,9 @@ export const subscriptionService = {
     if (input.tier === SubscriptionTier.FREE) {
       throw AppError.validationError('Invalid tier for checkout');
     }
+    if (input.tier === SubscriptionTier.ENTERPRISE) {
+      throw AppError.validationError('Enterprise is sales-only — contact us instead of self-serve checkout');
+    }
 
     const priceId = STRIPE_PRICE_IDS[input.tier]?.[input.interval];
     if (!priceId) {

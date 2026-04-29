@@ -83,7 +83,7 @@ const PROVIDER_ICONS: Record<string, { icon: IconDefinition; color: string }> = 
 
 const TIER_LABELS: Record<string, string> = {
   free: 'Free',
-  essentials: 'Essentials',
+  clan: 'Clan',
   pro: 'Pro',
   business: 'Business',
   enterprise: 'Enterprise',

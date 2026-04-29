@@ -22,7 +22,7 @@ export function useCreateCheckout() {
   const toast = useToast();
   return useMutation({
     mutationFn: (input: {
-      tier: 'essentials' | 'pro' | 'business' | 'enterprise';
+      tier: 'clan' | 'pro' | 'business' | 'enterprise';
       interval: 'monthly' | 'yearly';
       successUrl: string;
       cancelUrl: string;

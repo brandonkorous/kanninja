@@ -47,7 +47,7 @@ function verifyStateToken(token: string): StatePayload {
 
 const TIER_ORDER: Record<string, number> = {
   free: 0,
-  essentials: 1,
+  clan: 1,
   pro: 2,
   business: 3,
   enterprise: 4,

@@ -1239,7 +1239,7 @@ VALUES
   ('make', 'Make', 'Build powerful automations with Make scenarios.', 'pro', 'automation', false),
   ('generic_webhooks', 'Webhooks', 'Send and receive custom webhook events.', 'pro', 'automation', false),
   ('discord', 'Discord', 'Post card updates to Discord channels.', 'pro', 'messaging', false),
-  ('google_drive', 'Google Drive', 'Attach Drive files to cards.', 'essentials', 'files', false),
+  ('google_drive', 'Google Drive', 'Attach Drive files to cards.', 'clan', 'files', false),
   ('dropbox', 'Dropbox', 'Attach Dropbox files to cards.', 'pro', 'files', false),
   ('onedrive', 'OneDrive', 'Attach OneDrive and SharePoint files to cards.', 'business', 'files', false),
   ('loom', 'Loom', 'Embed Loom recordings in cards.', 'pro', 'media', false),

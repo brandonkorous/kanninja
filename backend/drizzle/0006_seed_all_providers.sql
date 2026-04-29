@@ -21,7 +21,7 @@ VALUES
   ('discord', 'Discord', 'Post card updates to Discord channels and create cards via slash commands.', 'pro', 'messaging', false),
 
   -- Tier 4: Files & Productivity
-  ('google_drive', 'Google Drive', 'Attach Google Drive files to cards and create docs from cards.', 'essentials', 'files', false),
+  ('google_drive', 'Google Drive', 'Attach Google Drive files to cards and create docs from cards.', 'clan', 'files', false),
   ('dropbox', 'Dropbox', 'Attach Dropbox files to cards.', 'pro', 'files', false),
   ('onedrive', 'OneDrive', 'Attach OneDrive and SharePoint files to cards.', 'business', 'files', false),
   ('loom', 'Loom', 'Embed Loom recordings in cards for async video updates.', 'pro', 'media', false),
