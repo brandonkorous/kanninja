@@ -3,6 +3,7 @@ import { stripe } from '../../config/stripe.js';
 import { env } from '../../config/env.js';
 import { db } from '../../db/index.js';
 import { subscriptions } from '../../db/schema/subscriptions.js';
+import { profiles } from '../../db/schema/profiles.js';
 import { stripeWebhookEvents } from '../../db/schema/stripe-events.js';
 import { eq } from 'drizzle-orm';
 import { tierFromPriceId, isBasePriceId, isOveragePriceId } from '../../config/stripe-prices.js';
@@ -48,6 +49,55 @@ export async function stripeWebhookRoutes(fastify: FastifyInstance) {
 
     try {
       switch (event.type) {
+        case 'checkout.session.completed': {
+          // Locks in the user→Stripe-customer mapping at the moment Checkout
+          // finishes, before the customer.subscription.created event arrives.
+          // We set metadata.userId during checkout creation (see
+          // subscription.service.ts:createCheckoutSession), so this handler
+          // doesn't have to fall back to email matching. The tier itself is
+          // filled in by the subsequent subscription.created event.
+          const session = event.data.object as Stripe.Checkout.Session;
+          const userId = session.metadata?.userId;
+          const customerId = typeof session.customer === 'string'
+            ? session.customer
+            : session.customer?.id;
+          if (!userId || !customerId) {
+            request.log.warn(
+              { sessionId: session.id, hasUserId: !!userId, hasCustomer: !!customerId },
+              'checkout.session.completed missing metadata.userId or customer',
+            );
+            break;
+          }
+          // Need the user's email to satisfy the NOT NULL on subscriptions.email.
+          // The row may not exist yet if this user never visited a route that
+          // upserts a free-tier row (e.g. signed up and went straight to checkout).
+          const [profile] = await db
+            .select({ email: profiles.email })
+            .from(profiles)
+            .where(eq(profiles.id, userId))
+            .limit(1);
+          if (!profile) {
+            request.log.warn({ userId }, 'checkout.session.completed: profile not found');
+            break;
+          }
+          await db
+            .insert(subscriptions)
+            .values({
+              userId,
+              email: profile.email,
+              stripeCustomerId: customerId,
+              subscribed: false, // flipped true by subscription.created/updated
+              subscriptionTier: 'free',
+            })
+            .onConflictDoUpdate({
+              target: subscriptions.userId,
+              set: {
+                stripeCustomerId: customerId,
+                updatedAt: new Date(),
+              },
+            });
+          break;
+        }
         case 'customer.subscription.created':
         case 'customer.subscription.updated': {
           const sub = event.data.object as Stripe.Subscription;

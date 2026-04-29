@@ -4,7 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useApi } from './use-api';
 import { useToast } from '@/providers/ToastProvider';
 import { getToastErrorMessage } from '@/lib/toast-errors';
-import type { Subscription, SubscriptionUsage } from '@kanninja/shared';
+import type { Subscription, SubscriptionUsage, AIQuotaStatus } from '@kanninja/shared';
 
 export function useSubscription() {
   const api = useApi();
@@ -24,6 +24,18 @@ export function useSubscriptionUsage() {
     queryKey: ['subscription', 'usage'],
     queryFn: () =>
       api.get<{ data: SubscriptionUsage }>('/api/v1/subscription/usage').then((r) => r.data),
+  });
+}
+
+/** AI run consumption — drives the "X / Y used" indicator and lets the UI
+ *  gate AI actions when the user's at their cap. Cheap to refetch (one
+ *  count query against the ai_interactions table). */
+export function useAIUsage() {
+  const api = useApi();
+  return useQuery({
+    queryKey: ['subscription', 'ai-usage'],
+    queryFn: () =>
+      api.get<{ data: AIQuotaStatus }>('/api/v1/subscription/ai-usage').then((r) => r.data),
   });
 }
 

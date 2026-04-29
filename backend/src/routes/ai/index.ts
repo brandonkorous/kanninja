@@ -1,13 +1,13 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { requireAuth } from '../../middleware/require-auth.js';
-import { requireSubscription } from '../../middleware/require-subscription.js';
+import { requireAIQuota } from '../../middleware/require-ai-quota.js';
 import { aiService } from '../../services/ai.service.js';
-import { SubscriptionTier } from '@kanninja/shared';
 
 export async function aiRoutes(fastify: FastifyInstance) {
-  // All AI routes require Pro+ subscription
-  const aiPreHandler = [requireAuth, requireSubscription(SubscriptionTier.PRO)];
+  // Every paid tier — and Free up to its 50-run lifetime taste — can hit AI
+  // routes. The gate is the quota, not the tier. The tier only sets the cap.
+  const aiPreHandler = [requireAuth, requireAIQuota];
 
   fastify.post(
     '/api/v1/ai/parse-task',

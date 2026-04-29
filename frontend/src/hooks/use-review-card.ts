@@ -1,9 +1,7 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
 import { useApi } from './use-api';
-import { useToast } from '@/providers/ToastProvider';
-import { getToastErrorMessage } from '@/lib/toast-errors';
+import { useAIMutation } from './use-ai-mutation';
 
 export interface CardReviewInput {
     title: string;
@@ -30,13 +28,9 @@ interface CardReviewResult {
  */
 export function useReviewCard() {
     const api = useApi();
-    const toast = useToast();
-
-    return useMutation({
-        mutationFn: (input: CardReviewInput) =>
-            api
-                .post<{ data: CardReviewResult }>('/api/v1/ai/review-card', input)
-                .then((r) => r.data),
-        onError: (err) => toast.error(getToastErrorMessage(err)),
-    });
+    return useAIMutation((input: CardReviewInput) =>
+        api
+            .post<{ data: CardReviewResult }>('/api/v1/ai/review-card', input)
+            .then((r) => r.data),
+    );
 }

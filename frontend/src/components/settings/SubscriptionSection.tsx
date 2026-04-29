@@ -1,12 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { useSubscription, useCustomerPortal, useSubscriptionUsage } from '@/hooks/use-subscription';
-import type { SubscriptionUsage } from '@kanninja/shared';
+import {
+    useSubscription,
+    useCustomerPortal,
+    useSubscriptionUsage,
+    useAIUsage,
+} from '@/hooks/use-subscription';
+import type { SubscriptionUsage, AIQuotaStatus } from '@kanninja/shared';
 
 export function SubscriptionSection() {
     const { data: subscription, isLoading, error, refetch, isFetching } = useSubscription();
     const { data: usage } = useSubscriptionUsage();
+    const { data: aiUsage } = useAIUsage();
     const portal = useCustomerPortal();
 
     const tier = subscription?.subscriptionTier ?? 'free';
@@ -90,6 +96,7 @@ export function SubscriptionSection() {
                     )}
 
                     {usage && <SeatUsageBlock usage={usage} />}
+                    {aiUsage && <AIUsageBlock status={aiUsage} />}
 
                     <div className="mt-8 flex flex-wrap gap-4">
                         <Link href="/pricing" className="btn btn-outline btn-secondary">
@@ -159,6 +166,59 @@ function SeatUsageBlock({ usage }: { usage: SubscriptionUsage }) {
             {atHardCap && (
                 <p className="mt-3 text-sm text-base-content/70 max-w-md">
                     Upgrade to add more seats. Your boards stay where they are.
+                </p>
+            )}
+        </div>
+    );
+}
+
+function AIUsageBlock({ status }: { status: AIQuotaStatus }) {
+    const { used, limit, windowKind, resetsAt } = status;
+    const exhausted = limit !== null && used >= limit;
+    const windowLabel =
+        windowKind === 'lifetime'
+            ? 'Lifetime'
+            : windowKind === 'monthly'
+              ? 'This month'
+              : 'AI runs';
+
+    return (
+        <div className="mt-10 pt-8 border-t border-base-300/60">
+            <p className="text-eyebrow font-mono uppercase tracking-widest text-base-content/40">
+                AI runs · {windowLabel}
+            </p>
+            <p className="mt-4 font-display text-2xl font-medium tracking-tight">
+                <span className="font-mono">{used}</span>
+                {limit !== null ? (
+                    <>
+                        <span className="text-base-content/40"> of </span>
+                        <span className="font-mono">{limit}</span>
+                    </>
+                ) : (
+                    <span className="ml-2 text-eyebrow font-mono uppercase tracking-widest text-base-content/60">
+                        Unlimited
+                    </span>
+                )}
+                {exhausted && (
+                    <span className="ml-3 text-eyebrow font-mono uppercase tracking-widest text-primary">
+                        At cap
+                    </span>
+                )}
+            </p>
+            {windowKind === 'monthly' && resetsAt && (
+                <p className="mt-3 text-sm text-base-content/70">
+                    Resets{' '}
+                    {new Date(resetsAt).toLocaleDateString(undefined, {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                    })}
+                </p>
+            )}
+            {exhausted && (
+                <p className="mt-3 text-sm text-base-content/70 max-w-md">
+                    AI features are paused until{' '}
+                    {windowKind === 'lifetime' ? 'you upgrade' : 'the next reset'}.
                 </p>
             )}
         </div>

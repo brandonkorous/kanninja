@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { createHash } from 'node:crypto';
-import Fastify from 'fastify';
+import Fastify, { type FastifyRequest } from 'fastify';
 import formbody from '@fastify/formbody';
 import rateLimit from '@fastify/rate-limit';
 import { env } from './config/env.js';
@@ -10,6 +10,44 @@ import { allTools } from 'kanninja-mcp/tools';
 import { registerAllTools } from 'kanninja-mcp/registry';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import {
+  SUBSCRIPTION_TIERS,
+  type SubscriptionTier,
+} from '@kanninja/shared';
+import type { McpContext } from 'kanninja-mcp/context';
+
+/**
+ * Memoize authenticateRequest on the request object so the rate-limit `max`
+ * callback and the route handler don't each fire a network round-trip when
+ * the bearer is an API key (the JWT path is local-only — cheap either way).
+ */
+type AuthedRequest = FastifyRequest & { __mcpCtx?: McpContext; __mcpAuthErr?: unknown };
+async function getAuthContext(request: FastifyRequest): Promise<McpContext> {
+  const r = request as AuthedRequest;
+  if (r.__mcpCtx) return r.__mcpCtx;
+  if (r.__mcpAuthErr) throw r.__mcpAuthErr;
+  try {
+    r.__mcpCtx = await authenticateRequest(r.headers.authorization, env.KANNINJA_API_URL);
+    return r.__mcpCtx;
+  } catch (err) {
+    r.__mcpAuthErr = err;
+    throw err;
+  }
+}
+
+/** Free-tier-equivalent ceiling. Used when the bearer is missing or invalid —
+ *  the request will be rejected by the auth check seconds later, but the
+ *  limiter still slows brute-force probes against the unauth path. */
+const UNAUTH_RATE_LIMIT = SUBSCRIPTION_TIERS.free.features.mcpRequestsPerMinute;
+
+function rateLimitMaxFor(request: FastifyRequest): Promise<number> {
+  return getAuthContext(request)
+    .then((ctx) => {
+      const tier = ctx.tier as SubscriptionTier;
+      return SUBSCRIPTION_TIERS[tier]?.features.mcpRequestsPerMinute ?? UNAUTH_RATE_LIMIT;
+    })
+    .catch(() => UNAUTH_RATE_LIMIT);
+}
 
 async function start() {
   const fastify = Fastify({
@@ -42,12 +80,14 @@ async function start() {
   fastify.post('/mcp', {
     config: {
       rateLimit: {
-        max: 60,
+        // Tier-aware ceiling sourced from @kanninja/shared SUBSCRIPTION_TIERS.
+        // Free=10, Clan=30, Pro=120, Business=600, Enterprise=6000 per minute.
+        // Unauthenticated requests get the Free ceiling; they'll be rejected
+        // by auth seconds later anyway, but the limiter still slows probes.
+        max: (req) => rateLimitMaxFor(req),
         timeWindow: '1 minute',
         // Hash the auth header so raw tokens don't sit in the limiter's
-        // memory. Unauthenticated requests fall back to IP — they'll be
-        // rejected by authenticateRequest seconds later, but the limiter
-        // still slows brute-force probes.
+        // memory. Unauthenticated requests fall back to IP.
         keyGenerator: (req) => {
           const auth = req.headers.authorization;
           if (!auth) return req.ip;
@@ -58,10 +98,9 @@ async function start() {
   }, async (request, reply) => {
     let ctx;
     try {
-      ctx = await authenticateRequest(
-        request.headers.authorization,
-        env.KANNINJA_API_URL,
-      );
+      // getAuthContext memoizes on the request — if the rate-limit hook above
+      // already authenticated, this is essentially free.
+      ctx = await getAuthContext(request);
     } catch (err) {
       if (err instanceof AuthError) {
         if (err.wwwAuthenticate) reply.header('WWW-Authenticate', err.wwwAuthenticate);
