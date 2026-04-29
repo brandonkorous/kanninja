@@ -78,6 +78,37 @@ export default function LandingPage() {
                 </div>
             </section>
 
+            {/* In any chat — the strategic positioning slot. The hero says what
+                we are; this section says where you can use us. Lands before the
+                four kata so visitors meet the chat thesis before the feature grid. */}
+            <section className="border-t border-base-300 bg-base-100">
+                <div className="container mx-auto px-6 md:px-12 lg:px-16 py-24 lg:py-32">
+                    <div className="hanko-scroll-rise max-w-3xl">
+                        <p className="hanko-eyebrow text-eyebrow font-mono uppercase tracking-widest text-primary">
+                            Now in your chat
+                        </p>
+                        <h2 className="mt-8 font-display text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight">
+                            Your dojo,{' '}
+                            <span className="italic text-primary">in any chat.</span>
+                        </h2>
+                        <p className="mt-10 text-lg leading-relaxed text-base-content/70">
+                            kanNINJA lives inside Claude, ChatGPT, and any agent that
+                            speaks MCP. The same board, the same kata, the same clan —
+                            driven from the chat you already use.
+                        </p>
+                        <p className="mt-6 text-lg leading-relaxed text-base-content/70">
+                            Project management, where the conversation already lives.
+                        </p>
+                        <Link
+                            href="/in-any-chat"
+                            className="mt-12 inline-flex btn btn-outline btn-secondary focus-visible:shadow-focus"
+                        >
+                            See how it works
+                        </Link>
+                    </div>
+                </div>
+            </section>
+
             {/* The four kata — features as disciplines. Hairline divider, no shift in surface. */}
             <section className="border-y border-base-300">
                 <div className="container mx-auto px-6 md:px-12 lg:px-16 py-24 lg:py-32">

@@ -6,6 +6,7 @@ import { PersonaIntro } from './PersonaIntro';
 import { PersonaSampleBoard } from './PersonaSampleBoard';
 import { PersonaUseCases } from './PersonaUseCases';
 import { PersonaFAQSection } from './PersonaFAQSection';
+import { PersonaInAnyChat } from './PersonaInAnyChat';
 import { PersonaClose } from './PersonaClose';
 import type { PersonaData, PersonaSampleColumn } from './types';
 
@@ -72,6 +73,7 @@ export function PersonaPage({ slug, data }: Props) {
                 />
             )}
             <PersonaUseCases label={data.label} useCases={data.useCases} />
+            <PersonaInAnyChat label={data.label} />
             <PersonaFAQSection label={data.label} faqs={data.faqs} />
             <PersonaClose
                 headlineBefore={data.close.headlineBefore}
