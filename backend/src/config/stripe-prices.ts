@@ -3,28 +3,27 @@ import { SubscriptionTier } from '@kanninja/shared';
 type Interval = 'monthly' | 'yearly';
 
 /**
- * Stripe price IDs for each paid tier × billing interval.
- * Created in Stripe test mode — replace with live IDs for production.
+ * Stripe price IDs for each self-serve paid tier × billing interval.
+ * Live mode, kanNINJA account (acct_1RphRYRaK2z9gXUt). Created 2026-04-28.
+ *
+ * Enterprise is sales-only (talk-to-us) — no Stripe price exists, and
+ * createCheckoutSession will reject any attempt to check out as Enterprise.
  */
 export const STRIPE_PRICE_IDS: Record<
-  Exclude<SubscriptionTier, 'free'>,
+  Exclude<SubscriptionTier, 'free' | 'enterprise'>,
   Record<Interval, string>
 > = {
-  [SubscriptionTier.ESSENTIALS]: {
-    monthly: 'price_1TKZHNDa5iGUonlx4DEbpvwV',
-    yearly: 'price_1TKZHPDa5iGUonlxUdwuBycl',
+  [SubscriptionTier.CLAN]: {
+    monthly: 'price_1TRQ0QRaK2z9gXUtZ6WxsjXJ',
+    yearly: 'price_1TRQ0WRaK2z9gXUtSoXKh7R0',
   },
   [SubscriptionTier.PRO]: {
-    monthly: 'price_1TKZHRDa5iGUonlxOvpdYJKc',
-    yearly: 'price_1TKZHSDa5iGUonlx5pOsRFHq',
+    monthly: 'price_1TRQ0nRaK2z9gXUtaGibjvlS',
+    yearly: 'price_1TRQ8zRaK2z9gXUt8kjmWeC5',
   },
   [SubscriptionTier.BUSINESS]: {
-    monthly: 'price_1TKZHXDa5iGUonlxgvSzKTiP',
-    yearly: 'price_1TKZHYDa5iGUonlxoOBNHovA',
-  },
-  [SubscriptionTier.ENTERPRISE]: {
-    monthly: 'price_1TKZHZDa5iGUonlxaNDbNM6I',
-    yearly: 'price_1TKZHaDa5iGUonlxUWDsLxyL',
+    monthly: 'price_1TRQ9HRaK2z9gXUtsiYrFFP2',
+    yearly: 'price_1TRQ9ORaK2z9gXUttNmC5133',
   },
 };
 

@@ -14,7 +14,7 @@ const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
 export const googleDriveProvider: IntegrationProvider = {
   id: 'google_drive',
   name: 'Google Drive',
-  requiredTier: 'essentials',
+  requiredTier: 'clan',
 
   getAuthUrl(state: string, redirectUri: string): string {
     const params = new URLSearchParams({

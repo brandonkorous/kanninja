@@ -7,8 +7,20 @@
 
 export const PRICING_FAQS: { q: string; a: string }[] = [
     {
+        q: 'Why is one of the tiers called "Clan"?',
+        a: "A clan in kanNINJA is the group of people you share boards with. A wedding party. A soccer team. A gaming group. The Clan tier is for life — the people you live and play with, not the people you go to work with.",
+    },
+    {
+        q: 'What counts as an AI run?',
+        a: "One run = one of our AI features — plan my week, generate cards from a brain dump, summarize a board. Quotas reset monthly except on Free, where 50 runs is a lifetime taste so you can feel the value before you pay.",
+    },
+    {
+        q: 'Does using kanNINJA from Claude or ChatGPT count toward my AI runs?',
+        a: "No. When an external agent calls kanNINJA tools through MCP, it uses your LLM, not ours. We rate-limit MCP calls per minute to prevent abuse, but there is no monthly cap. Use it as much as you want.",
+    },
+    {
         q: 'What happens when I hit my seat limit?',
-        a: "Add seats by upgrading the tier. Your boards stay where they are. Nobody loses access mid-week.",
+        a: "On Pro and Business, additional seats are billed at $4 and $6 respectively — no upgrade required. On Free and Clan, you'll need to move up a tier. Your boards stay where they are. Nobody loses access mid-week.",
     },
     {
         q: 'Can I downgrade later?',
