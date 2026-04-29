@@ -1,43 +1,69 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useCreateCheckout } from '@/hooks/use-subscription';
 import { SUBSCRIPTION_TIERS, SubscriptionTier } from '@kanninja/shared';
 
-// Voice-aligned tier descriptions and feature highlights. The constants in
-// @kanninja/shared own the source-of-truth pricing data; this owns the copy.
+// Audience-led tier copy. The constants in @kanninja/shared own the source-of-truth
+// pricing data; this owns the voice. Each tier targets a *who*, not a feature checklist.
 const TIERS = [
     {
         key: SubscriptionTier.FREE,
-        label: 'For the solo practitioner. Three seats. Everything you need to learn the moves.',
+        label: 'Solo practice. Three seats, unlimited boards. A taste of the AI.',
         cta: 'Start free',
-        features: ['Up to 3 seats', '100 MB of files', 'Unlimited boards', 'Real-time presence'],
+        features: [
+            'Up to 3 seats',
+            'Unlimited boards',
+            '50 AI runs to taste',
+            '100 MB of files',
+        ],
     },
     {
-        key: SubscriptionTier.ESSENTIALS,
-        label: 'For when the practice has shape. Templates, more space, the team you started with.',
-        cta: 'Pick Essentials',
-        features: ['Up to 10 seats', '1 GB of files', 'Project templates', 'Email support'],
+        key: SubscriptionTier.CLAN,
+        label: 'For the people you live and play with. Weddings, soccer teams, clubs, families.',
+        cta: 'Pick Clan',
+        features: [
+            'Up to 15 seats',
+            '200 AI runs/month',
+            'Project templates',
+            '5 GB of files',
+        ],
     },
     {
         key: SubscriptionTier.PRO,
-        label: 'For when AI joins the dojo. The full set of techniques.',
+        label: 'For the work you do. Startups, builders, agencies. Full AI, full MCP.',
         cta: 'Pick Pro',
-        features: ['Up to 10 seats', '2 GB of files', '12 AI techniques', 'Project templates'],
+        features: [
+            '15 seats included, $4 each after',
+            '2,000 AI runs/month',
+            'MCP for your agents',
+            '10 GB of files',
+        ],
     },
     {
         key: SubscriptionTier.BUSINESS,
-        label: 'For teams that need their own branding and an audit trail. Quiet for managers.',
+        label: 'When work needs guardrails. SSO, audit log, the things IT signs off on.',
         cta: 'Pick Business',
-        features: ['Up to 50 seats', '10 GB of files', 'Custom branding', 'Single sign-on', 'Audit log'],
+        features: [
+            '50 seats included, $6 each after',
+            '20,000 AI runs/month',
+            'Single sign-on + audit log',
+            'Priority support',
+        ],
     },
     {
         key: SubscriptionTier.ENTERPRISE,
-        label: 'For organizations that need a hundred seats and a contract.',
+        label: 'For when there is a contract, a CSM, and a procurement team in the room.',
         cta: 'Talk to us',
-        features: ['Up to 100 seats', '20 GB of files', 'Everything in Business', 'Dedicated support'],
+        features: [
+            'Custom seats',
+            'Custom AI quotas',
+            'Dedicated CSM + SLA',
+            'SCIM, dedicated infra',
+        ],
     },
 ] as const;
 
@@ -48,6 +74,10 @@ export function TierCardsSection() {
     const checkout = useCreateCheckout();
 
     const handleCheckout = async (tier: SubscriptionTier) => {
+        if (tier === SubscriptionTier.ENTERPRISE) {
+            router.push('/contact?topic=enterprise');
+            return;
+        }
         if (!isSignedIn) {
             router.push('/sign-up');
             return;
@@ -57,7 +87,7 @@ export function TierCardsSection() {
             return;
         }
         const result = await checkout.mutateAsync({
-            tier: tier as 'essentials' | 'pro' | 'business' | 'enterprise',
+            tier: tier as 'clan' | 'pro' | 'business' | 'enterprise',
             interval,
             successUrl: `${window.location.origin}/dashboard?checkout=success`,
             cancelUrl: `${window.location.origin}/pricing?checkout=cancel`,
@@ -111,6 +141,7 @@ export function TierCardsSection() {
                         const tier = SUBSCRIPTION_TIERS[t.key];
                         const price = interval === 'yearly' ? tier.price.yearly : tier.price.monthly;
                         const isPro = t.key === SubscriptionTier.PRO;
+                        const isEnterprise = t.key === SubscriptionTier.ENTERPRISE;
                         return (
                             <article
                                 key={t.key}
@@ -120,7 +151,9 @@ export function TierCardsSection() {
                                     {tier.name}
                                 </p>
                                 <p className="mt-6 font-display text-4xl font-medium tracking-tight">
-                                    {price === 0 ? (
+                                    {isEnterprise ? (
+                                        <span className="text-3xl">Custom</span>
+                                    ) : price === 0 ? (
                                         'Free'
                                     ) : (
                                         <>
@@ -148,14 +181,23 @@ export function TierCardsSection() {
                                         </li>
                                     ))}
                                 </ul>
-                                <button
-                                    type="button"
-                                    onClick={() => handleCheckout(t.key)}
-                                    disabled={checkout.isPending}
-                                    className={`mt-10 btn ${isPro ? 'btn-primary' : 'btn-outline btn-secondary'}`}
-                                >
-                                    {t.cta}
-                                </button>
+                                {isEnterprise ? (
+                                    <Link
+                                        href="/contact?topic=enterprise"
+                                        className="mt-10 btn btn-outline btn-secondary"
+                                    >
+                                        {t.cta}
+                                    </Link>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleCheckout(t.key)}
+                                        disabled={checkout.isPending}
+                                        className={`mt-10 btn ${isPro ? 'btn-primary' : 'btn-outline btn-secondary'}`}
+                                    >
+                                        {t.cta}
+                                    </button>
+                                )}
                             </article>
                         );
                     })}

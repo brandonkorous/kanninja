@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-    entry: ['src/index.ts'],
+    entry: ['src/index.ts', 'src/scripts/reconcile-seats.ts'],
     format: ['esm'],
     outDir: 'dist',
     target: 'node22',

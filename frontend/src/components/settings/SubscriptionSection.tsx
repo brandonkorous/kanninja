@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useSubscription, useCustomerPortal } from '@/hooks/use-subscription';
+import { useSubscription, useCustomerPortal, useSubscriptionUsage } from '@/hooks/use-subscription';
+import type { SubscriptionUsage } from '@kanninja/shared';
 
 export function SubscriptionSection() {
     const { data: subscription, isLoading, error, refetch, isFetching } = useSubscription();
+    const { data: usage } = useSubscriptionUsage();
     const portal = useCustomerPortal();
 
     const tier = subscription?.subscriptionTier ?? 'free';
@@ -87,6 +89,8 @@ export function SubscriptionSection() {
                         </p>
                     )}
 
+                    {usage && <SeatUsageBlock usage={usage} />}
+
                     <div className="mt-8 flex flex-wrap gap-4">
                         <Link href="/pricing" className="btn btn-outline btn-secondary">
                             See the tiers
@@ -105,5 +109,58 @@ export function SubscriptionSection() {
                 </>
             )}
         </section>
+    );
+}
+
+function SeatUsageBlock({ usage }: { usage: SubscriptionUsage }) {
+    const { seatsUsed, seatsIncluded, seatOverage, seatOveragePriceMonthly } = usage;
+    const overageCharge =
+        seatOverage > 0 && seatOveragePriceMonthly !== null
+            ? seatOverage * seatOveragePriceMonthly
+            : 0;
+    const atHardCap =
+        seatsIncluded !== null &&
+        seatOveragePriceMonthly === null &&
+        seatsUsed >= seatsIncluded;
+
+    return (
+        <div className="mt-10 pt-8 border-t border-base-300/60">
+            <p className="text-eyebrow font-mono uppercase tracking-widest text-base-content/40">
+                Seats
+            </p>
+            <p className="mt-4 font-display text-2xl font-medium tracking-tight">
+                <span className="font-mono">{seatsUsed}</span>
+                {seatsIncluded !== null ? (
+                    <>
+                        <span className="text-base-content/40"> of </span>
+                        <span className="font-mono">{seatsIncluded}</span>
+                    </>
+                ) : (
+                    <span className="text-base-content/40"> seats </span>
+                )}
+                {seatsIncluded === null && (
+                    <span className="ml-2 text-eyebrow font-mono uppercase tracking-widest text-base-content/60">
+                        Custom
+                    </span>
+                )}
+                {atHardCap && (
+                    <span className="ml-3 text-eyebrow font-mono uppercase tracking-widest text-primary">
+                        At limit
+                    </span>
+                )}
+            </p>
+            {seatOverage > 0 && seatOveragePriceMonthly !== null && (
+                <p className="mt-3 text-sm text-base-content/70">
+                    {seatsIncluded} included + <span className="font-mono">{seatOverage}</span>{' '}
+                    extra at <span className="font-mono">${seatOveragePriceMonthly}</span> ={' '}
+                    <span className="font-mono">${overageCharge}</span>/mo overage
+                </p>
+            )}
+            {atHardCap && (
+                <p className="mt-3 text-sm text-base-content/70 max-w-md">
+                    Upgrade to add more seats. Your boards stay where they are.
+                </p>
+            )}
+        </div>
     );
 }

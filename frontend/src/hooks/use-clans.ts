@@ -94,6 +94,7 @@ export function useCreateClan() {
       api.post<{ data: Clan }>('/api/v1/clans', input).then((r) => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['clans'] });
+      qc.invalidateQueries({ queryKey: ['subscription', 'usage'] });
       toast.success('Clan started.');
     },
     onError: (err) => toast.error(getToastErrorMessage(err)),
@@ -124,6 +125,7 @@ export function useDeleteClan() {
     mutationFn: (clanId: string) => api.delete(`/api/v1/clans/${clanId}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['clans'] });
+      qc.invalidateQueries({ queryKey: ['subscription', 'usage'] });
       toast.success('Clan disbanded.');
     },
     onError: (err) => toast.error(getToastErrorMessage(err)),
@@ -153,9 +155,26 @@ export function useRemoveClanMember(clanId: string) {
     mutationFn: (memberId: string) => api.delete(`/api/v1/clans/${clanId}/members/${memberId}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['clan-members', clanId] });
+      qc.invalidateQueries({ queryKey: ['subscription', 'usage'] });
       toast.success('Member removed.');
     },
     onError: (err) => toast.error(getToastErrorMessage(err)),
+  });
+}
+
+/** Seat usage for the clan's owner. Surfaced in the invite UI so admins
+ *  see whether the next seat will trigger overage or hit a hard cap. */
+export function useClanSeatUsage(clanId: string, enabled = true) {
+  const api = useApi();
+  return useQuery({
+    queryKey: ['clans', clanId, 'seat-usage'],
+    queryFn: () =>
+      api
+        .get<{ data: import('@kanninja/shared').SubscriptionUsage }>(
+          `/api/v1/clans/${clanId}/seat-usage`,
+        )
+        .then((r) => r.data),
+    enabled,
   });
 }
 

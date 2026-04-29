@@ -4,7 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useApi } from './use-api';
 import { useToast } from '@/providers/ToastProvider';
 import { getToastErrorMessage } from '@/lib/toast-errors';
-import type { Subscription } from '@kanninja/shared';
+import type { Subscription, SubscriptionUsage } from '@kanninja/shared';
 
 export function useSubscription() {
   const api = useApi();
@@ -15,6 +15,18 @@ export function useSubscription() {
   });
 }
 
+/** Seat usage for the billing UI — separate query so it can refetch on
+ *  invalidation (e.g. after a member is added/removed) without re-syncing
+ *  the full subscription. */
+export function useSubscriptionUsage() {
+  const api = useApi();
+  return useQuery({
+    queryKey: ['subscription', 'usage'],
+    queryFn: () =>
+      api.get<{ data: SubscriptionUsage }>('/api/v1/subscription/usage').then((r) => r.data),
+  });
+}
+
 // Checkout and portal redirect on success, so no success toast — the
 // page navigation is the feedback. Errors still toast.
 export function useCreateCheckout() {
@@ -22,7 +34,7 @@ export function useCreateCheckout() {
   const toast = useToast();
   return useMutation({
     mutationFn: (input: {
-      tier: 'essentials' | 'pro' | 'business' | 'enterprise';
+      tier: 'clan' | 'pro' | 'business' | 'enterprise';
       interval: 'monthly' | 'yearly';
       successUrl: string;
       cancelUrl: string;

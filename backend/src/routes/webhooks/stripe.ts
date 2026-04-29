@@ -5,7 +5,7 @@ import { db } from '../../db/index.js';
 import { subscriptions } from '../../db/schema/subscriptions.js';
 import { stripeWebhookEvents } from '../../db/schema/stripe-events.js';
 import { eq } from 'drizzle-orm';
-import { tierFromPriceId } from '../../config/stripe-prices.js';
+import { tierFromPriceId, isBasePriceId, isOveragePriceId } from '../../config/stripe-prices.js';
 import type Stripe from 'stripe';
 
 export async function stripeWebhookRoutes(fastify: FastifyInstance) {
@@ -52,8 +52,13 @@ export async function stripeWebhookRoutes(fastify: FastifyInstance) {
         case 'customer.subscription.updated': {
           const sub = event.data.object as Stripe.Subscription;
           const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer.id;
-          const priceId = sub.items.data[0]?.price?.id;
-          const tier = priceId ? tierFromPriceId(priceId) : 'free';
+          // A subscription may have multiple items (base + seat-overage). Find
+          // the base item to determine tier; track the overage item id so
+          // syncSeatOverageToStripe can update its quantity later.
+          const baseItem = sub.items.data.find((i) => i.price?.id && isBasePriceId(i.price.id));
+          const overageItem = sub.items.data.find((i) => i.price?.id && isOveragePriceId(i.price.id));
+          const basePriceId = baseItem?.price?.id;
+          const tier = basePriceId ? tierFromPriceId(basePriceId) : 'free';
           const periodEnd = (sub as { current_period_end?: number }).current_period_end;
           await db
             .update(subscriptions)
@@ -61,7 +66,8 @@ export async function stripeWebhookRoutes(fastify: FastifyInstance) {
               subscribed: sub.status === 'active',
               subscriptionTier: tier,
               stripeSubscriptionId: sub.id,
-              stripePriceId: priceId ?? null,
+              stripePriceId: basePriceId ?? null,
+              stripeOverageSubscriptionItemId: overageItem?.id ?? null,
               subscriptionEnd: periodEnd ? new Date(periodEnd * 1000) : null,
               updatedAt: new Date(),
             })
@@ -78,6 +84,7 @@ export async function stripeWebhookRoutes(fastify: FastifyInstance) {
               subscriptionTier: 'free',
               stripeSubscriptionId: null,
               stripePriceId: null,
+              stripeOverageSubscriptionItemId: null,
               subscriptionEnd: null,
               updatedAt: new Date(),
             })

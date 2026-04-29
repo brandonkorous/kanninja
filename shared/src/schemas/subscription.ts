@@ -22,5 +22,16 @@ export const createCheckoutSchema = z.object({
   cancelUrl: z.string().url(),
 });
 
+/** Seat usage snapshot for the billing UI. seatsIncluded is null for
+ *  Enterprise (custom). seatOveragePriceMonthly is null on tiers without
+ *  overage (Free, Clan, Enterprise). */
+export const subscriptionUsageSchema = z.object({
+  seatsUsed: z.number().int().min(0),
+  seatsIncluded: z.number().int().min(0).nullable(),
+  seatOverage: z.number().int().min(0),
+  seatOveragePriceMonthly: z.number().nullable(),
+});
+
 export type Subscription = z.infer<typeof subscriptionSchema>;
 export type CreateCheckoutInput = z.infer<typeof createCheckoutSchema>;
+export type SubscriptionUsage = z.infer<typeof subscriptionUsageSchema>;

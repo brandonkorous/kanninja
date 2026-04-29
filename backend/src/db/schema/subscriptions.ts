@@ -8,6 +8,10 @@ export const subscriptions = pgTable('subscriptions', {
   stripeCustomerId: text('stripe_customer_id'),
   stripeSubscriptionId: text('stripe_subscription_id'),
   stripePriceId: text('stripe_price_id'),
+  /** Stripe subscription_item id for the seat-overage line, when one exists.
+   *  NULL means the subscription has no overage item yet (either tier doesn't
+   *  support overage, or seat count is at/under the included quota). */
+  stripeOverageSubscriptionItemId: text('stripe_overage_subscription_item_id'),
   subscribed: boolean('subscribed').default(false).notNull(),
   subscriptionTier: text('subscription_tier').default('free').notNull(),
   subscriptionEnd: timestamp('subscription_end', { withTimezone: true }),

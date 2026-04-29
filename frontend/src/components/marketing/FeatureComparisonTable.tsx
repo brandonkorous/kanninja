@@ -4,20 +4,21 @@ import { faCheck } from '@fortawesome/free-solid-svg-icons';
 // Full feature × tier comparison. Hairline borders, no fills, no zebra stripes.
 // Mono numbers for quantitative cells, vermillion checkmarks for boolean cells,
 // muted dash for absences. The table itself is the design — no chrome.
-const TIER_NAMES = ['Starter', 'Essentials', 'Pro', 'Business', 'Enterprise'] as const;
+const TIER_NAMES = ['Free', 'Clan', 'Pro', 'Business', 'Enterprise'] as const;
 
 const ROWS: { label: string; values: (string | boolean)[] }[] = [
-    { label: 'Seats', values: ['3', '10', '10', '50', '100'] },
-    { label: 'File storage', values: ['100 MB', '1 GB', '2 GB', '10 GB', '20 GB'] },
+    { label: 'Seats included', values: ['3', '15', '15', '50', 'Custom'] },
+    { label: 'Seat overage', values: ['—', '—', '$4 / seat', '$6 / seat', 'Custom'] },
     { label: 'Boards', values: ['Unlimited', 'Unlimited', 'Unlimited', 'Unlimited', 'Unlimited'] },
+    { label: 'File storage', values: ['100 MB', '5 GB', '10 GB', '50 GB', 'Custom'] },
     { label: 'Real-time presence', values: [true, true, true, true, true] },
+    { label: 'AI runs', values: ['50 lifetime', '200 / month', '2,000 / month', '20,000 / month', 'Custom'] },
+    { label: 'MCP for your agents', values: ['10 / min', '30 / min', '120 / min', '600 / min', 'Custom'] },
     { label: 'Project templates', values: [false, true, true, true, true] },
-    { label: '12 AI techniques', values: [false, false, true, true, true] },
-    { label: 'Custom branding', values: [false, false, false, true, true] },
     { label: 'Single sign-on', values: [false, false, false, true, true] },
     { label: 'Audit log', values: [false, false, false, true, true] },
     { label: 'Priority support', values: [false, false, false, true, true] },
-    { label: 'Dedicated CSM', values: [false, false, false, false, true] },
+    { label: 'Dedicated CSM + SLA', values: [false, false, false, false, true] },
 ];
 
 function renderCell(v: string | boolean) {
@@ -25,6 +26,9 @@ function renderCell(v: string | boolean) {
         return <FontAwesomeIcon icon={faCheck} className="text-primary" />;
     }
     if (v === false) {
+        return <span className="text-base-content/20">—</span>;
+    }
+    if (v === '—') {
         return <span className="text-base-content/20">—</span>;
     }
     return <span className="font-mono text-sm">{v}</span>;

@@ -33,7 +33,7 @@
 | 14 | Make | automation | Pro | API | M | ↔ | — |
 | 15 | Generic Webhooks | automation | Pro | None | L | ↔ | — |
 | 16 | Discord | messaging | Pro | OAuth | M | → | — |
-| 17 | Google Drive | files | Essentials | OAuth | M | ← | — |
+| 17 | Google Drive | files | Clan | OAuth | M | ← | — |
 | 18 | Dropbox | files | Pro | OAuth | M | ← | — |
 | 19 | OneDrive | files | Business | OAuth | M | ← | — |
 | 20 | Loom | media | Pro | OAuth | L | ← | — |
@@ -629,12 +629,12 @@ These use the existing API endpoints with an API key for auth.
 |-------|-------|
 | **ID** | `google_drive` |
 | **Category** | files |
-| **Tier** | Essentials |
+| **Tier** | Clan |
 | **Auth** | OAuth 2.0 (Google) |
 | **Complexity** | Medium (3–4 days) |
 | **Direction** | Primarily inbound |
 
-**Why Essentials tier:** File attachment is a basic productivity feature, not a power-user need.
+**Why Clan tier:** File attachment is a basic productivity feature, not a power-user need.
 
 **Scopes:** `drive.file` (app-created files only) or `drive.readonly` (browse all)
 
@@ -1239,7 +1239,7 @@ VALUES
   ('make', 'Make', 'Build powerful automations with Make scenarios.', 'pro', 'automation', false),
   ('generic_webhooks', 'Webhooks', 'Send and receive custom webhook events.', 'pro', 'automation', false),
   ('discord', 'Discord', 'Post card updates to Discord channels.', 'pro', 'messaging', false),
-  ('google_drive', 'Google Drive', 'Attach Drive files to cards.', 'essentials', 'files', false),
+  ('google_drive', 'Google Drive', 'Attach Drive files to cards.', 'clan', 'files', false),
   ('dropbox', 'Dropbox', 'Attach Dropbox files to cards.', 'pro', 'files', false),
   ('onedrive', 'OneDrive', 'Attach OneDrive and SharePoint files to cards.', 'business', 'files', false),
   ('loom', 'Loom', 'Embed Loom recordings in cards.', 'pro', 'media', false),

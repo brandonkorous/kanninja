@@ -8,6 +8,10 @@ import { db } from '../../db/index.js';
 import { clans, clanInvitations, clanMembers } from '../../db/schema/clans.js';
 import { profiles } from '../../db/schema/profiles.js';
 import { AppError } from '../../utils/errors.js';
+import {
+  assertCanAddSeat,
+  syncSeatOverageToStripe,
+} from '../../services/seat-billing.service.js';
 
 const inviteClanSchema = z.object({
   email: z.string().email(),
@@ -113,7 +117,22 @@ export async function clanInvitationRoutes(fastify: FastifyInstance) {
         )
         .limit(1);
 
+      // The seat-paying owner is the clan creator, not the inviter — a
+      // non-creator admin may have sent the invite, but billing follows
+      // ownership.
+      const [clan] = await db
+        .select({ createdBy: clans.createdBy })
+        .from(clans)
+        .where(eq(clans.id, inv.clanId))
+        .limit(1);
+      if (!clan) throw AppError.notFound('Clan');
+
       if (!existing) {
+        // Hard-cap tiers throw here when adding this person would push
+        // the owner past their seat ceiling. Pro/Business pass through and
+        // overage is synced after the insert.
+        await assertCanAddSeat(clan.createdBy, request.profileId!);
+
         await db.insert(clanMembers).values({
           clanId: inv.clanId,
           userId: request.profileId!,
@@ -126,6 +145,13 @@ export async function clanInvitationRoutes(fastify: FastifyInstance) {
         .update(clanInvitations)
         .set({ acceptedAt: new Date() })
         .where(eq(clanInvitations.id, inv.id));
+
+      // Best-effort overage sync — failures are logged but don't block accept.
+      try {
+        await syncSeatOverageToStripe(clan.createdBy);
+      } catch (err) {
+        request.log.error({ err, ownerId: clan.createdBy }, 'syncSeatOverageToStripe failed');
+      }
 
       return { data: { clanId: inv.clanId } };
     },

@@ -15,7 +15,8 @@
         "db:generate": "drizzle-kit generate",
         "db:migrate": "tsx src/db/migrate.ts",
         "db:studio": "drizzle-kit studio",
-        "create-api-key": "tsx src/scripts/create-api-key.ts"
+        "create-api-key": "tsx src/scripts/create-api-key.ts",
+        "reconcile-seats": "tsx src/scripts/reconcile-seats.ts"
     },
     "dependencies": {
         "@clerk/fastify": "^2.0.0",

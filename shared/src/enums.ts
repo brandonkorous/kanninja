@@ -38,7 +38,7 @@ export type AuditActionType = (typeof AuditActionType)[keyof typeof AuditActionT
 
 export const SubscriptionTier = {
   FREE: 'free',
-  ESSENTIALS: 'essentials',
+  CLAN: 'clan',
   PRO: 'pro',
   BUSINESS: 'business',
   ENTERPRISE: 'enterprise',

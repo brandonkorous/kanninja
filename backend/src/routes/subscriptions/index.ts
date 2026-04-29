@@ -7,6 +7,7 @@ import { profiles } from '../../db/schema/profiles.js';
 import { eq } from 'drizzle-orm';
 import { AppError } from '../../utils/errors.js';
 import { createCheckoutSchema, SubscriptionTier } from '@kanninja/shared';
+import { getSeatUsage } from '../../services/seat-billing.service.js';
 
 const portalSchema = z.object({ returnUrl: z.string().url() });
 
@@ -25,6 +26,17 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
 
       const sub = await subscriptionService.checkAndSyncFromStripe(request.profileId!, profile.email);
       return { data: sub };
+    },
+  );
+
+  // Seat usage snapshot — current count, included quota, overage, price.
+  // Read-only; safe to call frequently (one DB count + one tier-config lookup).
+  fastify.get(
+    '/api/v1/subscription/usage',
+    { preHandler: [requireAuth] },
+    async (request) => {
+      const usage = await getSeatUsage(request.profileId!);
+      return { data: usage };
     },
   );
 

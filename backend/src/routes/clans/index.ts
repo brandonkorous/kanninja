@@ -9,6 +9,11 @@ import { profiles } from '../../db/schema/profiles.js';
 import { eq, and, desc } from 'drizzle-orm';
 import { AppError } from '../../utils/errors.js';
 import { createClanSchema, updateClanSchema } from '@kanninja/shared';
+import {
+  assertCanAddSeat,
+  syncSeatOverageToStripe,
+  getSeatUsage,
+} from '../../services/seat-billing.service.js';
 
 export async function clanRoutes(fastify: FastifyInstance) {
   // List clans the user is a member of
@@ -75,6 +80,11 @@ export async function clanRoutes(fastify: FastifyInstance) {
   fastify.post('/api/v1/clans', { preHandler: [requireAuth] }, async (request, reply) => {
     const input = createClanSchema.parse(request.body);
 
+    // Reject if a hard-cap tier (Free, Clan) would be pushed past its seat
+    // ceiling by adding the creator. Users with a personal clan that already
+    // contains them won't consume a new seat — assertCanAddSeat handles that.
+    await assertCanAddSeat(request.profileId!, request.profileId!);
+
     const [clan] = await db
       .insert(clans)
       .values({
@@ -93,6 +103,14 @@ export async function clanRoutes(fastify: FastifyInstance) {
 
     // Create default settings
     await db.insert(clanSettings).values({ clanId: clan.id });
+
+    // Best-effort Stripe sync. Failures are logged but don't block the API
+    // response — the seat-state truth is in our DB; Stripe can be reconciled.
+    try {
+      await syncSeatOverageToStripe(request.profileId!);
+    } catch (err) {
+      request.log.error({ err, ownerId: request.profileId }, 'syncSeatOverageToStripe failed');
+    }
 
     return reply.status(201).send({ data: clan });
   });
@@ -120,7 +138,7 @@ export async function clanRoutes(fastify: FastifyInstance) {
     { preHandler: [requireAuth, requireClanRole('admin')] },
     async (request, reply) => {
       const [target] = await db
-        .select({ isPersonal: clans.isPersonal })
+        .select({ isPersonal: clans.isPersonal, createdBy: clans.createdBy })
         .from(clans)
         .where(eq(clans.id, request.params.clanId))
         .limit(1);
@@ -131,6 +149,14 @@ export async function clanRoutes(fastify: FastifyInstance) {
       }
 
       await db.delete(clans).where(eq(clans.id, request.params.clanId));
+
+      // Re-sync overage for the clan owner — deleting the clan can drop their
+      // unique-seat count, which may reduce or remove the overage line.
+      try {
+        await syncSeatOverageToStripe(target.createdBy);
+      } catch (err) {
+        request.log.error({ err, ownerId: target.createdBy }, 'syncSeatOverageToStripe failed');
+      }
       return reply.status(204).send();
     },
   );
@@ -218,7 +244,24 @@ export async function clanRoutes(fastify: FastifyInstance) {
         if (admins.length === 1) throw AppError.forbidden('Cannot remove the last admin');
       }
 
+      // Look up the clan owner for the post-delete seat sync — the seat-paying
+      // owner is clans.createdBy, which is not necessarily the request actor
+      // (a non-creator admin may be removing someone).
+      const [clan] = await db
+        .select({ createdBy: clans.createdBy })
+        .from(clans)
+        .where(eq(clans.id, member.clanId))
+        .limit(1);
+
       await db.delete(clanMembers).where(eq(clanMembers.id, request.params.memberId));
+
+      if (clan) {
+        try {
+          await syncSeatOverageToStripe(clan.createdBy);
+        } catch (err) {
+          request.log.error({ err, ownerId: clan.createdBy }, 'syncSeatOverageToStripe failed');
+        }
+      }
       return reply.status(204).send();
     },
   );
@@ -264,6 +307,24 @@ export async function clanRoutes(fastify: FastifyInstance) {
         .where(eq(clanSettings.clanId, request.params.clanId))
         .limit(1);
       return { data: settings };
+    },
+  );
+
+  // Seat usage for the clan's owner — exposes the seat-paying subscription's
+  // capacity to clan admins so the invite UI can warn them before adding a
+  // seat that will trigger overage billing or hit a hard cap. Admins only.
+  fastify.get<{ Params: { clanId: string } }>(
+    '/api/v1/clans/:clanId/seat-usage',
+    { preHandler: [requireAuth, requireClanRole('admin')] },
+    async (request) => {
+      const [clan] = await db
+        .select({ createdBy: clans.createdBy })
+        .from(clans)
+        .where(eq(clans.id, request.params.clanId))
+        .limit(1);
+      if (!clan) throw AppError.notFound('Clan');
+      const usage = await getSeatUsage(clan.createdBy);
+      return { data: usage };
     },
   );
 

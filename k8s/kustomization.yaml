@@ -14,6 +14,7 @@ resources:
   - mcp-deployment.yaml
   - mcp-service.yaml
   - ingress.yaml
+  - reconcile-seats-cronjob.yaml
 
 # Image tags are rewritten by the GitHub Actions deploy workflow
 # via `kustomize edit set image`. Defaults below are used for manual

@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm';
 import { AppError } from '../utils/errors.js';
 import { SubscriptionTier } from '@kanninja/shared';
 import { env } from '../config/env.js';
-import { STRIPE_PRICE_IDS, tierFromPriceId } from '../config/stripe-prices.js';
+import { STRIPE_PRICE_IDS, tierFromPriceId, isBasePriceId, isOveragePriceId } from '../config/stripe-prices.js';
 
 export const subscriptionService = {
   async getSubscription(userId: string) {
@@ -71,8 +71,11 @@ export const subscriptionService = {
     }
 
     const sub = stripeSubs.data[0];
-    const price = sub.items.data[0].price;
-    const tier = tierFromPriceId(price.id);
+    // Pick the BASE item (not the seat-overage item) when mapping tier.
+    const baseItem = sub.items.data.find((i) => isBasePriceId(i.price.id));
+    const overageItem = sub.items.data.find((i) => isOveragePriceId(i.price.id));
+    const basePriceId = baseItem?.price.id ?? sub.items.data[0]?.price.id;
+    const tier = basePriceId ? tierFromPriceId(basePriceId) : 'free';
     const periodEnd = (sub as { current_period_end?: number }).current_period_end;
     const subscriptionEnd = periodEnd ? new Date(periodEnd * 1000) : null;
 
@@ -83,7 +86,8 @@ export const subscriptionService = {
         email,
         stripeCustomerId: customer.id,
         stripeSubscriptionId: sub.id,
-        stripePriceId: price.id,
+        stripePriceId: basePriceId,
+        stripeOverageSubscriptionItemId: overageItem?.id ?? null,
         subscribed: true,
         subscriptionTier: tier,
         subscriptionEnd,
@@ -93,7 +97,8 @@ export const subscriptionService = {
         set: {
           stripeCustomerId: customer.id,
           stripeSubscriptionId: sub.id,
-          stripePriceId: price.id,
+          stripePriceId: basePriceId,
+          stripeOverageSubscriptionItemId: overageItem?.id ?? null,
           subscribed: true,
           subscriptionTier: tier,
           subscriptionEnd,
@@ -131,8 +136,11 @@ export const subscriptionService = {
     if (input.tier === SubscriptionTier.FREE) {
       throw AppError.validationError('Invalid tier for checkout');
     }
+    if (input.tier === SubscriptionTier.ENTERPRISE) {
+      throw AppError.validationError('Enterprise is sales-only — contact us instead of self-serve checkout');
+    }
 
-    const priceId = STRIPE_PRICE_IDS[input.tier]?.[input.interval];
+    const priceId = STRIPE_PRICE_IDS[input.tier]?.base[input.interval];
     if (!priceId) {
       throw AppError.validationError('Invalid tier/interval combination');
     }
