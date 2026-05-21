@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCopy, faCheck, faKey } from '@fortawesome/free-solid-svg-icons';
 import { Field, Input } from '@/components/ui';
 import { useCreateApiKey } from '@/hooks/use-api-keys';
+import { MCP_REMOTE_URL } from '@/lib/seo';
 
 function buildMcpConfig(key: string): string {
   return JSON.stringify(
@@ -147,6 +148,14 @@ export function CreateApiKeyModal({ open, onClose }: CreateApiKeyModalProps) {
                   <FontAwesomeIcon icon={copied === 'config' ? faCheck : faCopy} />
                 </button>
               </div>
+              <p className="text-xs text-base-content/60 mt-3">
+                Using Claude.ai or ChatGPT instead? Skip the key — add the
+                connector URL{' '}
+                <code className="font-mono text-primary break-all">
+                  {MCP_REMOTE_URL}
+                </code>{' '}
+                and sign in when prompted.
+              </p>
             </div>
 
             <div className="modal-action">

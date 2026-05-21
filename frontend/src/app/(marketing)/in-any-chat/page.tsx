@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { buildPageMetadata } from '@/lib/seo';
+import { buildPageMetadata, MCP_REMOTE_URL } from '@/lib/seo';
 import { JsonLd, breadcrumbLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = buildPageMetadata({
@@ -186,7 +186,7 @@ export default function InAnyChatPage() {
                         <p className="mt-10 max-w-2xl text-lg leading-relaxed text-base-content/70">
                             In ChatGPT or Claude, open Settings → Integrations and add{' '}
                             <code className="font-mono text-base text-primary">
-                                mcp.kanninja.com
+                                {MCP_REMOTE_URL}
                             </code>
                             . Sign in when it asks. From then on, the agent can see your boards
                             and act on them.

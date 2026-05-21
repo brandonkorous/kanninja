@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { buildPageMetadata } from '@/lib/seo';
+import { buildPageMetadata, MCP_REMOTE_URL } from '@/lib/seo';
 import { JsonLd, breadcrumbLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = buildPageMetadata({
@@ -192,7 +192,7 @@ export default function McpForEveryonePage() {
                             <p className="mt-4 text-base leading-relaxed text-base-content/70">
                                 In ChatGPT or Claude, open Settings → Integrations and add{' '}
                                 <code className="font-mono text-sm text-primary">
-                                    mcp.kanninja.com
+                                    {MCP_REMOTE_URL}
                                 </code>
                                 . Sign in when it asks.
                             </p>
@@ -274,7 +274,7 @@ export default function McpForEveryonePage() {
                             <p className="mt-8 max-w-xl text-lg leading-relaxed text-neutral-content/70">
                                 Start a kata, then add{' '}
                                 <code className="font-mono text-sm text-primary">
-                                    mcp.kanninja.com
+                                    {MCP_REMOTE_URL}
                                 </code>{' '}
                                 in ChatGPT or Claude. Two minutes.
                             </p>

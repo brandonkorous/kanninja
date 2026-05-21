@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import { useApiKeys } from '@/hooks/use-api-keys';
+import { MCP_REMOTE_URL } from '@/lib/seo';
 import { ApiKeyRow } from './ApiKeyRow';
 import { CreateApiKeyModal } from './CreateApiKeyModal';
 
@@ -29,8 +30,11 @@ export function ApiKeysSection() {
         Connect your <span className="italic text-primary">agents.</span>
       </h2>
       <p className="mt-3 text-sm text-base-content/60 max-w-lg">
-        API keys let MCP clients like Claude Code, Cursor, and ChatGPT manage
-        your boards. Each key is scoped to your account.
+        API keys connect terminal MCP clients — Claude Code, Cursor, Windsurf —
+        to your boards. Each key is scoped to your account. For Claude.ai or
+        ChatGPT, add the connector URL{' '}
+        <code className="font-mono text-primary break-all">{MCP_REMOTE_URL}</code>{' '}
+        instead — no key required.
       </p>
 
       {isLoading && (

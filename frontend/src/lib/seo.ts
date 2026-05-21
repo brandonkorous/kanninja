@@ -10,6 +10,13 @@ export const TWITTER_HANDLE = '@kanninja';
 export const ORG_LEGAL_NAME = 'wizeworks';
 export const SUPPORT_EMAIL = 'hello@kanninja.com';
 
+/**
+ * The hosted remote MCP server's connection URL — the value users paste into
+ * Claude.ai, ChatGPT, or any web MCP client. Note the `/mcp` path: the OAuth
+ * discovery endpoints serve at the origin, but the MCP transport is at `/mcp`.
+ */
+export const MCP_REMOTE_URL = 'https://mcp.kanninja.com/mcp';
+
 export function absoluteUrl(path: string): string {
     if (!path.startsWith('/')) path = `/${path}`;
     return `${SITE_URL}${path}`;

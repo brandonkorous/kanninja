@@ -15,6 +15,12 @@ A Streamable HTTP MCP server, OAuth-gated, hosted at `https://mcp.kanninja.com`,
 2. OpenAI's directory or whatever ChatGPT eventually uses (still emerging)
 3. Smithery's hosted tier
 
+> **Endpoint vs. origin.** The MCP transport endpoint — the URL clients register — is
+> `https://mcp.kanninja.com/mcp`. The bare origin `https://mcp.kanninja.com` is the OAuth
+> issuer: discovery (`/.well-known/*`), `/authorize`, `/token`, and `/register` all serve
+> at the root, *not* under `/mcp`. Keep the two distinct — `MCP_PUBLIC_URL` holds the
+> origin and must not have `/mcp` appended.
+
 Same tool registry as the local stdio server — one tool surface, two transports. The tool definitions in `v2/mcp-server/src/tools/` get reused; only the transport layer is new.
 
 ## Architecture

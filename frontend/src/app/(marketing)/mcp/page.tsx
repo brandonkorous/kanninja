@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { buildPageMetadata } from '@/lib/seo';
+import { buildPageMetadata, MCP_REMOTE_URL } from '@/lib/seo';
 import { JsonLd, breadcrumbLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = buildPageMetadata({
@@ -99,10 +99,11 @@ export default function McpPage() {
                             software you already pay for.
                         </p>
                         <p className="mt-6 text-lg leading-relaxed text-base-content/70">
-                            kanNINJA ships an MCP server. You generate an API key, paste a
-                            short snippet into your agent’s config, and the agent can read
-                            your boards and move your kata. No browser tab. No copy-paste from
-                            the dashboard. The work happens where you already work.
+                            kanNINJA ships an MCP server. Paste a URL into a web client, or a
+                            short snippet into your terminal agent&rsquo;s config, and the
+                            agent can read your boards and move your kata. No browser tab. No
+                            copy-paste from the dashboard. The work happens where you already
+                            work.
                         </p>
                     </div>
                 </div>
@@ -170,7 +171,7 @@ export default function McpPage() {
                 </div>
             </section>
 
-            {/* 03 — Three steps */}
+            {/* 03 — Setup */}
             <section className="border-t border-base-300">
                 <div className="container mx-auto px-6 md:px-12 lg:px-16 py-24 lg:py-32">
                     <div className="max-w-3xl">
@@ -178,66 +179,100 @@ export default function McpPage() {
                             03 — Setup
                         </p>
                         <h2 className="mt-8 font-display text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight">
-                            Three steps to{' '}
-                            <span className="italic text-primary">wired.</span>
+                            Two ways in.{' '}
+                            <span className="italic text-primary">Pick one.</span>
                         </h2>
                         <p className="mt-8 max-w-2xl text-lg leading-relaxed text-base-content/70">
-                            Under a minute, in any direction.
+                            Paste a URL, or paste a snippet. Under a minute either way.
                         </p>
                     </div>
 
-                    <div className="hanko-scroll-rise mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl">
-                        <article className="bg-base-100 rounded-lg shadow-e1 p-8">
-                            <p className="text-eyebrow font-mono uppercase tracking-widest text-base-content/40">
-                                Step 01
-                            </p>
-                            <h3 className="mt-4 font-display text-2xl font-medium tracking-tight">
-                                Generate a key.
-                            </h3>
-                            <p className="mt-4 text-base leading-relaxed text-base-content/70">
-                                Settings &rarr; API keys &rarr; <em>Create key</em>. Name it
-                                after the agent that will use it.
-                            </p>
-                        </article>
-                        <article className="bg-base-100 rounded-lg shadow-e1 p-8">
-                            <p className="text-eyebrow font-mono uppercase tracking-widest text-base-content/40">
-                                Step 02
-                            </p>
-                            <h3 className="mt-4 font-display text-2xl font-medium tracking-tight">
-                                Paste the snippet.
-                            </h3>
-                            <p className="mt-4 text-base leading-relaxed text-base-content/70">
-                                Drop it into your client&rsquo;s MCP config and restart the
-                                client.
-                            </p>
-                        </article>
-                        <article className="bg-base-100 rounded-lg shadow-e1 p-8">
-                            <p className="text-eyebrow font-mono uppercase tracking-widest text-base-content/40">
-                                Step 03
-                            </p>
-                            <h3 className="mt-4 font-display text-2xl font-medium tracking-tight">
-                                Ask for your boards.
-                            </h3>
-                            <p className="mt-4 text-base leading-relaxed text-base-content/70">
-                                &ldquo;List my boards.&rdquo; The agent calls{' '}
-                                <code className="font-mono text-sm">list_boards</code> and
-                                you&rsquo;re done.
-                            </p>
-                        </article>
-                    </div>
-
-                    {/* Snippet */}
-                    <div className="mt-12 max-w-3xl">
-                        <p className="text-eyebrow font-mono uppercase tracking-widest text-base-content/50 mb-4">
-                            The snippet
+                    {/* Hosted remote — by URL */}
+                    <div className="hanko-scroll-rise mt-20 max-w-3xl">
+                        <p className="text-eyebrow font-mono uppercase tracking-widest text-base-content/50">
+                            By URL — Claude.ai, ChatGPT, any web client
                         </p>
-                        <pre className="bg-base-100 rounded-lg shadow-e1 p-6 font-mono text-sm overflow-x-auto whitespace-pre">
-                            {MCP_SNIPPET}
+                        <h3 className="mt-6 font-display text-2xl md:text-3xl font-medium tracking-tight">
+                            Add the connector.{' '}
+                            <span className="italic text-primary">Sign in. Done.</span>
+                        </h3>
+                        <p className="mt-6 text-base leading-relaxed text-base-content/70">
+                            Open your client&rsquo;s connector settings, add a custom
+                            connector, and paste this URL. Sign in to kanNINJA when it asks
+                            &mdash; there is no key to generate or store.
+                        </p>
+                        <pre className="mt-6 bg-base-100 rounded-lg shadow-e1 p-6 font-mono text-sm overflow-x-auto whitespace-pre">
+                            {MCP_REMOTE_URL}
                         </pre>
                         <p className="mt-3 text-sm text-base-content/50">
-                            Replace <code className="font-mono">ninja_live_...</code> with the
-                            key from your settings page.
+                            OAuth handles the sign-in. The connector sees only what you can
+                            see, and you can revoke it from settings any time.
                         </p>
+                    </div>
+
+                    {/* Local stdio — by config */}
+                    <div className="hanko-scroll-rise mt-20 max-w-5xl">
+                        <p className="text-eyebrow font-mono uppercase tracking-widest text-base-content/50">
+                            By config — Claude Code, Cursor, Windsurf, the terminal
+                        </p>
+                        <h3 className="mt-6 font-display text-2xl md:text-3xl font-medium tracking-tight">
+                            Three steps to{' '}
+                            <span className="italic text-primary">wired.</span>
+                        </h3>
+
+                        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <article className="bg-base-100 rounded-lg shadow-e1 p-8">
+                                <p className="text-eyebrow font-mono uppercase tracking-widest text-base-content/40">
+                                    Step 01
+                                </p>
+                                <h4 className="mt-4 font-display text-2xl font-medium tracking-tight">
+                                    Generate a key.
+                                </h4>
+                                <p className="mt-4 text-base leading-relaxed text-base-content/70">
+                                    Settings &rarr; API keys &rarr; <em>Create key</em>. Name
+                                    it after the agent that will use it.
+                                </p>
+                            </article>
+                            <article className="bg-base-100 rounded-lg shadow-e1 p-8">
+                                <p className="text-eyebrow font-mono uppercase tracking-widest text-base-content/40">
+                                    Step 02
+                                </p>
+                                <h4 className="mt-4 font-display text-2xl font-medium tracking-tight">
+                                    Paste the snippet.
+                                </h4>
+                                <p className="mt-4 text-base leading-relaxed text-base-content/70">
+                                    Drop it into your client&rsquo;s MCP config and restart
+                                    the client.
+                                </p>
+                            </article>
+                            <article className="bg-base-100 rounded-lg shadow-e1 p-8">
+                                <p className="text-eyebrow font-mono uppercase tracking-widest text-base-content/40">
+                                    Step 03
+                                </p>
+                                <h4 className="mt-4 font-display text-2xl font-medium tracking-tight">
+                                    Ask for your boards.
+                                </h4>
+                                <p className="mt-4 text-base leading-relaxed text-base-content/70">
+                                    &ldquo;List my boards.&rdquo; The agent calls{' '}
+                                    <code className="font-mono text-sm">list_boards</code> and
+                                    you&rsquo;re done.
+                                </p>
+                            </article>
+                        </div>
+
+                        {/* Snippet */}
+                        <div className="mt-12 max-w-3xl">
+                            <p className="text-eyebrow font-mono uppercase tracking-widest text-base-content/50 mb-4">
+                                The snippet
+                            </p>
+                            <pre className="bg-base-100 rounded-lg shadow-e1 p-6 font-mono text-sm overflow-x-auto whitespace-pre">
+                                {MCP_SNIPPET}
+                            </pre>
+                            <p className="mt-3 text-sm text-base-content/50">
+                                Replace <code className="font-mono">ninja_live_...</code> with
+                                the key from your settings page.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </section>
