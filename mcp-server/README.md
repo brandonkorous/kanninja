@@ -45,27 +45,27 @@ The settings page also gives you a copy-pasteable JSON block, ready to drop into
 
 ## Tools
 
-Fifteen tools, two groups.
+Forty-two tools, grouped by what they touch.
 
-**Read**
-- `list_boards` — every dojo you can see
-- `get_board` — columns, cards, members
-- `list_tasks` — same as get_board, scoped for the agent
-- `get_task` — full detail with comments and history
-- `get_my_work` — everything assigned to you, grouped by board
-- `search` — text search across cards and comments
+**Read** — `list_boards`, `get_board`, `list_tasks`, `get_task`, `get_my_work`, `search`, `list_comments`, `list_checklist`, `list_labels`
 
-**Write**
-- `create_task` — new kata on a column
-- `update_task` — title, description, priority, progress
-- `move_task` — across columns, with an optional comment
-- `add_comment` — posts as you
-- `assign_task` — to a teammate, or no one
-- `add_label` / `remove_label`
-- `set_due_date`
-- `create_board`
+**Boards** — `create_board`, `update_board`, `delete_board`
 
-AI-native tools (`break_down_task`, `estimate_task`, `suggest_next`, `summarize_board`, `draft_standup`, `extract_tasks`) and clan tools ship in v0.2.
+**Lists** — `create_list`, `update_list`, `delete_list`, `reorder_lists`
+
+**Cards** — `create_task`, `update_task`, `move_task`, `delete_task`, `assign_task`, `set_due_date`
+
+**Comments** — `add_comment`, `update_comment`, `delete_comment`
+
+**Checklist** — `add_checklist_item`, `update_checklist_item`, `delete_checklist_item`
+
+**Labels** — `create_label`, `update_label`, `delete_label`, `add_label`, `remove_label`
+
+**Composite** — one transactional call in place of a chain of CRUD: `create_board_with_structure`, `apply_template_to_board`, `bulk_create_tasks`, `bulk_update_tasks`, `duplicate_card`
+
+**Integrations** — `list_connected_integrations`, `list_available_providers`, `get_integration_events`, `sync_integration`
+
+AI-native tools (`break_down_task`, `estimate_task`, `suggest_next`, `summarize_board`, `draft_standup`, `extract_tasks`) and clan tools are on the roadmap.
 
 ## Configuration
 
