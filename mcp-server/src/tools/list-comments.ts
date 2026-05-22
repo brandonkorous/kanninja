@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const listCommentsTool = defineTool({
   name: 'list_comments',
+  readOnly: true,
   title: 'List Comments',
   description: 'List all comments on a task, oldest first.',
   inputSchema: z.object({

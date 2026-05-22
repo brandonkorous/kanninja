@@ -27,6 +27,16 @@ const envSchema = z.object({
   // the backend's /api/v1/oauth/* internal endpoints. Backend rejects calls
   // without it.
   MCP_S2S_TOKEN: z.string().min(32),
+
+  // Comma-separated host allowlist for the inbound Origin header. Requests
+  // with no Origin (server-to-server, CLIs) are always allowed; a request
+  // that carries an Origin must resolve to one of these hosts (or a
+  // subdomain). localhost is included so the MCP Inspector works.
+  MCP_ALLOWED_ORIGINS: z
+    .string()
+    .default(
+      'claude.ai,claude.com,anthropic.com,chatgpt.com,openai.com,gemini.google.com,aistudio.google.com,kanninja.com,localhost,127.0.0.1',
+    ),
 });
 
 export type Env = z.infer<typeof envSchema>;

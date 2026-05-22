@@ -3,11 +3,13 @@ import { createHash } from 'node:crypto';
 import Fastify, { type FastifyRequest } from 'fastify';
 import formbody from '@fastify/formbody';
 import rateLimit from '@fastify/rate-limit';
+import cors from '@fastify/cors';
 import { env } from './config/env.js';
 import { authenticateRequest, AuthError } from './auth.js';
 import { oauthRoutes } from './oauth.js';
+import { enforceOrigin, isAllowedOrigin } from './origin.js';
 import { allTools } from 'kanninja-mcp/tools';
-import { registerAllTools } from 'kanninja-mcp/registry';
+import { registerAllTools, serverInfo } from 'kanninja-mcp/registry';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import {
@@ -65,6 +67,19 @@ async function start() {
   // token instead.
   await fastify.register(rateLimit, { global: false });
 
+  // CORS — lets browser-based MCP clients (and the MCP Inspector reviewers
+  // use) complete preflight. The allowlist mirrors the Origin check.
+  await fastify.register(cors, {
+    origin: (origin, cb) => cb(null, !origin || isAllowedOrigin(origin)),
+    methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Mcp-Session-Id', 'Mcp-Protocol-Version'],
+    exposedHeaders: ['WWW-Authenticate', 'Mcp-Session-Id'],
+  });
+
+  // Reject any request carrying a disallowed Origin. No-Origin requests
+  // (server-to-server, CLIs) pass — the bearer token is the real gate.
+  fastify.addHook('onRequest', enforceOrigin);
+
   fastify.get('/health', async () => ({ status: 'ok' }));
 
   await fastify.register(oauthRoutes);
@@ -113,10 +128,19 @@ async function start() {
       throw err;
     }
 
+    // The streamable-HTTP transport writes straight to the raw socket, so
+    // CORS headers @fastify/cors set on the Fastify reply are bypassed —
+    // echo the allowed Origin onto the raw response here.
+    const reqOrigin = request.headers.origin;
+    if (reqOrigin && isAllowedOrigin(reqOrigin)) {
+      reply.raw.setHeader('Access-Control-Allow-Origin', reqOrigin);
+      reply.raw.setHeader('Vary', 'Origin');
+    }
+
     reply.hijack();
 
     const server = new Server(
-      { name: 'kanninja', version: '0.1.0' },
+      { ...serverInfo, version: '0.3.0' },
       { capabilities: { tools: {} } },
     );
     registerAllTools(server, allTools, ctx);

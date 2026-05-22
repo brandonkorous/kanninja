@@ -3,7 +3,7 @@ import 'dotenv/config';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { createApiClient } from './api-client.js';
-import { registerAllTools } from './registry.js';
+import { registerAllTools, serverInfo } from './registry.js';
 import { allTools } from './tools/index.js';
 import type { McpContext } from './context.js';
 
@@ -33,7 +33,7 @@ async function main() {
     };
 
     const server = new Server(
-        { name: 'kanninja', version: '0.2.0' },
+        { ...serverInfo, version: '0.3.0' },
         { capabilities: { tools: {} } },
     );
 

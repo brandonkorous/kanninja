@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const getMyWorkTool = defineTool({
   name: 'get_my_work',
+  readOnly: true,
   title: 'Get My Work',
   description: 'Get all tasks assigned to the authenticated user, grouped by board.',
   inputSchema: z.object({}),

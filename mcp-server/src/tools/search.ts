@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const searchTool = defineTool({
   name: 'search',
+  readOnly: true,
   title: 'Search',
   description: 'Search across tasks and comments by text query. Scoped to boards the user has access to.',
   inputSchema: z.object({

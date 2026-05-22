@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const listChecklistTool = defineTool({
   name: 'list_checklist',
+  readOnly: true,
   title: 'List Checklist Items',
   description: 'List the checklist items on a task, in display order.',
   inputSchema: z.object({

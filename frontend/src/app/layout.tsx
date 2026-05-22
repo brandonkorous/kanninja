@@ -92,11 +92,8 @@ export const metadata: Metadata = {
             }),
         ],
     },
-    icons: {
-        icon: '/brand/nin-glyph.svg',
-        shortcut: '/brand/nin-icon.svg',
-        apple: '/brand/nin-icon.svg',
-    },
+    // Icons resolve from the App Router file convention:
+    // app/favicon.ico, app/icon.svg, app/apple-icon.png — see those files.
     robots: { index: true, follow: true },
 };
 

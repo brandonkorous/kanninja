@@ -3,6 +3,12 @@ import { createApiClient } from 'kanninja-mcp/api-client';
 import type { McpContext } from 'kanninja-mcp/context';
 import { env } from './config/env.js';
 
+// RFC 9728 — every 401 points the client at the protected-resource metadata
+// document so it can discover the authorization server and run OAuth.
+const RESOURCE_METADATA_URL = `${env.MCP_PUBLIC_URL}/.well-known/oauth-protected-resource`;
+const WWW_AUTHENTICATE = `Bearer realm="kanninja-mcp", resource_metadata="${RESOURCE_METADATA_URL}"`;
+const WWW_AUTHENTICATE_INVALID = `${WWW_AUTHENTICATE}, error="invalid_token"`;
+
 interface VerifyKeyResponse {
   data: {
     userId: string;
@@ -102,17 +108,17 @@ export async function authenticateRequest(
   apiUrl: string,
 ): Promise<McpContext> {
   if (!authHeader) {
-    throw new AuthError(401, 'Missing Authorization header', 'Bearer realm="kanninja-mcp"');
+    throw new AuthError(401, 'Missing Authorization header', WWW_AUTHENTICATE);
   }
 
   const match = /^Bearer\s+(.+)$/i.exec(authHeader);
   if (!match) {
-    throw new AuthError(401, 'Authorization header must use Bearer scheme', 'Bearer realm="kanninja-mcp"');
+    throw new AuthError(401, 'Authorization header must use Bearer scheme', WWW_AUTHENTICATE);
   }
 
   const token = match[1].trim();
   if (!token) {
-    throw new AuthError(401, 'Empty bearer token', 'Bearer realm="kanninja-mcp"');
+    throw new AuthError(401, 'Empty bearer token', WWW_AUTHENTICATE);
   }
 
   // Path 1: kanNINJA API key
@@ -125,7 +131,7 @@ export async function authenticateRequest(
         { key: token },
       );
     } catch {
-      throw new AuthError(401, 'Invalid or revoked API key', 'Bearer realm="kanninja-mcp", error="invalid_token"');
+      throw new AuthError(401, 'Invalid or revoked API key', WWW_AUTHENTICATE_INVALID);
     }
     return {
       userId: verified.data.userId,
@@ -150,5 +156,5 @@ export async function authenticateRequest(
     };
   }
 
-  throw new AuthError(401, 'Unrecognised bearer token format', 'Bearer realm="kanninja-mcp"');
+  throw new AuthError(401, 'Unrecognised bearer token format', WWW_AUTHENTICATE);
 }
