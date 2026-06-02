@@ -15,7 +15,6 @@ spec:
   tls:
     - hosts:
         - kanninja.com
-        - www.kanninja.com
       secretName: kanninja-com-tls
     - hosts:
         - api.kanninja.com
@@ -34,16 +33,8 @@ spec:
                 name: frontend
                 port:
                   number: 80
-    - host: www.kanninja.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: frontend
-                port:
-                  number: 80
+    # www.kanninja.com is NOT served here — it 301-redirects to the apex
+    # via ingress-www-redirect.yaml so there is exactly one canonical origin.
     - host: api.kanninja.com
       http:
         paths:

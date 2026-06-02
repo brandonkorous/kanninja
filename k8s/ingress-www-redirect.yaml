@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kanninja-www-redirect
+  namespace: kanninja
+  annotations:
+    # Canonicalize www -> apex. $request_uri preserves the original path and
+    # query string, so https://www.kanninja.com/dashboard?x=1 lands on
+    # https://kanninja.com/dashboard?x=1. This is the ONLY thing this ingress
+    # does — nginx returns the 301 at the server level and never proxies to
+    # the backend below (the backend ref is required by the Ingress schema).
+    nginx.ingress.kubernetes.io/permanent-redirect: "https://kanninja.com$request_uri"
+    # Don't 308 http->https first; the 301 already targets https apex, so a
+    # plain http://www request redirects to the canonical origin in one hop.
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    # This ingress fully owns the www host (TLS + redirect) to avoid
+    # cross-ingress host-merge ambiguity. cert-manager issues a dedicated cert.
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - www.kanninja.com
+      secretName: www-kanninja-com-tls
+  rules:
+    - host: www.kanninja.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
