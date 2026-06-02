@@ -20,6 +20,9 @@ const READ_TOOLS = [
     { name: 'get_task.', body: 'Full detail — comments, history, attachments.' },
     { name: 'get_my_work.', body: 'Everything assigned to you, grouped by board.' },
     { name: 'search.', body: 'Text search across cards and comments. Scoped to what you can see.' },
+    { name: 'list_comments.', body: 'Every comment on a kata, in order, threaded.' },
+    { name: 'list_checklist.', body: 'The checklist on a kata, in display order.' },
+    { name: 'list_labels.', body: 'Labels available on a dojo — your globals plus board-scoped.' },
 ];
 
 const WRITE_TOOLS = [
@@ -29,6 +32,14 @@ const WRITE_TOOLS = [
     { name: 'add_comment.', body: 'Posts as you. Threaded with the rest.' },
     { name: 'assign_task.', body: 'To yourself, a clan member, or no one.' },
     { name: 'set_due_date.', body: 'In your workspace timezone, not the server’s.' },
+];
+
+const COMPOSITE_TOOLS = [
+    { name: 'create_board_with_structure.', body: 'A whole dojo in one call — board, columns, and starter kata.' },
+    { name: 'apply_template_to_board.', body: 'Stamp a template onto an existing dojo. Atomic.' },
+    { name: 'bulk_create_tasks.', body: 'A sprint of kata in one POST, not twenty.' },
+    { name: 'bulk_update_tasks.', body: 'Move, assign, due-date many kata at once. One call.' },
+    { name: 'duplicate_card.', body: 'A kata plus its checklist, labels, and assignees — cloned.' },
 ];
 
 const MCP_SNIPPET = `{
@@ -117,7 +128,7 @@ export default function McpPage() {
                             02 — Tools you get
                         </p>
                         <h2 className="mt-8 font-display text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight">
-                            Fifteen verbs, in{' '}
+                            Forty-two verbs, in{' '}
                             <span className="italic text-primary">your vocabulary.</span>
                         </h2>
                         <p className="mt-8 max-w-2xl text-lg leading-relaxed text-base-content/70">
@@ -164,9 +175,29 @@ export default function McpPage() {
                         </ul>
                     </div>
 
+                    {/* Composite */}
+                    <div className="hanko-scroll-rise mt-20 max-w-5xl">
+                        <p className="text-eyebrow font-mono uppercase tracking-widest text-base-content/50">
+                            Composite
+                        </p>
+                        <ul className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12">
+                            {COMPOSITE_TOOLS.map((t) => (
+                                <li key={t.name}>
+                                    <h3 className="font-display text-2xl font-medium tracking-tight">
+                                        {t.name}
+                                    </h3>
+                                    <p className="mt-3 text-base leading-relaxed text-base-content/70 max-w-md">
+                                        {t.body}
+                                    </p>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
                     <p className="mt-16 max-w-2xl text-base text-base-content/60 italic">
-                        AI-native tools (break down, estimate, suggest next, draft standup) and
-                        clan tools are next. Pro and Team tiers, when they ship.
+                        Forty-two tools across read, write, compose, and integrations. AI-native
+                        tools (break down, estimate, suggest next, draft standup) and clan tools
+                        are on the roadmap.
                     </p>
                 </div>
             </section>
