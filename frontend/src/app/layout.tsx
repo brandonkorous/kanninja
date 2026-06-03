@@ -46,6 +46,15 @@ const jetbrainsMono = JetBrains_Mono({
     display: 'swap',
 });
 
+// Home page OG/Twitter card — rendered by /api/og at request time. Computed
+// once and shared between the openGraph and twitter blocks below.
+const HOME_OG_ALT = `${SITE_NAME} — Discipline, made visible.`;
+const homeOgImage = ogImageUrl({
+    title: 'Discipline, made visible.',
+    eyebrow: 'wizeworks · kanNINJA',
+    subtitle: SITE_DESCRIPTION,
+});
+
 export const metadata: Metadata = {
     metadataBase: new URL(SITE_URL),
     title: {
@@ -63,18 +72,17 @@ export const metadata: Metadata = {
         type: 'website',
         url: SITE_URL,
         siteName: SITE_NAME,
+        locale: 'en_US',
         title: `${SITE_NAME} — Discipline, made visible.`,
         description: SITE_DESCRIPTION,
         images: [
             {
-                url: ogImageUrl({
-                    title: 'Discipline, made visible.',
-                    eyebrow: 'wizeworks · kanNINJA',
-                    subtitle: SITE_DESCRIPTION,
-                }),
+                url: homeOgImage,
+                secureUrl: homeOgImage,
+                type: 'image/png',
                 width: 1200,
                 height: 630,
-                alt: `${SITE_NAME} — Discipline, made visible.`,
+                alt: HOME_OG_ALT,
             },
         ],
     },
@@ -84,13 +92,7 @@ export const metadata: Metadata = {
         creator: TWITTER_HANDLE,
         title: `${SITE_NAME} — Discipline, made visible.`,
         description: SITE_DESCRIPTION,
-        images: [
-            ogImageUrl({
-                title: 'Discipline, made visible.',
-                eyebrow: 'wizeworks · kanNINJA',
-                subtitle: SITE_DESCRIPTION,
-            }),
-        ],
+        images: [{ url: homeOgImage, alt: HOME_OG_ALT }],
     },
     // Icons resolve from the App Router file convention:
     // app/favicon.ico, app/icon.svg, app/apple-icon.png — see those files.

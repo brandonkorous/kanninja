@@ -80,9 +80,19 @@ export function buildPageMetadata(input: PageMetaInput): Metadata {
             type: input.type ?? 'website',
             url: canonical,
             siteName: SITE_NAME,
+            locale: 'en_US',
             title: ogTitle,
             description: ogDescription,
-            images: [{ url: image, width: 1200, height: 630, alt: ogTitle }],
+            images: [
+                {
+                    url: image,
+                    secureUrl: image,
+                    type: 'image/png',
+                    width: 1200,
+                    height: 630,
+                    alt: ogTitle,
+                },
+            ],
         },
         twitter: {
             card: 'summary_large_image',
@@ -90,7 +100,7 @@ export function buildPageMetadata(input: PageMetaInput): Metadata {
             creator: TWITTER_HANDLE,
             title: ogTitle,
             description: ogDescription,
-            images: [image],
+            images: [{ url: image, alt: ogTitle }],
         },
     };
 }
