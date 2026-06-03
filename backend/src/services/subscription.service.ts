@@ -157,6 +157,7 @@ export const subscriptionService = {
       payment_method_types: ['card'],
       customer_email: profile.email,
       line_items: [{ price: priceId, quantity: 1 }],
+      allow_promotion_codes: true,
       success_url: input.successUrl,
       cancel_url: input.cancelUrl,
       metadata: { userId: input.userId, tier: input.tier },
