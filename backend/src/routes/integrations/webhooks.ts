@@ -6,6 +6,7 @@ import * as repo from '../../repositories/integration.repo.js';
 export async function integrationWebhookRoutes(fastify: FastifyInstance) {
   fastify.post<{ Params: { provider: string } }>(
     '/api/webhooks/integrations/:provider',
+    { config: { rawBody: true } },
     async (request, reply) => {
       const { provider: providerId } = request.params;
 
@@ -16,8 +17,12 @@ export async function integrationWebhookRoutes(fastify: FastifyInstance) {
         return reply.status(404).send({ error: 'Unknown provider' });
       }
 
+      // Prefer the exact bytes the sender signed (captured by fastify-raw-body
+      // via config.rawBody above); fall back to a re-serialized body only if
+      // unavailable.
       const rawBody =
-        typeof request.body === 'string' ? request.body : JSON.stringify(request.body);
+        request.rawBody ??
+        (typeof request.body === 'string' ? request.body : JSON.stringify(request.body));
 
       const isValid = provider.verifyWebhook(
         rawBody,

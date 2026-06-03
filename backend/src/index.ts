@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import rawBody from 'fastify-raw-body';
 import { env } from './config/env.js';
 import { corsPlugin } from './plugins/cors.js';
 import { errorHandlerPlugin } from './plugins/error-handler.js';
@@ -72,6 +73,18 @@ async function start() {
     logger: {
       level: env.NODE_ENV === 'production' ? 'info' : 'debug',
     },
+  });
+
+  // Capture the raw request body on opt-in routes (config: { rawBody: true }).
+  // Webhook signature verification (Stripe, Clerk/svix, integration HMACs) must
+  // hash the exact bytes the sender signed — a re-serialized request.body won't
+  // match. Registered before the routes; global:false keeps it off every other
+  // route, runFirst captures before the JSON body parser runs.
+  await fastify.register(rawBody, {
+    field: 'rawBody',
+    global: false,
+    encoding: 'utf8',
+    runFirst: true,
   });
 
   // Plugins

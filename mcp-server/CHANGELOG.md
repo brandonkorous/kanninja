@@ -2,6 +2,12 @@
 
 All notable changes to `kanninja-mcp`. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] — 2026-06-03
+
+### Fixed
+
+- `set_due_date` was missing its `title:` field, so hosts rendered it as the snake_case tool name instead of "Set Due Date". All 42 tools now carry a human-readable `title`, matching the Anthropic Connectors Directory requirements.
+
 ## [0.3.0] — 2026-05-21
 
 ### Added

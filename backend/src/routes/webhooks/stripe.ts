@@ -10,7 +10,7 @@ import { tierFromPriceId, isBasePriceId, isOveragePriceId } from '../../config/s
 import type Stripe from 'stripe';
 
 export async function stripeWebhookRoutes(fastify: FastifyInstance) {
-  fastify.post('/api/webhooks/stripe', async (request, reply) => {
+  fastify.post('/api/webhooks/stripe', { config: { rawBody: true } }, async (request, reply) => {
     if (!env.STRIPE_WEBHOOK_SECRET) {
       return reply.status(503).send({ error: 'Stripe webhooks not configured' });
     }
@@ -18,9 +18,17 @@ export async function stripeWebhookRoutes(fastify: FastifyInstance) {
     const sig = request.headers['stripe-signature'] as string;
     if (!sig) return reply.status(400).send({ error: 'Missing signature' });
 
+    // Must verify against the exact bytes Stripe signed. request.rawBody is
+    // captured by fastify-raw-body for this route (config.rawBody above); a
+    // re-serialized request.body fails verification.
+    const rawBody = request.rawBody;
+    if (!rawBody) {
+      request.log.error('Stripe webhook: raw body unavailable — fastify-raw-body misconfigured');
+      return reply.status(400).send({ error: 'Raw body unavailable' });
+    }
+
     let event: Stripe.Event;
     try {
-      const rawBody = JSON.stringify(request.body);
       event = stripe.webhooks.constructEvent(rawBody, sig, env.STRIPE_WEBHOOK_SECRET);
     } catch (err) {
       return reply.status(400).send({ error: `Webhook error: ${(err as Error).message}` });

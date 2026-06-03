@@ -41,11 +41,20 @@ export async function clerkWebhookRoutes(fastify: FastifyInstance) {
         return reply.status(400).send({ error: 'Missing svix headers' });
       }
 
+      // svix verifies the signature against the raw payload bytes — captured by
+      // fastify-raw-body (config.rawBody below). A re-serialized request.body
+      // won't match.
+      const rawBody = request.rawBody;
+      if (!rawBody) {
+        request.log.error('Clerk webhook: raw body unavailable — fastify-raw-body misconfigured');
+        return reply.status(400).send({ error: 'Raw body unavailable' });
+      }
+
       const wh = new Webhook(env.CLERK_WEBHOOK_SECRET);
       let payload: ClerkWebhookPayload;
 
       try {
-        payload = wh.verify(JSON.stringify(request.body), {
+        payload = wh.verify(rawBody, {
           'svix-id': svixId,
           'svix-timestamp': svixTimestamp,
           'svix-signature': svixSignature,
