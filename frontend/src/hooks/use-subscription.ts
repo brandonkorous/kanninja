@@ -17,25 +17,41 @@ export function useSubscription() {
 
 /** Seat usage for the billing UI — separate query so it can refetch on
  *  invalidation (e.g. after a member is added/removed) without re-syncing
- *  the full subscription. */
+ *  the full subscription.
+ *
+ *  Gated on the tier from useSubscription(): /subscription live-syncs Stripe
+ *  into the DB and resolves the true tier, whereas /usage reads the tier
+ *  straight from that DB row. Firing both in parallel right after an upgrade
+ *  lets /usage read the stale pre-upgrade row and render the old seat cap
+ *  (e.g. "of 3" instead of "of 15"). Waiting for the synced tier — and keying
+ *  on it — guarantees this reads a freshly-synced row and refetches if the
+ *  tier later changes. The dedup on ['subscription'] means no extra request. */
 export function useSubscriptionUsage() {
   const api = useApi();
+  const tier = useSubscription().data?.subscriptionTier;
   return useQuery({
-    queryKey: ['subscription', 'usage'],
+    queryKey: ['subscription', 'usage', tier],
     queryFn: () =>
       api.get<{ data: SubscriptionUsage }>('/api/v1/subscription/usage').then((r) => r.data),
+    enabled: !!tier,
   });
 }
 
 /** AI run consumption — drives the "X / Y used" indicator and lets the UI
  *  gate AI actions when the user's at their cap. Cheap to refetch (one
- *  count query against the ai_interactions table). */
+ *  count query against the ai_interactions table).
+ *
+ *  Gated on the synced tier for the same reason as useSubscriptionUsage —
+ *  otherwise a just-upgraded user sees Free's "Lifetime · 0 of 50" window
+ *  instead of Pro's monthly quota until the stale DB row catches up. */
 export function useAIUsage() {
   const api = useApi();
+  const tier = useSubscription().data?.subscriptionTier;
   return useQuery({
-    queryKey: ['subscription', 'ai-usage'],
+    queryKey: ['subscription', 'ai-usage', tier],
     queryFn: () =>
       api.get<{ data: AIQuotaStatus }>('/api/v1/subscription/ai-usage').then((r) => r.data),
+    enabled: !!tier,
   });
 }
 

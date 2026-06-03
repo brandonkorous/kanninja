@@ -3,6 +3,7 @@ import { defineTool } from '../registry.js';
 
 export const setDueDateTool = defineTool({
   name: 'set_due_date',
+  title: 'Set Due Date',
   description: 'Set or clear the due date on a task.',
   inputSchema: z.object({
     boardId: z.string().uuid().describe('The board ID'),
