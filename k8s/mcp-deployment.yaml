@@ -22,11 +22,10 @@ spec:
         app.kubernetes.io/name: mcp
         app.kubernetes.io/part-of: kanninja
     spec:
-      imagePullSecrets:
-        - name: ghcr-pull-secret
+      # No imagePullSecrets: Artifact Registry images pulled by the node SA.
       containers:
         - name: mcp
-          image: ghcr.io/brandonkorous/kanninja-mcp-remote:latest
+          image: us-central1-docker.pkg.dev/sparxworks/kanninja/mcp-remote:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

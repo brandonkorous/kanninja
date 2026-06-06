@@ -31,11 +31,10 @@ spec:
             app.kubernetes.io/part-of: kanninja
         spec:
           restartPolicy: Never
-          imagePullSecrets:
-            - name: ghcr-pull-secret
+          # No imagePullSecrets: Artifact Registry images pulled by the node SA.
           containers:
             - name: reconcile-seats
-              image: ghcr.io/brandonkorous/kanninja-backend:latest
+              image: us-central1-docker.pkg.dev/sparxworks/kanninja/backend:latest
               imagePullPolicy: IfNotPresent
               command: ["node", "dist/scripts/reconcile-seats.js"]
               # Same env as the backend so the script gets DATABASE_URL,

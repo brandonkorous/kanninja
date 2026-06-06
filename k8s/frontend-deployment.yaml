@@ -22,11 +22,10 @@ spec:
         app.kubernetes.io/name: frontend
         app.kubernetes.io/part-of: kanninja
     spec:
-      imagePullSecrets:
-        - name: ghcr-pull-secret
+      # No imagePullSecrets: Artifact Registry images pulled by the node SA.
       containers:
         - name: frontend
-          image: ghcr.io/brandonkorous/kanninja-frontend:latest
+          image: us-central1-docker.pkg.dev/sparxworks/kanninja/frontend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

@@ -1,70 +1,86 @@
-name: Build & Deploy to AKS
+name: Build & Deploy to GKE
+
+# Builds the three deployed images (backend, frontend, mcp-remote) and pushes
+# them to Artifact Registry, then rolls them out to the shared sparx-prod
+# Autopilot cluster in the `kanninja` namespace.
+#
+# Auth model (mirrors sparx.works/.github/workflows/*):
+#   - Workload Identity Federation (no long-lived keys). The `kanninja-pool`
+#     provider is locked to this repo and lets us impersonate kanninja-deployer.
+#   - The cluster control plane is private + authorized-networks-locked, so we
+#     reach it through GKE Connect Gateway (fleet membership), NOT the public
+#     IP. `get-gke-credentials` would hand back the unreachable public endpoint.
+#
+# The npm-distributed stdio MCP image (build-mcp) still publishes to GHCR — it's
+# a public artifact users pull, not a cluster workload, so it doesn't move to AR.
 
 on:
     push:
         branches: [ main ]
     workflow_dispatch:
 
+permissions:
+    contents: read
+    id-token: write # required for Workload Identity Federation
+
 env:
+    PROJECT_ID: sparxworks
+    PROJECT_NUMBER: "631794111842"
+    REGION: us-central1
+    CLUSTER: sparx-prod-autopilot
+    NAMESPACE: kanninja
+    AR_REPO: kanninja
+    AR_HOST: us-central1-docker.pkg.dev
+    # Public identifiers (no secret value). WIF binds brandonkorous/kanninja to
+    # the kanninja-deployer SA via the kanninja-pool provider.
+    WIF_PROVIDER: projects/631794111842/locations/global/workloadIdentityPools/kanninja-pool/providers/kanninja-provider
+    DEPLOYER_SA: kanninja-deployer@sparxworks.iam.gserviceaccount.com
+    # GHCR (build-mcp only — npm/distribution artifact, not a cluster image).
     REGISTRY: ghcr.io
     IMAGE_OWNER: brandonkorous
-    AKS_RESOURCE_GROUP: rg-ww-platform-prod-wu3
-    AKS_CLUSTER_NAME: aks-ww-platform-prod-wu3
-    NAMESPACE: kanninja
-    # Non-secret GitHub App identifiers (visible in the App's URL).
-    GHCR_APP_ID: "3486525"
-    GHCR_APP_INSTALLATION_ID: "126646503"
 
 jobs:
     # ------------------------------------------------------------------
-    # Build & push backend image
+    # Build & push backend image → Artifact Registry
     # ------------------------------------------------------------------
     build-backend:
         name: Build backend
         runs-on: ubuntu-latest
-        permissions:
-            contents: read
-            packages: write
-        outputs:
-            image: ${{ steps.meta.outputs.tags }}
-            digest: ${{ steps.build.outputs.digest }}
-            sha_tag: ${{ steps.vars.outputs.sha_tag }}
         steps:
             - uses: actions/checkout@v4
 
-            - name: Set version tag
-              id: vars
-              run: echo "sha_tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+            - uses: google-github-actions/auth@v2
+              with:
+                  workload_identity_provider: ${{ env.WIF_PROVIDER }}
+                  service_account: ${{ env.DEPLOYER_SA }}
+
+            - uses: google-github-actions/setup-gcloud@v2
+
+            - name: Configure Docker for Artifact Registry
+              run: gcloud auth configure-docker ${{ env.AR_HOST }} --quiet
 
             - uses: docker/setup-buildx-action@v3
-
-            - name: Log in to GHCR
-              uses: docker/login-action@v3
-              with:
-                  registry: ${{ env.REGISTRY }}
-                  username: ${{ github.actor }}
-                  password: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Docker metadata
               id: meta
               uses: docker/metadata-action@v5
               with:
-                  images: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/kanninja-backend
+                  images: ${{ env.AR_HOST }}/${{ env.PROJECT_ID }}/${{ env.AR_REPO }}/backend
                   tags: |
                       type=sha,prefix=sha-,format=short
                       type=raw,value=latest,enable={{is_default_branch}}
 
             - name: Build & push
-              id: build
               uses: docker/build-push-action@v6
               with:
                   context: .
                   file: ./Dockerfile.backend
                   push: true
+                  provenance: false
                   tags: ${{ steps.meta.outputs.tags }}
                   labels: ${{ steps.meta.outputs.labels }}
                   cache-from: type=gha,scope=backend
-                  cache-to: type=gha,mode=max,scope=backend,ignore-error=true
+                  cache-to: type=gha,mode=min,scope=backend,ignore-error=true
 
     # ------------------------------------------------------------------
     # Build & push frontend image (Next.js — public env vars baked in)
@@ -72,49 +88,41 @@ jobs:
     build-frontend:
         name: Build frontend
         runs-on: ubuntu-latest
-        permissions:
-            contents: read
-            packages: write
-        outputs:
-            image: ${{ steps.meta.outputs.tags }}
-            digest: ${{ steps.build.outputs.digest }}
-            sha_tag: ${{ steps.vars.outputs.sha_tag }}
         steps:
             - uses: actions/checkout@v4
 
-            - name: Set version tag
-              id: vars
-              run: echo "sha_tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+            - uses: google-github-actions/auth@v2
+              with:
+                  workload_identity_provider: ${{ env.WIF_PROVIDER }}
+                  service_account: ${{ env.DEPLOYER_SA }}
+
+            - uses: google-github-actions/setup-gcloud@v2
+
+            - name: Configure Docker for Artifact Registry
+              run: gcloud auth configure-docker ${{ env.AR_HOST }} --quiet
 
             - uses: docker/setup-buildx-action@v3
-
-            - name: Log in to GHCR
-              uses: docker/login-action@v3
-              with:
-                  registry: ${{ env.REGISTRY }}
-                  username: ${{ github.actor }}
-                  password: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Docker metadata
               id: meta
               uses: docker/metadata-action@v5
               with:
-                  images: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/kanninja-frontend
+                  images: ${{ env.AR_HOST }}/${{ env.PROJECT_ID }}/${{ env.AR_REPO }}/frontend
                   tags: |
                       type=sha,prefix=sha-,format=short
                       type=raw,value=latest,enable={{is_default_branch}}
 
             - name: Build & push
-              id: build
               uses: docker/build-push-action@v6
               with:
                   context: .
                   file: ./Dockerfile.frontend
                   push: true
+                  provenance: false
                   tags: ${{ steps.meta.outputs.tags }}
                   labels: ${{ steps.meta.outputs.labels }}
                   cache-from: type=gha,scope=frontend
-                  cache-to: type=gha,mode=max,scope=frontend,ignore-error=true
+                  cache-to: type=gha,mode=min,scope=frontend,ignore-error=true
                   build-args: |
                       NEXT_PUBLIC_API_URL=https://api.kanninja.com
                       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
@@ -124,57 +132,50 @@ jobs:
                       NEXT_PUBLIC_CLARITY_PROJECT_ID=wh11efmbfb
 
     # ------------------------------------------------------------------
-    # Build & push MCP remote image (Streamable HTTP, deployed to AKS)
+    # Build & push MCP remote image (Streamable HTTP — deployed to GKE)
     # ------------------------------------------------------------------
     build-mcp-remote:
         name: Build MCP remote
         runs-on: ubuntu-latest
-        permissions:
-            contents: read
-            packages: write
-        outputs:
-            image: ${{ steps.meta.outputs.tags }}
-            digest: ${{ steps.build.outputs.digest }}
-            sha_tag: ${{ steps.vars.outputs.sha_tag }}
         steps:
             - uses: actions/checkout@v4
 
-            - name: Set version tag
-              id: vars
-              run: echo "sha_tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+            - uses: google-github-actions/auth@v2
+              with:
+                  workload_identity_provider: ${{ env.WIF_PROVIDER }}
+                  service_account: ${{ env.DEPLOYER_SA }}
+
+            - uses: google-github-actions/setup-gcloud@v2
+
+            - name: Configure Docker for Artifact Registry
+              run: gcloud auth configure-docker ${{ env.AR_HOST }} --quiet
 
             - uses: docker/setup-buildx-action@v3
-
-            - name: Log in to GHCR
-              uses: docker/login-action@v3
-              with:
-                  registry: ${{ env.REGISTRY }}
-                  username: ${{ github.actor }}
-                  password: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Docker metadata
               id: meta
               uses: docker/metadata-action@v5
               with:
-                  images: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/kanninja-mcp-remote
+                  images: ${{ env.AR_HOST }}/${{ env.PROJECT_ID }}/${{ env.AR_REPO }}/mcp-remote
                   tags: |
                       type=sha,prefix=sha-,format=short
                       type=raw,value=latest,enable={{is_default_branch}}
 
             - name: Build & push
-              id: build
               uses: docker/build-push-action@v6
               with:
                   context: .
                   file: ./Dockerfile.mcp-remote
                   push: true
+                  provenance: false
                   tags: ${{ steps.meta.outputs.tags }}
                   labels: ${{ steps.meta.outputs.labels }}
                   cache-from: type=gha,scope=mcp-remote
-                  cache-to: type=gha,mode=max,scope=mcp-remote,ignore-error=true
+                  cache-to: type=gha,mode=min,scope=mcp-remote,ignore-error=true
 
     # ------------------------------------------------------------------
-    # Build & push MCP server image (npm-published stdio variant — NOT deployed to AKS)
+    # Build & push MCP server image (npm-published stdio variant → GHCR).
+    # NOT deployed to the cluster — a public distribution artifact.
     # ------------------------------------------------------------------
     build-mcp:
         name: Build MCP server
@@ -215,65 +216,53 @@ jobs:
                   cache-to: type=gha,mode=max,scope=mcp,ignore-error=true
 
     # ------------------------------------------------------------------
-    # Deploy to AKS
+    # Deploy to GKE (sparx-prod Autopilot, kanninja namespace)
     # ------------------------------------------------------------------
     deploy:
-        name: Deploy to AKS
+        name: Deploy to GKE
         runs-on: ubuntu-latest
         needs: [ build-backend, build-frontend, build-mcp-remote ]
-        permissions:
-            id-token: write # required for Azure OIDC
-            contents: read
         concurrency:
-            group: deploy-aks-prod
+            group: deploy-gke-prod
             cancel-in-progress: false
         steps:
             - uses: actions/checkout@v4
 
-            - name: Azure login (OIDC)
-              uses: azure/login@v2
+            - uses: google-github-actions/auth@v2
               with:
-                  client-id: ${{ secrets.AZURE_CLIENT_ID }}
-                  tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-                  subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+                  workload_identity_provider: ${{ env.WIF_PROVIDER }}
+                  service_account: ${{ env.DEPLOYER_SA }}
 
-            # kubelogin isn't on ubuntu-latest by default — install it before
-            # aks-set-context, which invokes it when use-kubelogin: true.
-            # GITHUB_TOKEN is required because the action queries GitHub's
-            # release API to resolve kubelogin-version: latest.
-            - name: Install kubelogin
-              uses: azure/use-kubelogin@v1
+            - name: Set up gcloud + auth plugin
+              uses: google-github-actions/setup-gcloud@v2
               with:
-                  kubelogin-version: latest
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  install_components: gke-gcloud-auth-plugin
 
-            - name: Get AKS credentials
-              uses: azure/aks-set-context@v4
-              with:
-                  resource-group: ${{ env.AKS_RESOURCE_GROUP }}
-                  cluster-name: ${{ env.AKS_CLUSTER_NAME }}
-                  admin: false
-                  use-kubelogin: true
+            # Connect Gateway routes through Google's proxy and reaches the
+            # private control plane. `get-gke-credentials` would return the
+            # public IP (35.255.x.x) which is unreachable from the runner — the
+            # cluster has authorized networks locked. Fleet membership lives at
+            # `global` (sparx.works/terraform/modules/gke/main.tf).
+            - name: Get GKE credentials via Connect Gateway
+              run: gcloud container fleet memberships get-credentials "$CLUSTER" --location global
 
             - name: Set up Kustomize
               uses: imranismail/setup-kustomize@v2
 
-            # Ensure the namespace exists before we try to write Secrets into it.
-            # Idempotent: the `kubectl apply -k` step below reconciles it anyway.
+            # Ensure the namespace exists before writing Secrets into it.
+            # Idempotent: `kubectl apply -k` reconciles it anyway.
             - name: Ensure namespace
               run: |
-                  kubectl get namespace ${{ env.NAMESPACE }} 2>/dev/null \
-                    || kubectl create namespace ${{ env.NAMESPACE }}
+                  kubectl get namespace "$NAMESPACE" 2>/dev/null \
+                    || kubectl create namespace "$NAMESPACE"
 
-            # Upsert the three cluster Secrets from individual GitHub Actions
-            # secrets (one GH secret per env var — rotatable and auditable
-            # independently). Runs every deploy so GH is the source of truth.
+            # Upsert cluster Secrets from individual GitHub Actions secrets (one
+            # GH secret per env var — rotatable + auditable independently). Runs
+            # every deploy so GitHub is the source of truth. Unchanged from the
+            # AKS pipeline except the GHCR-rotator credentials are gone.
             - name: Bootstrap cluster Secrets from GitHub Actions secrets
               env:
                   # --- Backend core ---
-                  # CLERK_PUBLISHABLE_KEY isn't read by backend code, only
-                  # frontend at build time — omitted from this block.
                   SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
                   SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
                   DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -324,29 +313,19 @@ jobs:
                   SALESFORCE_CLIENT_ID: ${{ secrets.SALESFORCE_CLIENT_ID }}
                   SALESFORCE_CLIENT_SECRET: ${{ secrets.SALESFORCE_CLIENT_SECRET }}
 
-                  # --- MCP OAuth ---
-                  # Shared with mcp-remote (mints) and backend (validates).
-                  # Required once MCP OAuth ships; backend tolerates missing
-                  # values and falls back to Clerk/ninja_live_ paths.
+                  # --- MCP OAuth (shared: mcp-remote mints, backend validates) ---
                   MCP_JWT_SECRET: ${{ secrets.MCP_JWT_SECRET }}
                   MCP_S2S_TOKEN: ${{ secrets.MCP_S2S_TOKEN }}
-
-                  # --- GHCR App for the pull-token rotator ---
-                  GHCR_APP_PRIVATE_KEY: ${{ secrets.GHCR_APP_PRIVATE_KEY }}
               run: |
                   set -euo pipefail
-                  NS=${{ env.NAMESPACE }}
+                  NS="$NAMESPACE"
 
-                  # Required GH secrets = the ones the server strictly needs
-                  # to boot + serve auth requests. Everything else is a
-                  # feature-level dependency (Stripe, OpenAI, integrations)
-                  # that the backend code handles gracefully when absent.
-                  # Keeping this list tight so optional features don't
-                  # block the deploy.
+                  # Required = the minimum the server needs to boot + serve auth.
+                  # Everything else is feature-level and handled gracefully when
+                  # absent, so optional providers never block the deploy.
                   required=(
                     SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY DATABASE_URL
                     CLERK_SECRET_KEY
-                    GHCR_APP_PRIVATE_KEY
                   )
                   missing=()
                   for var in "${required[@]}"; do
@@ -358,11 +337,10 @@ jobs:
                     exit 1
                   fi
 
-                  # Backend: build --from-literal args only for non-empty vars
-                  # so optional provider secrets don't create empty Secret keys.
-                  # ConfigMap-owned keys (NODE_ENV, HOST, PORT, FRONTEND_URL)
-                  # are intentionally not in the list above. CLERK_PUBLISHABLE_KEY
-                  # is declared in env.ts but never read — omitted.
+                  # Backend: only add --from-literal for non-empty vars so optional
+                  # provider secrets don't create empty Secret keys. ConfigMap-owned
+                  # keys (NODE_ENV, HOST, PORT, FRONTEND_URL) are intentionally not
+                  # here. CLERK_PUBLISHABLE_KEY is declared in env.ts but never read.
                   backend_keys=(
                     SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY DATABASE_URL
                     CLERK_SECRET_KEY CLERK_WEBHOOK_SECRET
@@ -385,9 +363,8 @@ jobs:
                     HUBSPOT_CLIENT_ID HUBSPOT_CLIENT_SECRET
                     SALESFORCE_CLIENT_ID SALESFORCE_CLIENT_SECRET
                   )
-                  # The integration backend code reads env.GITHUB_* at runtime;
-                  # map GH_APP_* (renamed to avoid collision with GitHub's
-                  # reserved GITHUB_ secret prefix) back to GITHUB_* keys here.
+                  # Backend reads env.GITHUB_* at runtime; map GH_APP_* (renamed to
+                  # dodge GitHub's reserved GITHUB_ secret prefix) back to GITHUB_*.
                   backend_extra_keys=(GITHUB_CLIENT_ID GITHUB_CLIENT_SECRET GITHUB_WEBHOOK_SECRET)
                   declare -A backend_extra_sources=(
                     [GITHUB_CLIENT_ID]="$GH_APP_CLIENT_ID"
@@ -409,19 +386,14 @@ jobs:
                       "${args[@]}" \
                       --dry-run=client -o yaml | kubectl apply -f -
 
-                  # Frontend: CLERK_SECRET_KEY only (Next.js middleware). Same
-                  # value as backend's — one source of truth.
+                  # Frontend: CLERK_SECRET_KEY only (Next.js middleware).
                   kubectl -n "$NS" create secret generic frontend-secrets \
                       --from-literal=CLERK_SECRET_KEY="$CLERK_SECRET_KEY" \
                       --dry-run=client -o yaml | kubectl apply -f -
 
-                  # MCP remote: JWT signing key (shared with backend so the
-                  # same token validates in both services) + service-to-service
-                  # token used to call backend's internal /api/v1/oauth/*
-                  # endpoints. Empty values are tolerated so the deploy doesn't
-                  # block before MCP OAuth ships — but the mcp container will
-                  # fail to boot until both are present, which is the signal
-                  # we want.
+                  # MCP remote: JWT signing key (shared with backend) + S2S token
+                  # for backend's internal /api/v1/oauth/* endpoints. Empty values
+                  # tolerated so the deploy doesn't block before MCP OAuth ships.
                   mcp_args=()
                   [ -n "${MCP_JWT_SECRET:-}" ] \
                       && mcp_args+=("--from-literal=MCP_JWT_SECRET=$MCP_JWT_SECRET")
@@ -431,27 +403,16 @@ jobs:
                       "${mcp_args[@]}" \
                       --dry-run=client -o yaml | kubectl apply -f -
 
-                  # GHCR pull-token rotator credentials.
-                  printf '%s' "$GHCR_APP_PRIVATE_KEY" > /tmp/private-key.pem
-                  kubectl -n "$NS" create secret generic ghcr-app-credentials \
-                      --from-literal=app-id="${{ env.GHCR_APP_ID }}" \
-                      --from-literal=installation-id="${{ env.GHCR_APP_INSTALLATION_ID }}" \
-                      --from-file=private-key.pem=/tmp/private-key.pem \
-                      --dry-run=client -o yaml | kubectl apply -f -
-                  shred -u /tmp/private-key.pem 2>/dev/null || rm -f /tmp/private-key.pem
-
-                  echo "Upserted backend-secrets, frontend-secrets, ghcr-app-credentials."
+                  echo "Upserted backend-secrets, frontend-secrets, mcp-secrets."
 
             - name: Pin image tags
               working-directory: k8s
               run: |
                   SHA_TAG="sha-${GITHUB_SHA::7}"
-                  kustomize edit set image \
-                    ghcr.io/${{ env.IMAGE_OWNER }}/kanninja-backend=ghcr.io/${{ env.IMAGE_OWNER }}/kanninja-backend:${SHA_TAG}
-                  kustomize edit set image \
-                    ghcr.io/${{ env.IMAGE_OWNER }}/kanninja-frontend=ghcr.io/${{ env.IMAGE_OWNER }}/kanninja-frontend:${SHA_TAG}
-                  kustomize edit set image \
-                    ghcr.io/${{ env.IMAGE_OWNER }}/kanninja-mcp-remote=ghcr.io/${{ env.IMAGE_OWNER }}/kanninja-mcp-remote:${SHA_TAG}
+                  BASE="${{ env.AR_HOST }}/${{ env.PROJECT_ID }}/${{ env.AR_REPO }}"
+                  kustomize edit set image "$BASE/backend=$BASE/backend:${SHA_TAG}"
+                  kustomize edit set image "$BASE/frontend=$BASE/frontend:${SHA_TAG}"
+                  kustomize edit set image "$BASE/mcp-remote=$BASE/mcp-remote:${SHA_TAG}"
                   echo "--- resolved kustomization.yaml ---"
                   cat kustomization.yaml
 
@@ -459,26 +420,14 @@ jobs:
               working-directory: k8s
               run: kubectl apply -k .
 
-            # Trigger a one-off run of the GHCR token rotator so that
-            # `ghcr-pull-secret` exists (or is freshly rotated) before the
-            # Deployments try to pull images. Idempotent — safe to run on every deploy.
-            - name: Prime GHCR pull secret
-              run: |
-                  set -e
-                  JOB_NAME="ghcr-prime-$(date +%s)"
-                  kubectl -n ${{ env.NAMESPACE }} create job --from=cronjob/ghcr-token-rotator "$JOB_NAME"
-                  kubectl -n ${{ env.NAMESPACE }} wait --for=condition=complete --timeout=3m "job/$JOB_NAME"
-                  kubectl -n ${{ env.NAMESPACE }} logs "job/$JOB_NAME" || true
-                  kubectl -n ${{ env.NAMESPACE }} delete job "$JOB_NAME"
-
             - name: Wait for rollout
               run: |
-                  kubectl -n ${{ env.NAMESPACE }} rollout status deploy/backend --timeout=5m
-                  kubectl -n ${{ env.NAMESPACE }} rollout status deploy/frontend --timeout=5m
-                  kubectl -n ${{ env.NAMESPACE }} rollout status deploy/mcp --timeout=5m
+                  kubectl -n "$NAMESPACE" rollout status deploy/backend --timeout=5m
+                  kubectl -n "$NAMESPACE" rollout status deploy/frontend --timeout=5m
+                  kubectl -n "$NAMESPACE" rollout status deploy/mcp --timeout=5m
 
             - name: Summary
               if: always()
               run: |
                   echo "### Deployment summary" >> $GITHUB_STEP_SUMMARY
-                  kubectl -n ${{ env.NAMESPACE }} get deploy,svc,ingress >> $GITHUB_STEP_SUMMARY
+                  kubectl -n "$NAMESPACE" get deploy,svc >> $GITHUB_STEP_SUMMARY

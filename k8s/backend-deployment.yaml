@@ -22,11 +22,12 @@ spec:
         app.kubernetes.io/name: backend
         app.kubernetes.io/part-of: kanninja
     spec:
-      imagePullSecrets:
-        - name: ghcr-pull-secret
+      # No imagePullSecrets: images live in Artifact Registry
+      # (us-central1-docker.pkg.dev/sparxworks/kanninja) and the Autopilot node
+      # SA pulls them natively. The old GHCR pull-token rotator is retired.
       containers:
         - name: backend
-          image: ghcr.io/brandonkorous/kanninja-backend:latest
+          image: us-central1-docker.pkg.dev/sparxworks/kanninja/backend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
