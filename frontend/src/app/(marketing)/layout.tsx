@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { SignedIn, SignedOut } from '@clerk/nextjs';
+import { SignedIn, SignedOut } from '@/components/auth/SessionGate';
 import { Wordmark } from '@/components/layout/wordmark';
 import { UserDropdown } from '@/components/layout/user-dropdown';
 

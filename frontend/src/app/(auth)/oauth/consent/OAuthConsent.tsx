@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@clerk/nextjs';
+import { useSession } from '@/lib/auth-client';
 import {
   useAuthorizationRequest,
   useConsent,
@@ -18,9 +18,11 @@ const SCOPE_LABELS: Record<string, { title: string; detail: string }> = {
     title: 'Create, update, and move katas.',
     detail: 'Add, edit, complete, assign, comment — everything you can do on a board.',
   },
+  // Legacy scope. kanNINJA no longer runs models of its own, so this grants
+  // nothing. Still accepted so older clients that request it keep working.
   'ai:capabilities': {
-    title: 'Use AI features on your behalf.',
-    detail: 'Drafting, summarising, suggesting next steps. Pro plan and up.',
+    title: 'Nothing. This permission is retired.',
+    detail: 'kanNINJA has no built-in AI. Your agent brings its own model.',
   },
   'team:read': {
     title: 'Read your clan members and roles.',
@@ -34,7 +36,7 @@ const SCOPE_LABELS: Record<string, { title: string; detail: string }> = {
 
 export function OAuthConsent() {
   const params = useSearchParams();
-  const { isLoaded } = useAuth();
+  const { isPending: sessionPending } = useSession();
   const reqId = params.get('req_id');
   const [error, setError] = useState<string | null>(null);
 
@@ -46,7 +48,7 @@ export function OAuthConsent() {
       <Missing message="No authorization request ID was provided." />
     );
   }
-  if (!isLoaded || requestQuery.isPending) {
+  if (sessionPending || requestQuery.isPending) {
     return (
       <p
         role="status"

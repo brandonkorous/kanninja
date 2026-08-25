@@ -14,23 +14,29 @@ resources:
   - mcp-service.yaml
   - reconcile-seats-cronjob.yaml
 
-# NOTE: ingress.yaml / ingress-www-redirect.yaml were removed in the GKE
-# migration. The sparx-prod cluster has no nginx ingress controller or
-# cert-manager — HTTP(S) routing + TLS for kanninja.com / api.kanninja.com /
-# mcp.kanninja.com is handled by the shared Caddy reverse proxy in the
-# sparx-prod namespace (see sparx.works/k8s/caddy/Caddyfile). Caddy reaches
-# these Services cross-namespace at <svc>.kanninja.svc.cluster.local.
+# NOTE: ingress.yaml / ingress-www-redirect.yaml do not exist here. The shared
+# cluster has no nginx ingress controller and no cert-manager — HTTP(S) routing
+# and TLS for kanninja.com / api.kanninja.com / mcp.kanninja.com are handled by
+# the shared Caddy reverse proxy in the `sparx-prod` namespace (see
+# sparx.works/k8s/ingress/Caddyfile). Caddy reaches these Services
+# cross-namespace at <svc>.kanninja.svc.cluster.local.
 #
-# ghcr-rotator.yaml was also removed: Artifact Registry images are pulled by
-# the Autopilot node SA, so no imagePullSecrets / token rotation is needed.
+# Those Caddy blocks use ON-DEMAND TLS, which means all four kanNINJA hostnames
+# must also appear in api-rest's PLATFORM_HOSTNAMES allow-list. Removing one
+# there silently costs that hostname its certificate. See
+# docs/azure-migration-plan.md, "Gate 5".
+#
+# No imagePullSecrets: the GHCR packages are public, so the kubelet pulls
+# anonymously. If a pod ever sits in ImagePullBackOff with a 401, the package
+# visibility reverted to private — that is the first thing to check, not the tag.
 
 # Image tags are rewritten by the GitHub Actions deploy workflow
 # via `kustomize edit set image`. Defaults below are used for manual
 # `kubectl apply -k .` runs.
 images:
-  - name: us-central1-docker.pkg.dev/sparxworks/kanninja/backend
+  - name: ghcr.io/brandonkorous/kanninja/backend
     newTag: latest
-  - name: us-central1-docker.pkg.dev/sparxworks/kanninja/frontend
+  - name: ghcr.io/brandonkorous/kanninja/frontend
     newTag: latest
-  - name: us-central1-docker.pkg.dev/sparxworks/kanninja/mcp-remote
+  - name: ghcr.io/brandonkorous/kanninja/mcp-remote
     newTag: latest

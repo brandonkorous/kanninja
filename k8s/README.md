@@ -25,7 +25,7 @@ the **`kanninja`** namespace.
 
 1. **Auth** — Workload Identity Federation (`kanninja-pool`) → `kanninja-deployer` SA. Keyless.
 2. **Build** — backend / frontend / mcp-remote images pushed to Artifact Registry
-   (`us-central1-docker.pkg.dev/sparxworks/kanninja/*`). Autopilot's node SA pulls
+   (`ghcr.io/brandonkorous/kanninja/*`). Autopilot's node SA pulls
    them natively — no `imagePullSecrets`.
 3. **Connect** — `gcloud container fleet memberships get-credentials` (Connect
    Gateway) reaches the private control plane. The public endpoint is firewalled.

@@ -37,8 +37,8 @@ const data: PersonaData = {
             body: 'Invite your partner or your sister. Real-time presence. The thing you both thought the other was doing — finally on the board.',
         },
         {
-            title: 'AI for breaking down the new tradition.',
-            body: "Hosting your first big holiday? Ask the AI to break it down. Accept what fits your family. Adjust the rest. Save the brain space for the actual cooking.",
+            title: 'Hosting, already broken down.',
+            body: 'Hosting your first big one? Start from "A board for hosting Thanksgiving for twelve" and adjust to your family. Save the brain space for the cooking.',
         },
     ],
     faqs: [
@@ -56,7 +56,7 @@ const data: PersonaData = {
         },
         {
             q: 'How much does it cost?',
-            a: 'Free for one person. Free for two on a shared board. The paid tiers are for bigger groups and the AI — most hosts never need them.',
+            a: 'Free for one person. Free for two on a shared board. The paid tiers are for bigger groups — most hosts never need them.',
         },
         {
             q: 'After the holiday, what do I do with the board?',

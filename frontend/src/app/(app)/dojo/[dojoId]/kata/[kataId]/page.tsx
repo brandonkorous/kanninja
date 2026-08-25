@@ -221,10 +221,6 @@ export default function KataPage() {
                         <ChecklistTab
                             boardId={dojoId}
                             cardId={card.id}
-                            cardTitle={card.title}
-                            cardDescription={card.description}
-                            cardPriority={card.priority}
-                            cardEstimatedHours={card.estimatedHours}
                             canEdit={canEdit}
                         />
                     )}

@@ -32,5 +32,22 @@ ENV NODE_ENV=production \
 COPY --from=build /out/dist ./dist
 COPY --from=build /out/node_modules ./node_modules
 COPY --from=build /out/package.json ./package.json
+
+# The SQL migrations, which are DATA rather than code and so are not emitted by
+# tsup into dist/.
+#
+# WITHOUT THIS THERE IS NO WAY TO MIGRATE PRODUCTION AT ALL. Azure Postgres is
+# private-endpoint only, so `pnpm db:migrate` from a laptop or a CI runner
+# cannot reach it — the migration has to run as a Job using this image, and
+# src/db/migrate.ts reads `migrationsFolder: './drizzle'` relative to the
+# working directory. docs/deployment.md used to record the absence of this line
+# as a known limitation ("drizzle/ is not copied into the runtime image, so this
+# cannot currently run as an in-cluster Job"). It is no longer optional.
+#
+# Copied from the BUILD stage's source tree rather than from /out: `pnpm deploy`
+# prunes to what the package manifest declares, and drizzle/ is not a declared
+# file, so /out/drizzle is not guaranteed to exist.
+COPY --from=build /app/backend/drizzle ./drizzle
+
 EXPOSE 3001
 CMD ["node", "dist/index.js"]

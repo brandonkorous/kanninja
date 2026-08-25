@@ -33,16 +33,32 @@ export function useUploadAttachment(boardId: string, cardId: string) {
     const toast = useToast();
     return useMutation({
         mutationFn: async (file: File) => {
-            const urlRes = await api.post<{ data: { uploadUrl: string; path: string } }>(
-                `/api/v1/boards/${boardId}/cards/${cardId}/attachments/upload-url`,
-                { fileName: file.name, fileSize: file.size, mimeType: file.type },
-            );
+            const urlRes = await api.post<{
+                data: {
+                    uploadUrl: string;
+                    path: string;
+                    requiredHeaders?: Record<string, string>;
+                };
+            }>(`/api/v1/boards/${boardId}/cards/${cardId}/attachments/upload-url`, {
+                fileName: file.name,
+                fileSize: file.size,
+                mimeType: file.type,
+            });
 
-            // Upload the file directly to Supabase Storage
+            // Straight to Azure Blob Storage — the bytes never touch our API.
+            // `x-ms-blob-type: BlockBlob` is mandatory; Azure answers a bare
+            // PUT with a 400 that doesn't name the missing header. The server
+            // sends it in `requiredHeaders` so the contract lives in one place.
             const uploadRes = await fetch(urlRes.data.uploadUrl, {
                 method: 'PUT',
                 body: file,
-                headers: { 'Content-Type': file.type },
+                headers: {
+                    'Content-Type': file.type,
+                    ...(urlRes.data.requiredHeaders ?? { 'x-ms-blob-type': 'BlockBlob' }),
+                },
+                // A SAS URL carries its own auth; sending cookies to Azure
+                // would only trip CORS.
+                credentials: 'omit',
             });
             if (!uploadRes.ok) throw new Error('Upload failed. Try again in a moment.');
 

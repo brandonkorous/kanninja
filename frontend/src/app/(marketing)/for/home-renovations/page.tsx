@@ -37,8 +37,8 @@ const data: PersonaData = {
             body: "A board for spend. Cards for each line item. Drag to 'over' or 'under' as the bills come in. The honesty hurts a little, then it helps a lot.",
         },
         {
-            title: 'AI for breaking down the next phase.',
-            body: 'Ask the AI to break down "kitchen remodel week 4" into cards. Accept what fits your project. Save the planning time for the harder choices.',
+            title: 'A renovation board, phase by phase.',
+            body: 'Start from "A board for the renovation" — permits, trades, change orders, the punch list. Save the planning time for the harder choices.',
         },
     ],
     faqs: [
@@ -59,8 +59,8 @@ const data: PersonaData = {
             a: 'Free for the homeowner. If you bring in your contractor and architect, you might cross a paid tier — still less than a single sheet of subway tile.',
         },
         {
-            q: 'Will the AI tell me what my contractor is hiding?',
-            a: 'No. The AI helps you plan and break down the work. It does not audit your contractor. Trust comes from the change orders on the cards, not from us.',
+            q: 'Will this tell me what my contractor is hiding?',
+            a: 'No. kanNINJA holds the plan; it does not audit anyone. Trust comes from the change orders written on the cards, not from us.',
         },
     ],
     close: {

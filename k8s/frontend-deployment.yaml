@@ -25,7 +25,7 @@ spec:
       # No imagePullSecrets: Artifact Registry images pulled by the node SA.
       containers:
         - name: frontend
-          image: us-central1-docker.pkg.dev/sparxworks/kanninja/frontend:latest
+          image: ghcr.io/brandonkorous/kanninja/frontend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

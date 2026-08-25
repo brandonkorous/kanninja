@@ -29,7 +29,7 @@ kanNINJA is organized around four kata (disciplines):
 3. AI as second — twelve AI techniques that suggest next moves; you accept or ignore. No takeover.
 4. Honest signal — burndown, velocity, and cycle-time charts that do not flatter the numbers.
 
-It runs on Microsoft Azure (West US 3), uses Clerk for auth, Supabase Postgres for data, and Stripe for billing. Source code is closed.
+It runs on Google Cloud (us-central1), with PostgreSQL and file storage on Microsoft Azure (Central US), self-hosted authentication, and Stripe for billing. Source code is closed.
 
 ## Pricing
 

@@ -33,8 +33,8 @@ const data: PersonaData = {
             body: "Set a due date. The card surfaces in 'this week.' Filter to see what's due in the next 48 hours. The mental energy you spent juggling deadlines goes back into the work.",
         },
         {
-            title: 'AI for the part where you stare at the wall.',
-            body: 'Ask the AI to break the next paper into smaller cards: thesis statement, three points, supporting research, draft, edit. Accept what fits. Start.',
+            title: 'A semester board, already laid out.',
+            body: 'Start from "A board for the semester" — readings, drafts, the deadlines that arrive together in week nine. Then just start.',
         },
         {
             title: 'Mobile, for the bus.',

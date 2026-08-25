@@ -32,20 +32,6 @@ export const subscriptionUsageSchema = z.object({
   seatOveragePriceMonthly: z.number().nullable(),
 });
 
-/** AI run consumption snapshot for the billing UI and pre-call quota gate.
- *  - lifetime: Free tier — never resets
- *  - monthly: Clan/Pro/Business — resets at start of UTC month
- *  - unlimited: Enterprise — limit and resetsAt are null */
-export const aiQuotaStatusSchema = z.object({
-  tier: z.enum(tierValues),
-  windowKind: z.enum(['lifetime', 'monthly', 'unlimited']),
-  used: z.number().int().min(0),
-  limit: z.number().int().min(0).nullable(),
-  remaining: z.number().int().min(0).nullable(),
-  resetsAt: z.string().datetime().nullable(),
-});
-
 export type Subscription = z.infer<typeof subscriptionSchema>;
 export type CreateCheckoutInput = z.infer<typeof createCheckoutSchema>;
 export type SubscriptionUsage = z.infer<typeof subscriptionUsageSchema>;
-export type AIQuotaStatus = z.infer<typeof aiQuotaStatusSchema>;

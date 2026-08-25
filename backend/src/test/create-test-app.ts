@@ -12,12 +12,12 @@ export async function createTestApp(
   const app = Fastify({ logger: false });
 
   // Decorate request like the real auth plugin does
-  app.decorateRequest('clerkUserId', undefined);
+  app.decorateRequest('authUserId', undefined);
   app.decorateRequest('profileId', undefined);
 
   // Bypass auth — inject profileId on every request
   app.addHook('onRequest', async (request) => {
-    request.clerkUserId = 'clerk_test';
+    request.authUserId = 'auth_test_user';
     request.profileId = profileId;
   });
 

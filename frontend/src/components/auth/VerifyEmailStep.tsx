@@ -2,13 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSignUp } from '@clerk/nextjs';
-import { getClerkErrorMessage } from './clerk-errors';
+import { authClient } from '@/lib/auth-client';
+import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { Field, Input } from '@/components/ui';
 
-// Second step of sign-up: enter the 6-digit verification code Clerk emailed
-// to the user. On success, sets the active session and redirects to the
-// dashboard. "Start over" returns to the email/password step.
+// Second step of sign-up: enter the 6-digit verification code emailed to the
+// user. Sign-up already created the session, so this confirms the address and
+// moves on. "Start over" returns to the email/password step.
 
 export function VerifyEmailStep({
     email,
@@ -17,29 +17,49 @@ export function VerifyEmailStep({
     email: string;
     onStartOver: () => void;
 }) {
-    const { signUp, setActive, isLoaded } = useSignUp();
     const router = useRouter();
     const [code, setCode] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
+    const [resent, setResent] = useState(false);
 
     async function handleVerify(e: React.FormEvent) {
         e.preventDefault();
-        if (!isLoaded || !signUp) return;
         setError(null);
         setSubmitting(true);
         try {
-            const result = await signUp.attemptEmailAddressVerification({ code });
-            if (result.status === 'complete') {
-                await setActive({ session: result.createdSessionId });
-                router.push('/dashboard');
+            const { error: verifyError } = await authClient.emailOtp.verifyEmail({
+                email,
+                otp: code,
+            });
+            if (verifyError) {
+                setError(getAuthErrorMessage(verifyError));
                 return;
             }
-            setError('Verification did not complete. Try again.');
+            router.push('/dashboard');
+            router.refresh();
         } catch (err) {
-            setError(getClerkErrorMessage(err));
+            setError(getAuthErrorMessage(err));
         } finally {
             setSubmitting(false);
+        }
+    }
+
+    async function handleResend() {
+        setError(null);
+        setResent(false);
+        try {
+            const { error: resendError } = await authClient.emailOtp.sendVerificationOtp({
+                email,
+                type: 'email-verification',
+            });
+            if (resendError) {
+                setError(getAuthErrorMessage(resendError));
+                return;
+            }
+            setResent(true);
+        } catch (err) {
+            setError(getAuthErrorMessage(err));
         }
     }
 
@@ -87,13 +107,28 @@ export function VerifyEmailStep({
                 </button>
             </form>
 
-            <button
-                type="button"
-                onClick={onStartOver}
-                className="mt-8 text-eyebrow font-mono uppercase tracking-widest text-base-content/50 hover:text-primary transition-colors"
-            >
-                Wrong address? Start over
-            </button>
+            {resent && (
+                <p role="status" className="mt-8 text-sm text-base-content/70">
+                    Sent another code.
+                </p>
+            )}
+
+            <div className="mt-8 flex flex-col items-start gap-4">
+                <button
+                    type="button"
+                    onClick={handleResend}
+                    className="text-eyebrow font-mono uppercase tracking-widest text-base-content/50 hover:text-primary transition-colors"
+                >
+                    Didn&rsquo;t arrive? Send another
+                </button>
+                <button
+                    type="button"
+                    onClick={onStartOver}
+                    className="text-eyebrow font-mono uppercase tracking-widest text-base-content/50 hover:text-primary transition-colors"
+                >
+                    Wrong address? Start over
+                </button>
+            </div>
         </div>
     );
 }

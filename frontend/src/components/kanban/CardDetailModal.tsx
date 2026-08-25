@@ -11,10 +11,8 @@ import { LabelsTab } from './card-tabs/LabelsTab';
 import { TimeTab } from './card-tabs/TimeTab';
 import { AttachmentsTab } from './card-tabs/AttachmentsTab';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faTimes, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { CardReviewPane } from './CardReviewPane';
-import { useReviewCard, type CardReviewSuggestions } from '@/hooks/use-review-card';
 import type { UpdateCardInput, Priority } from '@kanninja/shared';
 
 interface CardDetailModalProps {
@@ -49,13 +47,10 @@ export function CardDetailModal({ boardId, card, open, onClose }: CardDetailModa
     const [assigneeId, setAssigneeId] = useState<string | null>(null);
     const [estimatedHours, setEstimatedHours] = useState('');
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-    // Review-mode state: non-null = the modal body is showing the review
     // pane instead of the tabbed editor. Cleared on close so reopening
     // the same card lands back on Details.
-    const [reviewSuggestions, setReviewSuggestions] = useState<CardReviewSuggestions | null>(null);
     const updateCard = useUpdateCard(boardId);
     const deleteCard = useDeleteCard(boardId);
-    const reviewCard = useReviewCard();
     const dialogRef = useRef<HTMLDialogElement>(null);
     // Role gate from the cached useBoard query — viewers see the modal
     // as a read-only inspector. Per Hanko editing-patterns.md.
@@ -184,9 +179,8 @@ export function CardDetailModal({ boardId, card, open, onClose }: CardDetailModa
     // Flush any unsaved text-field edits. Blur DOES fire when you click
     // outside or tab away, but the native dialog's Escape key tears the
     // input out of the DOM without firing blur, which would silently
-    // drop the user's last typed change. Also called before the AI
-    // review so the model sees the user's in-progress draft, not the
-    // stale saved value. Skipped entirely for viewers — nothing to flush.
+    // drop the user's last typed change. Skipped entirely for viewers —
+    // nothing to flush.
     const flushTextEdits = async () => {
         if (!card || !canEdit) return;
         const patch: Partial<UpdateCardInput> = {};
@@ -206,22 +200,7 @@ export function CardDetailModal({ boardId, card, open, onClose }: CardDetailModa
 
     const handleClose = async () => {
         await flushTextEdits();
-        setReviewSuggestions(null);
         onClose();
-    };
-
-    const handleReview = async () => {
-        if (!card || !canEdit) return;
-        // Flush first so the model reviews the draft the user actually sees,
-        // not the last-saved values that drift one keystroke behind.
-        await flushTextEdits();
-        const result = await reviewCard.mutateAsync({
-            title: title.trim() || card.title,
-            description: description.trim() || null,
-            priority,
-            estimatedHours: estimatedHours ? parseFloat(estimatedHours) : null,
-        });
-        setReviewSuggestions(result.suggestions);
     };
 
     const handleConfirmDelete = async () => {
@@ -242,16 +221,7 @@ export function CardDetailModal({ boardId, card, open, onClose }: CardDetailModa
             <div
                 data-modal-focus-target
                 tabIndex={-1}
-                className={`modal-box bg-base-100 rounded-xl shadow-e4 w-full p-0 overflow-hidden focus:outline-none ${
-                    // When the review is active, grow the modal on lg+ so
-                    // the editor stays at its natural max-w-2xl width and
-                    // the sidecar appears to its right — preserving the
-                    // user's working context per the design discussion.
-                    // On mobile we don't have room, so the review takes
-                    // over the editor space (handled below by hiding the
-                    // editor column).
-                    reviewSuggestions ? 'max-w-2xl lg:max-w-[1200px]' : 'max-w-2xl'
-                }`}
+                className="modal-box bg-base-100 rounded-xl shadow-e4 w-full max-w-2xl p-0 overflow-hidden focus:outline-none"
             >
                 {/* Header */}
                 <div className="px-8 pt-8 pb-6 border-b border-base-300 flex items-start justify-between gap-4">
@@ -291,25 +261,6 @@ export function CardDetailModal({ boardId, card, open, onClose }: CardDetailModa
                         />
                     </div>
                     <div className="flex items-center gap-1 shrink-0 -mt-2 -mr-2">
-                        {canEdit && !reviewSuggestions && (
-                            <button
-                                type="button"
-                                onClick={handleReview}
-                                disabled={reviewCard.isPending || updateCard.isPending}
-                                aria-label="Review kata with AI"
-                                title="AI reviews this kata and proposes improvements"
-                                className="btn btn-ghost btn-sm text-base-content/60 hover:text-primary"
-                            >
-                                <FontAwesomeIcon
-                                    icon={faWandMagicSparkles}
-                                    aria-hidden="true"
-                                    className={reviewCard.isPending ? 'animate-pulse' : ''}
-                                />
-                                <span className="ml-1.5 hidden md:inline">
-                                    {reviewCard.isPending ? 'Reviewing…' : 'Review with AI'}
-                                </span>
-                            </button>
-                        )}
                         <button
                             type="button"
                             aria-label="Close kata details"
@@ -321,20 +272,9 @@ export function CardDetailModal({ boardId, card, open, onClose }: CardDetailModa
                     </div>
                 </div>
 
-                {/* Body — when review is active, becomes a flex row on lg+
-                  * so the editor (left) and the review sidecar (right)
-                  * sit side-by-side. On mobile the editor column hides
-                  * and the review takes the full width, falling back to
-                  * the take-over behavior (no room for two columns). */}
-                <div className={reviewSuggestions ? 'lg:flex' : ''}>
-                    {/* Editor column */}
-                    <div
-                        className={
-                            reviewSuggestions
-                                ? 'hidden lg:flex lg:flex-col lg:w-[672px] lg:shrink-0 lg:border-r lg:border-base-300'
-                                : 'flex flex-col'
-                        }
-                    >
+                {/* Body */}
+                <div>
+                    <div className="flex flex-col">
                         <CardTabBar active={activeTab} onChange={setActiveTab} />
                         <div
                             role="tabpanel"
@@ -383,10 +323,6 @@ export function CardDetailModal({ boardId, card, open, onClose }: CardDetailModa
                                 <ChecklistTab
                                     boardId={boardId}
                                     cardId={card.id}
-                                    cardTitle={card.title}
-                                    cardDescription={card.description}
-                                    cardPriority={card.priority}
-                                    cardEstimatedHours={card.estimatedHours}
                                     canEdit={canEdit}
                                 />
                             )}
@@ -402,23 +338,6 @@ export function CardDetailModal({ boardId, card, open, onClose }: CardDetailModa
                         </div>
                     </div>
 
-                    {/* Review column — only mounted while suggestions
-                      * exist. Full-width on mobile (replaces the hidden
-                      * editor); sidecar on lg+. */}
-                    {reviewSuggestions && (
-                        <div className="lg:flex-1 px-8 py-6 min-h-[320px] max-h-[60vh] overflow-y-auto">
-                            <CardReviewPane
-                                suggestions={reviewSuggestions}
-                                current={{
-                                    description: card.description,
-                                    priority: card.priority,
-                                    estimatedHours: card.estimatedHours,
-                                }}
-                                onApply={commit}
-                                onBack={() => setReviewSuggestions(null)}
-                            />
-                        </div>
-                    )}
                 </div>
 
                 {/* Action bar — autosave per editing-patterns.md means no

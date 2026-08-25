@@ -11,12 +11,12 @@ export const PRICING_FAQS: { q: string; a: string }[] = [
         a: "A clan in kanNINJA is the group of people you share boards with. A wedding party. A soccer team. A gaming group. The Clan tier is for life — the people you live and play with, not the people you go to work with.",
     },
     {
-        q: 'What counts as an AI run?',
-        a: "One run = one of our AI features — plan my week, generate cards from a brain dump, summarize a board. Quotas reset monthly except on Free, where 50 runs is a lifetime taste so you can feel the value before you pay.",
+        q: 'Where is the AI?',
+        a: "There isn't one, and that's deliberate. kanNINJA used to ship its own assistant; we took it out. You already pay for an agent that is better than anything we would run on a $10 plan, so we gave it 42 tools instead and got out of the way.",
     },
     {
-        q: 'Does using kanNINJA from Claude or ChatGPT count toward my AI runs?',
-        a: "No. When an external agent calls kanNINJA tools through MCP, it uses your LLM, not ours. We rate-limit MCP calls per minute to prevent abuse, but there is no monthly cap. Use it as much as you want.",
+        q: 'So what does a plan actually buy me?',
+        a: "Seats, storage, templates, and how fast your agent may call us. There is no monthly token cap — your agent runs on your LLM, not ours, so the only thing worth metering is throughput.",
     },
     {
         q: 'What happens when I hit my seat limit?',
@@ -27,8 +27,8 @@ export const PRICING_FAQS: { q: string; a: string }[] = [
         a: "Yes. The features you upgraded for stop working at the next billing cycle. Your data stays put.",
     },
     {
-        q: 'Where does the AI run?',
-        a: "Routed to OpenAI's gpt-4o-mini. We never train models on your data. We don't log what you ask.",
+        q: 'Do you send my boards to a model?',
+        a: "No. We run no reasoning models, so nothing goes to an LLM unless your own agent reads it — and then it goes to the provider you already chose. The one exception is voice capture, which sends the audio clip to Azure OpenAI to turn it into text, and nothing else.",
     },
     {
         q: 'Do you import from other kanban tools?',

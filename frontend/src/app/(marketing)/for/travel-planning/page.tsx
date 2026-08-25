@@ -37,8 +37,8 @@ const data: PersonaData = {
             body: 'A board for what to pack. Drag cards from "to pack" to "in the bag." The night before, the empty "to pack" column is the answer.',
         },
         {
-            title: 'AI for breaking down the trip.',
-            body: "Ask the AI to break down 'four days in Tokyo' into cards. Accept the bits that match your taste. Throw out the rest.",
+            title: 'A trip board, already packed.',
+            body: 'Start from "A board for a two-week trip to Japan" — visas, bookings, the things you remember at the airport. Swap in your own country.',
         },
     ],
     faqs: [
@@ -60,7 +60,7 @@ const data: PersonaData = {
         },
         {
             q: 'How much does it cost?',
-            a: 'Free for the trip. Free for two on a shared board. The paid tiers are for bigger groups and the AI — most trips never need them.',
+            a: 'Free for the trip. Free for two on a shared board. The paid tiers are for bigger groups — most trips never need them.',
         },
     ],
     close: {

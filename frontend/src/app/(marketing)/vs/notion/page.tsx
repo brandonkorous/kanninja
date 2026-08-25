@@ -10,7 +10,7 @@ const data: ComparisonData = {
     heroSubtitle:
         "Notion is the best tool ever made for thinking on paper. The kanban board is a derived view of a database — and it shows. kanNINJA is what happens when the kanban is the point, not the byproduct.",
     coreDifference:
-        "Notion is docs-first; kanban is a layout you choose. kanNINJA is kanban-first; the card is a real object with native real-time, AI, and analytics. Use both — Notion for the writing, kanNINJA for the doing.",
+        "Notion is docs-first; kanban is a layout you choose. kanNINJA is kanban-first; the card is a real object with native real-time, analytics, and 42 tools your own agent can call. Use both — Notion for the writing, kanNINJA for the doing.",
     pickThemIf: [
         "You take notes, write specs, and need them connected to your work.",
         "You're building a wiki or knowledge base for your team.",
@@ -20,7 +20,7 @@ const data: ComparisonData = {
     pickUsIf: [
         "You drag a card and want it to move at 60fps, not after a network round-trip.",
         "Real-time presence — seeing teammates move cards live — is part of how you collaborate.",
-        "You want time tracking, AI suggestions, and burndown without building them yourself.",
+        "You want time tracking, agent access, and burndown without building them yourself.",
         "The kanban is the work, not a derived view of a doc database.",
     ],
     rows: [
@@ -28,10 +28,10 @@ const data: ComparisonData = {
         { feature: 'Kanban as primary surface', kanninja: 'Yes — the only surface', competitor: 'A view on a database' },
         { feature: 'Real-time presence on cards', kanninja: 'Yes, native', competitor: 'Limited — works on docs, weaker on board view' },
         { feature: 'Drag latency on the board', kanninja: 'Sub-frame, measured', competitor: 'Noticeable — Notion re-renders the database' },
-        { feature: 'AI built in', kanninja: 'Yes — 12 techniques (Pro)', competitor: 'Notion AI (paid add-on)' },
+        { feature: 'Built-in AI', kanninja: 'None, deliberately', competitor: 'Notion AI (paid add-on)' },
         { feature: 'Time tracking', kanninja: 'Yes, in the card', competitor: 'Build it yourself' },
         { feature: 'Burndown / velocity charts', kanninja: 'Yes, in the box', competitor: 'Build it yourself with formulas' },
-        { feature: 'MCP server for AI agents', kanninja: 'Yes — 15 tools', competitor: 'Yes (recently added)' },
+        { feature: 'MCP server for AI agents', kanninja: 'Yes — 42 tools', competitor: 'Yes (recently added)' },
         { feature: 'Pricing entry (paid)', kanninja: '$8 / user / month', competitor: '$10 / user / month (Plus)' },
     ],
     faqs: [
@@ -52,8 +52,8 @@ const data: ComparisonData = {
             a: "Each card has a description that supports rich text, but we don't have wiki-style pages. If documentation is central, keep Notion (or Confluence) for that and use kanNINJA for the work itself.",
         },
         {
-            q: 'How does the AI compare to Notion AI?',
-            a: "Notion AI writes inside docs and summarizes pages. kanNINJA's AI watches how you move cards and suggests the next move. Different jobs.",
+            q: 'What about Notion AI?',
+            a: "Notion AI is another subscription for a model Notion picked. kanNINJA ships no assistant — you connect the agent you already pay for and it edits the board directly. One less AI bill, one less assistant to learn.",
         },
         {
             q: 'Can I import from Notion?',

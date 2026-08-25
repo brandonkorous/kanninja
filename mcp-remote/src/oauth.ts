@@ -5,10 +5,16 @@ import { s2sCall } from './backend-client.js';
 
 const SUPPORTED_RESPONSE_TYPES = ['code'];
 const SUPPORTED_GRANT_TYPES = ['authorization_code', 'refresh_token'];
-const SUPPORTED_SCOPES = [
+// What we publish in discovery. New clients register against this list, so a
+// retired scope must not appear here.
+//
+// Validation lives in the backend (routes/oauth/index.ts), which accepts a
+// superset: `ai:capabilities` is a retired no-op — kanNINJA ships no AI of its
+// own — but clients that registered before the removal have it cached and would
+// fail re-authorization if it were rejected. Accepted there, never advertised here.
+const ADVERTISED_SCOPES = [
   'read:boards',
   'write:tasks',
-  'ai:capabilities',
   'team:read',
   'integrations:read',
 ];
@@ -71,7 +77,7 @@ export async function oauthRoutes(fastify: FastifyInstance) {
       grant_types_supported: SUPPORTED_GRANT_TYPES,
       code_challenge_methods_supported: ['S256'],
       token_endpoint_auth_methods_supported: ['none'],
-      scopes_supported: SUPPORTED_SCOPES,
+      scopes_supported: ADVERTISED_SCOPES,
     };
   });
 
@@ -81,7 +87,7 @@ export async function oauthRoutes(fastify: FastifyInstance) {
     return {
       resource: env.MCP_PUBLIC_URL,
       authorization_servers: [env.MCP_PUBLIC_URL],
-      scopes_supported: SUPPORTED_SCOPES,
+      scopes_supported: ADVERTISED_SCOPES,
       bearer_methods_supported: ['header'],
     };
   });

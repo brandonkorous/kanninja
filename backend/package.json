@@ -16,21 +16,25 @@
         "db:migrate": "tsx src/db/migrate.ts",
         "db:studio": "drizzle-kit studio",
         "create-api-key": "tsx src/scripts/create-api-key.ts",
-        "reconcile-seats": "tsx src/scripts/reconcile-seats.ts"
+        "reconcile-seats": "tsx src/scripts/reconcile-seats.ts",
+        "migrate-clerk-users": "tsx src/scripts/migrate-clerk-users.ts",
+        "seed-auth-users": "tsx src/scripts/seed-auth-users-from-profiles.ts",
+        "backfill-profile-user-id": "tsx src/scripts/backfill-profile-user-id.ts"
     },
     "dependencies": {
+        "@azure/storage-blob": "^12.33.0",
         "@clerk/fastify": "^2.0.0",
         "@fastify/cors": "^10.0.0",
         "@fastify/rate-limit": "^10.0.0",
         "@fastify/websocket": "^11.0.0",
         "@kanninja/shared": "workspace:*",
-        "@supabase/supabase-js": "^2.49.0",
+        "bcryptjs": "^3.0.3",
+        "better-auth": "^1.6.26",
         "dotenv": "^16.4.0",
         "drizzle-orm": "^0.45.2",
         "fastify": "^5.2.0",
         "fastify-plugin": "^5.1.0",
         "fastify-raw-body": "^5.0.0",
-        "llm-harness": "0.2.0",
         "openai": "^6.34.0",
         "postgres": "^3.4.0",
         "stripe": "^17.0.0",
@@ -38,7 +42,9 @@
         "zod": "^3.24.0"
     },
     "devDependencies": {
+        "@types/bcryptjs": "^3.0.0",
         "@types/node": "^22.10.0",
+        "@types/ws": "^8.18.1",
         "drizzle-kit": "^0.31.10",
         "tsup": "^8.5.1",
         "tsx": "^4.19.0",

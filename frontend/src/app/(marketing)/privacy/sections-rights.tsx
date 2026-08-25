@@ -19,8 +19,8 @@ export const privacyRightsSections: LegalSectionData[] = [
                 <ul>
                     <li>
                         <strong>Strictly necessary</strong> cookies keep you signed
-                        in (set by Clerk) and remember your theme and basic
-                        preferences. These cannot be turned off.
+                        in and remember your theme and basic preferences. These
+                        cannot be turned off.
                     </li>
                     <li>
                         <strong>Analytics</strong> — Google Analytics counts page
@@ -134,8 +134,11 @@ export const privacyRightsSections: LegalSectionData[] = [
                         Up to 7 years for tax and accounting purposes, as required
                         by law.
                     </dd>
-                    <dt>AI request logs</dt>
-                    <dd>Up to 90 days for debugging and abuse investigation.</dd>
+                    <dt>Voice transcription</dt>
+                    <dd>
+                        Audio is not retained. The transcript lives on the card you
+                        created, for as long as you keep it.
+                    </dd>
                     <dt>Analytics and session replay</dt>
                     <dd>
                         Google Analytics: 14 months. Microsoft Clarity: up to 12
@@ -153,8 +156,10 @@ export const privacyRightsSections: LegalSectionData[] = [
             <>
                 <p>
                     We use TLS 1.2+ for all data in transit and AES-256 for data
-                    at rest in the database. The application runs on Microsoft
-                    Azure Kubernetes Service in the West US 3 region. Access to
+                    at rest in the database. The application runs on Google
+                    Kubernetes Engine in the us-central1 region, with the
+                    database and file storage on Microsoft Azure in the Central
+                    US region. Access to
                     production systems is limited to the smallest set of people
                     who need it, behind multi-factor authentication. We log
                     administrative actions.
@@ -190,7 +195,8 @@ export const privacyRightsSections: LegalSectionData[] = [
                 <h3>International transfers</h3>
                 <p>
                     kanNINJA is operated from the United States and your data is
-                    processed in the United States (Azure West US 3). If you use
+                    processed in the United States (Google Cloud us-central1 and
+                    Microsoft Azure Central US). If you use
                     the service from outside the United States, you consent to
                     that transfer and processing.
                 </p>

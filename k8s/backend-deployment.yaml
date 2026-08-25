@@ -7,6 +7,11 @@ metadata:
     app.kubernetes.io/name: backend
     app.kubernetes.io/part-of: kanninja
 spec:
+  # DO NOT raise above 1 without adding a shared realtime bus (Redis pub/sub).
+  # The WebSocket hub in src/services/realtime-hub.ts fans out only to sockets
+  # on THIS pod: with 2+ replicas, board broadcasts would silently reach a
+  # fraction of connected clients and presence rosters would fragment per-pod.
+  # Nothing would error — it would just quietly be wrong.
   replicas: 1
   strategy:
     type: RollingUpdate
@@ -23,11 +28,11 @@ spec:
         app.kubernetes.io/part-of: kanninja
     spec:
       # No imagePullSecrets: images live in Artifact Registry
-      # (us-central1-docker.pkg.dev/sparxworks/kanninja) and the Autopilot node
+      # (ghcr.io/brandonkorous/kanninja) and the Autopilot node
       # SA pulls them natively. The old GHCR pull-token rotator is retired.
       containers:
         - name: backend
-          image: us-central1-docker.pkg.dev/sparxworks/kanninja/backend:latest
+          image: ghcr.io/brandonkorous/kanninja/backend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -61,9 +66,24 @@ spec:
             periodSeconds: 20
             timeoutSeconds: 3
             failureThreshold: 3
+          # THE ONLY PROBE THAT TOUCHES THE DATABASE, deliberately.
+          #
+          # Readiness controls Service membership: a failure takes this pod out
+          # of rotation and leaves it running. That is the correct response to
+          # Postgres being unreachable — stop advertising, keep the process,
+          # recover when the database does.
+          #
+          # The startup and liveness probes above stay on the static /api/health
+          # for the opposite reason: they KILL the container, and restarting a
+          # pod does not repair a database. Pointing them here would turn a brief
+          # Postgres blip into a fleet-wide crashloop that outlives its cause.
+          #
+          # Before this split every probe hit the static endpoint, so a pod went
+          # Ready and served traffic with no database at all: the deploy went
+          # green, the rollout succeeded, and every request 500'd.
           readinessProbe:
             httpGet:
-              path: /api/health
+              path: /api/health/ready
               port: http
             periodSeconds: 10
             timeoutSeconds: 3

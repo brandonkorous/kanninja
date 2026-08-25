@@ -40,10 +40,11 @@ export const privacySections: LegalSectionData[] = [
                 <p>We collect only what we need to run the service.</p>
                 <h3>Account information</h3>
                 <p>
-                    When you create an account, our authentication provider Clerk
-                    handles your name, email, password (hashed — we never see it),
-                    and any social login identifiers you choose to use. We receive a
-                    user ID and the basic profile fields from Clerk.
+                    When you create an account, we store your name, email, and — if
+                    you set one — a password. Passwords are hashed before they are
+                    stored; we never hold the original. If you sign in with Google
+                    instead, we store the identifier Google gives us and your basic
+                    profile fields, never your Google password.
                 </p>
                 <h3>Billing information</h3>
                 <p>
@@ -68,12 +69,12 @@ export const privacySections: LegalSectionData[] = [
                     We use this through Google Analytics and Microsoft Clarity (see
                     section 06).
                 </p>
-                <h3>AI prompts and outputs</h3>
+                <h3>Voice capture</h3>
                 <p>
-                    When you use an AI feature, the contents of the cards or
-                    prompts involved are sent to OpenAI to generate a response. We
-                    keep a record of the request and response so the feature can
-                    show history and so we can debug failures.
+                    If you record a voice note to create a card, the audio clip is
+                    sent to our Azure OpenAI resource to be turned into text. We keep
+                    the resulting text as the card you created. We do not keep the
+                    audio, and nothing else about your boards is sent with it.
                 </p>
                 <h3>Integration data</h3>
                 <p>
@@ -107,8 +108,7 @@ export const privacySections: LegalSectionData[] = [
                         notices).
                     </li>
                     <li>
-                        Power AI features when you invoke them — we do not run AI on
-                        your content unless you ask us to.
+                        Turn a voice note into text, when you record one.
                     </li>
                     <li>
                         Understand which features are used and which are broken,
@@ -120,7 +120,9 @@ export const privacySections: LegalSectionData[] = [
                 <p>
                     <strong>We do not sell your personal information.</strong> We
                     do not share it with advertisers. We do not use your content to
-                    train any AI model — ours or anyone else's.
+                    train any AI model — ours or anyone else's. kanNINJA runs no
+                    reasoning models at all, so your board content is never sent to
+                    a language model by us.
                 </p>
             </>
         ),
@@ -137,10 +139,10 @@ export const privacySections: LegalSectionData[] = [
                     contract that limits what they can do with it. The current list
                     is on our{' '}
                     <Link href="/subprocessors">Subprocessors page</Link>. It
-                    includes Clerk (auth), Stripe (payments), Supabase (database
-                    and realtime), OpenAI (AI features), Microsoft Clarity (session
-                    replay), Google Analytics (web analytics), Resend (email), and
-                    Microsoft Azure (hosting).
+                    includes Stripe (payments), Microsoft Azure (database and file
+                    storage), Google Cloud (application hosting), Azure OpenAI
+                    (voice transcription), Microsoft Clarity (session replay),
+                    Google Analytics (web analytics), and Resend (email).
                 </p>
                 <p>
                     Beyond subprocessors, we share information only:
@@ -167,28 +169,37 @@ export const privacySections: LegalSectionData[] = [
     {
         id: 'ai',
         number: '05',
-        title: 'AI features and your data',
+        title: 'AI, and why we do not run one',
         body: (
             <>
                 <p>
-                    AI features are opt-in: you have to invoke them. When you do,
-                    we send the relevant card content or prompt to OpenAI's API and
-                    return the response.
+                    kanNINJA has no built-in AI. We removed it. We run no reasoning
+                    models and we do not send your cards, comments, or boards to any
+                    language model.
                 </p>
                 <p>
-                    OpenAI's API platform commits not to use API inputs or outputs
-                    to train its models, and to delete request data within 30 days
-                    unless required by law. We rely on those commitments. We add
-                    one of our own:{' '}
+                    If you connect your own agent over MCP — Claude, ChatGPT, Cursor
+                    or another client — then that agent reads the boards you gave it
+                    access to, using the model provider you already chose. That
+                    exchange is between you and your provider, under their privacy
+                    terms, not ours. You can see and revoke every connected agent on
+                    the Agents page.
+                </p>
+                <p>
+                    The one exception is voice capture. Audio you record is sent to
+                    our Azure OpenAI resource in the United States purely to produce
+                    a transcript. Microsoft does not use Azure OpenAI customer data
+                    to train models, and we do not retain the audio once the
+                    transcript comes back. We rely on that commitment, and we add one
+                    of our own:{' '}
                     <strong>
                         we do not train, fine-tune, or build any model on customer
                         content.
                     </strong>
                 </p>
                 <p>
-                    You can disable AI features for your account in Settings. If
-                    you are on a team plan, the workspace owner can disable them
-                    for everyone.
+                    Voice capture only runs when you press record. If you never use
+                    it, no audio ever leaves your device.
                 </p>
             </>
         ),

@@ -10,14 +10,9 @@ export interface TierConfig {
   /** Per-seat monthly price for seats over maxUsers. null = hard cap. */
   seatOveragePrice: number | null;
   features: {
-    /** In-app AI features (kanNINJA pays LLM tokens — metered for margin). */
-    aiFeatures: boolean;
-    /** AI runs allowed per month. Free uses lifetime quota — see aiRunsLifetime. */
-    aiRunsPerMonth: number | null;
-    /** Free-tier taste quota; non-null only on Free. */
-    aiRunsLifetime: number | null;
-    /** MCP tool calls per minute (rate limit only — no monthly cap, since MCP
-     *  uses the user's own LLM, not ours). */
+    /** MCP tool calls per minute. The primary capability axis: kanNINJA runs
+     *  no models of its own, so every agent brings (and pays for) its own LLM
+     *  and there is nothing to meter but throughput. */
     mcpRequestsPerMinute: number;
     projectTemplates: boolean;
     prioritySupport: boolean;
@@ -36,9 +31,6 @@ export const SUBSCRIPTION_TIERS: Record<SubscriptionTier, TierConfig> = {
     maxUsers: 3,
     seatOveragePrice: null,
     features: {
-      aiFeatures: true,
-      aiRunsPerMonth: null,
-      aiRunsLifetime: 50,
       mcpRequestsPerMinute: 10,
       projectTemplates: false,
       prioritySupport: false,
@@ -55,9 +47,6 @@ export const SUBSCRIPTION_TIERS: Record<SubscriptionTier, TierConfig> = {
     maxUsers: 15,
     seatOveragePrice: null,
     features: {
-      aiFeatures: true,
-      aiRunsPerMonth: 200,
-      aiRunsLifetime: null,
       mcpRequestsPerMinute: 30,
       projectTemplates: true,
       prioritySupport: false,
@@ -74,9 +63,6 @@ export const SUBSCRIPTION_TIERS: Record<SubscriptionTier, TierConfig> = {
     maxUsers: 15,
     seatOveragePrice: 4,
     features: {
-      aiFeatures: true,
-      aiRunsPerMonth: 2000,
-      aiRunsLifetime: null,
       mcpRequestsPerMinute: 120,
       projectTemplates: true,
       prioritySupport: false,
@@ -93,9 +79,6 @@ export const SUBSCRIPTION_TIERS: Record<SubscriptionTier, TierConfig> = {
     maxUsers: 50,
     seatOveragePrice: 6,
     features: {
-      aiFeatures: true,
-      aiRunsPerMonth: 20000,
-      aiRunsLifetime: null,
       mcpRequestsPerMinute: 600,
       projectTemplates: true,
       prioritySupport: true,
@@ -112,9 +95,6 @@ export const SUBSCRIPTION_TIERS: Record<SubscriptionTier, TierConfig> = {
     maxUsers: Number.POSITIVE_INFINITY,
     seatOveragePrice: null,
     features: {
-      aiFeatures: true,
-      aiRunsPerMonth: null,
-      aiRunsLifetime: null,
       mcpRequestsPerMinute: 6000,
       projectTemplates: true,
       prioritySupport: true,
@@ -125,15 +105,6 @@ export const SUBSCRIPTION_TIERS: Record<SubscriptionTier, TierConfig> = {
     },
   },
 };
-
-/** Tiers where in-app AI features are accessible (gated by quota above Free). */
-export const AI_ENABLED_TIERS: SubscriptionTier[] = [
-  SubscriptionTier.FREE,
-  SubscriptionTier.CLAN,
-  SubscriptionTier.PRO,
-  SubscriptionTier.BUSINESS,
-  SubscriptionTier.ENTERPRISE,
-];
 
 /** Tiers that include audit logs */
 export const AUDIT_ENABLED_TIERS: SubscriptionTier[] = [

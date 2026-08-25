@@ -10,7 +10,7 @@ const data: ComparisonData = {
     heroSubtitle:
         "Asana is what big teams pick when they need timelines, dependencies, and project portfolios. kanNINJA is what they pick when they realize most of the work is just one team, one board, today.",
     coreDifference:
-        "Asana is a work management platform — it scales to portfolios and program managers. kanNINJA is a kanban board first, with the depth of analytics and AI that small teams need but without the org-chart machinery they don't.",
+        "Asana is a work management platform — it scales to portfolios and program managers. kanNINJA is a kanban board first, with the analytics small teams need and an open door for their own agent, minus the org-chart machinery they don't.",
     pickThemIf: [
         "You manage portfolios of projects across many teams and need program-level rollups.",
         "Gantt-style timelines and task dependencies are central to how you plan.",
@@ -19,7 +19,7 @@ const data: ComparisonData = {
     ],
     pickUsIf: [
         "You want a kanban that feels honed, not a configuration of a generic platform.",
-        "AI suggestions baked into the card — not a separate AI Studio you have to enable.",
+        "Your own agent working the card directly — not a separate AI Studio you have to enable.",
         "Real-time presence at the same level as Figma or Linear, not just inbox notifications.",
         "Pricing that doesn't punish you for a single extra seat.",
     ],
@@ -27,12 +27,12 @@ const data: ComparisonData = {
         { feature: 'Free tier', kanninja: 'Yes — forever', competitor: 'Yes — up to 10 users' },
         { feature: 'Kanban as primary view', kanninja: 'Yes', competitor: 'One of many views' },
         { feature: 'Real-time presence avatars', kanninja: 'Yes, native', competitor: 'Limited' },
-        { feature: 'AI built in', kanninja: 'Yes — 12 techniques (Pro)', competitor: 'Asana Intelligence (paid)' },
+        { feature: 'Built-in AI', kanninja: 'None, deliberately', competitor: 'Asana Intelligence (paid)' },
         { feature: 'Timeline / Gantt', kanninja: 'Not yet', competitor: 'Yes (Premium+)' },
         { feature: 'Task dependencies', kanninja: 'Not yet', competitor: 'Yes' },
         { feature: 'Custom fields', kanninja: 'Yes, native', competitor: 'Yes (Premium+)' },
         { feature: 'Time tracking', kanninja: 'Yes, in the card', competitor: 'Integration only' },
-        { feature: 'MCP server for AI agents', kanninja: 'Yes — 15 tools', competitor: 'No' },
+        { feature: 'MCP server for AI agents', kanninja: 'Yes — 42 tools', competitor: 'No' },
         { feature: 'Pricing entry (paid)', kanninja: '$8 / user / month', competitor: '$10.99 / user / month (Starter)' },
     ],
     faqs: [
@@ -45,8 +45,8 @@ const data: ComparisonData = {
             a: "Not yet. We chose to make the kanban excellent before we added timeline. If timeline is non-negotiable for your team, Asana or Linear are honest answers.",
         },
         {
-            q: 'How is the AI different from Asana Intelligence?',
-            a: "Asana Intelligence is a feature flag on the workspace. kanNINJA's AI techniques are inline — the suggestion appears next to the card you're looking at, and you accept or ignore in one click. No separate panel.",
+            q: 'What replaces Asana Intelligence here?',
+            a: "Your own agent. Asana Intelligence is a workspace feature flag attached to Asana's model and Asana's bill. kanNINJA ships none — you point Claude, ChatGPT, or Cursor at the board over MCP, and it works in the chat you are already in.",
         },
         {
             q: 'Is your free tier as generous as Asana’s?',

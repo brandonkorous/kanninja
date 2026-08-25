@@ -42,8 +42,7 @@ export const termsAccountSections: LegalSectionData[] = [
         body: (
             <>
                 <p>
-                    You need an account to use most of the service. Authentication
-                    is handled by Clerk; the basics still apply:
+                    You need an account to use most of the service. The basics:
                 </p>
                 <ul>
                     <li>

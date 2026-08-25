@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { Fraunces, Inter, JetBrains_Mono } from 'next/font/google';
-import { ClerkProvider } from '@clerk/nextjs';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import { FontAwesomeProvider } from '@/providers/FontAwesomeProvider';
@@ -99,36 +98,36 @@ export const metadata: Metadata = {
     robots: { index: true, follow: true },
 };
 
+// No auth provider here on purpose: the Better Auth React client keeps session
+// state in its own store, so `useSession()` works anywhere without one.
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
-        <ClerkProvider>
-            <html
-                lang="en"
-                suppressHydrationWarning
-                data-theme="hanko"
-                className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable}`}
-            >
-                <body>
-                    <JsonLd data={organizationLd()} />
-                    <JsonLd data={websiteLd()} />
-                    <JsonLd data={softwareApplicationLd()} />
-                    <ThemeProvider>
-                        <FontAwesomeProvider>
-                            <QueryProvider>
-                                <ToastProvider>
-                                    <ConsentProvider>
-                                        {children}
-                                        <CookieBanner />
-                                        <CookiePreferencesDialog />
-                                        <ClarityScript />
-                                        <GoogleAnalyticsScript />
-                                    </ConsentProvider>
-                                </ToastProvider>
-                            </QueryProvider>
-                        </FontAwesomeProvider>
-                    </ThemeProvider>
-                </body>
-            </html>
-        </ClerkProvider>
+        <html
+            lang="en"
+            suppressHydrationWarning
+            data-theme="hanko"
+            className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+        >
+            <body>
+                <JsonLd data={organizationLd()} />
+                <JsonLd data={websiteLd()} />
+                <JsonLd data={softwareApplicationLd()} />
+                <ThemeProvider>
+                    <FontAwesomeProvider>
+                        <QueryProvider>
+                            <ToastProvider>
+                                <ConsentProvider>
+                                    {children}
+                                    <CookieBanner />
+                                    <CookiePreferencesDialog />
+                                    <ClarityScript />
+                                    <GoogleAnalyticsScript />
+                                </ConsentProvider>
+                            </ToastProvider>
+                        </QueryProvider>
+                    </FontAwesomeProvider>
+                </ThemeProvider>
+            </body>
+        </html>
     );
 }

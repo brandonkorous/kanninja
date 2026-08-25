@@ -2,22 +2,26 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@clerk/nextjs';
+import { useSession } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { useCreateCheckout } from '@/hooks/use-subscription';
 import { SUBSCRIPTION_TIERS, SubscriptionTier } from '@kanninja/shared';
 
 // Audience-led tier copy. The constants in @kanninja/shared own the source-of-truth
 // pricing data; this owns the voice. Each tier targets a *who*, not a feature checklist.
+//
+// "Agent calls" are MCP tool calls — the per-minute rate limit in
+// SUBSCRIPTION_TIERS.features.mcpRequestsPerMinute. There is no monthly cap:
+// kanNINJA runs no models, so the agent's own LLM bill is the only meter.
 const TIERS = [
     {
         key: SubscriptionTier.FREE,
-        label: 'Solo practice. Three seats, unlimited boards. A taste of the AI.',
+        label: 'Solo practice. Three seats, unlimited boards, your own agent.',
         cta: 'Start free',
         features: [
             'Up to 3 seats',
             'Unlimited boards',
-            '50 AI runs to taste',
+            '10 agent calls/min',
             '100 MB of files',
         ],
     },
@@ -27,19 +31,19 @@ const TIERS = [
         cta: 'Pick Clan',
         features: [
             'Up to 15 seats',
-            '200 AI runs/month',
+            '30 agent calls/min',
             'Project templates',
             '5 GB of files',
         ],
     },
     {
         key: SubscriptionTier.PRO,
-        label: 'For the work you do. Startups, builders, agencies. Full AI, full MCP.',
+        label: 'For the work you do. Startups, builders, agencies. Your agent, at speed.',
         cta: 'Pick Pro',
         features: [
             '15 seats included, $4 each after',
-            '2,000 AI runs/month',
-            'MCP for your agents',
+            '120 agent calls/min',
+            'Project templates',
             '10 GB of files',
         ],
     },
@@ -49,7 +53,7 @@ const TIERS = [
         cta: 'Pick Business',
         features: [
             '50 seats included, $6 each after',
-            '20,000 AI runs/month',
+            '600 agent calls/min',
             'Single sign-on + audit log',
             'Priority support',
         ],
@@ -60,7 +64,7 @@ const TIERS = [
         cta: 'Talk to us',
         features: [
             'Custom seats',
-            'Custom AI quotas',
+            'Unmetered agent calls',
             'Dedicated CSM + SLA',
             'SCIM, dedicated infra',
         ],
@@ -69,7 +73,8 @@ const TIERS = [
 
 export function TierCardsSection() {
     const [interval, setBillingInterval] = useState<'monthly' | 'yearly'>('monthly');
-    const { isSignedIn } = useAuth();
+    const { data: session } = useSession();
+    const isSignedIn = Boolean(session);
     const router = useRouter();
     const checkout = useCreateCheckout();
 

@@ -37,8 +37,8 @@ const data: PersonaData = {
             body: 'A card per vendor. Their quote, their phone number, the day they show up. Comments capture every conversation.',
         },
         {
-            title: 'AI for the parts you keep forgetting.',
-            body: 'Ask the AI to break "moving abroad" or "moving with pets" into cards. Accept what it got right. Save the brain space for the actual move.',
+            title: 'A move board, already written.',
+            body: 'Start from "A board for the move" — utilities, addresses, the deposit you will otherwise forget. Save the brain space for the actual move.',
         },
     ],
     faqs: [
@@ -56,7 +56,7 @@ const data: PersonaData = {
         },
         {
             q: 'How much does it cost?',
-            a: 'Free for one person. Free for two on a shared board. The paid tiers exist for the AI and for bigger groups — most moves never need them.',
+            a: 'Free for one person. Free for two on a shared board. The paid tiers exist for bigger groups — most moves never need them.',
         },
         {
             q: 'After the move, what do I do with the board?',

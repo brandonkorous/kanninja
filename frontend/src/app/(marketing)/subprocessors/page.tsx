@@ -18,13 +18,6 @@ export const metadata: Metadata = buildPageMetadata({
 // to advance notice — see /dpa section 05.
 const subprocessors: Subprocessor[] = [
     {
-        name: 'Clerk',
-        purpose: 'Authentication',
-        data: 'Name, email, hashed password, social-login identifiers, session cookies.',
-        location: 'United States',
-        privacyUrl: 'https://clerk.com/privacy',
-    },
-    {
         name: 'Stripe',
         purpose: 'Payment processing',
         data: 'Cardholder name, card details (Stripe-tokenized — we never see full card numbers), billing address, transaction history.',
@@ -32,25 +25,25 @@ const subprocessors: Subprocessor[] = [
         privacyUrl: 'https://stripe.com/privacy',
     },
     {
-        name: 'Supabase',
-        purpose: 'Database and realtime infrastructure',
-        data: 'All customer content stored in kanNINJA — boards, lists, cards, comments, attachments, profile data, audit logs.',
-        location: 'United States (managed Postgres + Realtime)',
-        privacyUrl: 'https://supabase.com/privacy',
-    },
-    {
         name: 'Microsoft Azure',
-        purpose: 'Application hosting (AKS, West US 3)',
-        data: 'All customer content while it is being processed by the application; logs and metrics.',
-        location: 'United States (West US 3)',
+        purpose: 'Database and file storage',
+        data: 'All customer content stored in kanNINJA — boards, lists, cards, comments, attachments, profile data, audit logs. Account credentials, including hashed passwords.',
+        location: 'United States (Central US)',
         privacyUrl: 'https://www.microsoft.com/privacy',
     },
     {
-        name: 'OpenAI',
-        purpose: 'AI features (suggestions, summaries, drafting)',
-        data: 'Card content or prompt text you submit to an AI feature, plus the response. Per OpenAI API terms, not used to train models; deleted within 30 days unless required by law.',
+        name: 'Google Cloud',
+        purpose: 'Application hosting',
+        data: 'All customer content while it is being processed by the application; logs and metrics.',
+        location: 'United States (us-central1)',
+        privacyUrl: 'https://cloud.google.com/terms/cloud-privacy-notice',
+    },
+    {
+        name: 'Azure OpenAI (Microsoft)',
+        purpose: 'Voice-note transcription',
+        data: 'The audio clip you record when creating a card by voice, used only to produce a transcript. Not used to train models. We do not retain the audio.',
         location: 'United States',
-        privacyUrl: 'https://openai.com/policies/privacy-policy',
+        privacyUrl: 'https://privacy.microsoft.com/privacystatement',
     },
     {
         name: 'Resend',
@@ -102,7 +95,7 @@ export default function SubprocessorsPage() {
             eyebrow="Subprocessors"
             headlineBefore="The names"
             headlineItalic="behind the scenes."
-            lastUpdatedISO="2026-04-24"
+            lastUpdatedISO="2026-08-07"
             effectiveISO="2026-04-24"
             contactEmail="privacy@kanninja.com"
             intro={

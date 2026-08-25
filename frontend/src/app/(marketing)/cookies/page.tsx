@@ -62,8 +62,9 @@ export default function CookiesPage() {
                             </p>
                             <ul>
                                 <li>
-                                    <strong>Clerk</strong> — session and CSRF
-                                    cookies for authentication.
+                                    <strong>kanNINJA session</strong> — the
+                                    cookie that keeps you signed in, plus its
+                                    CSRF protection.
                                 </li>
                                 <li>
                                     <strong>kanNINJA</strong> — theme

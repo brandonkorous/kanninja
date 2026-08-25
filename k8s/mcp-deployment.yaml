@@ -25,7 +25,7 @@ spec:
       # No imagePullSecrets: Artifact Registry images pulled by the node SA.
       containers:
         - name: mcp
-          image: us-central1-docker.pkg.dev/sparxworks/kanninja/mcp-remote:latest
+          image: ghcr.io/brandonkorous/kanninja/mcp-remote:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

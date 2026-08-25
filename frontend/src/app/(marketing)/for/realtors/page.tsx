@@ -37,8 +37,8 @@ const data: PersonaData = {
             body: 'A card for each vendor. Their contact, their deadlines, the day they confirmed. No more chasing the title company at 4pm on closing day.',
         },
         {
-            title: 'AI for breaking down a complex closing.',
-            body: 'Ask the AI to break down a 30-day closing into cards. Edit for your jurisdiction. Save the brain space for the negotiation.',
+            title: 'A pipeline board, already staged.',
+            body: 'Start from "A board for the pipeline" — lead through closing, with the steps that slip already on cards. Edit for your jurisdiction.',
         },
     ],
     faqs: [
@@ -56,11 +56,11 @@ const data: PersonaData = {
         },
         {
             q: 'How much does it cost?',
-            a: 'Free for solo agents. The paid tiers exist for teams and for the AI — even busy solo agents stay free.',
+            a: 'Free for solo agents. The paid tiers exist for teams — even busy solo agents stay free.',
         },
         {
-            q: 'Is the AI giving legal advice?',
-            a: 'No. The AI helps you plan and break down work. It does not interpret contracts or give legal advice. Your broker, your attorney, your judgment.',
+            q: 'Is anything here giving legal advice?',
+            a: 'No. kanNINJA holds the checklist; it does not interpret contracts. We run no AI of our own, and if you connect your own agent it is still your broker, your attorney, and your judgment that decide.',
         },
     ],
     close: {

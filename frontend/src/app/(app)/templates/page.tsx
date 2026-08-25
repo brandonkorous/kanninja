@@ -7,22 +7,17 @@ import type { BoardTemplate, TemplateCategory } from '@kanninja/shared';
 import { useApi } from '@/hooks/use-api';
 import { useToast } from '@/providers/ToastProvider';
 import { getToastErrorMessage } from '@/lib/toast-errors';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
 import { TemplateCard } from '@/components/templates/TemplateCard';
 import {
     TemplateCategoryTabs,
     type TemplateFilter,
 } from '@/components/templates/TemplateCategoryTabs';
-import { AITemplateModal } from '@/components/templates/AITemplateModal';
 
 const PRIORITIES = ['none', 'low', 'medium', 'high', 'urgent'] as const;
 type Priority = (typeof PRIORITIES)[number];
 
-// AI output is loose with priority casing — "Medium", "High", etc. — even
-// when prompted for lowercase. Normalize here before sending to the apply
-// endpoint, which validates against a strict lowercase enum. Unknown values
-// fall back to 'none' rather than failing the whole import.
+// Defensive: the apply endpoint validates against a strict lowercase enum.
+// Unknown values fall back to 'none' rather than failing the whole import.
 function normalizePriority(raw: string | null | undefined): Priority {
     const lower = (raw ?? '').toLowerCase();
     return (PRIORITIES as readonly string[]).includes(lower)
@@ -73,7 +68,6 @@ export default function TemplatesPage() {
     const api = useApi();
     const router = useRouter();
     const toast = useToast();
-    const [showAI, setShowAI] = useState(false);
     const [filter, setFilter] = useState<TemplateFilter>('all');
 
     const {
@@ -131,23 +125,10 @@ export default function TemplatesPage() {
                         </span>
                     </h1>
                     <p className="mt-4 text-base text-base-content/60 max-w-xl">
-                        Pick a built-in template, or have the model draft one
-                        from a description.
+                        Pick one, and it lands on a fresh dojo with the columns
+                        and starter kata already in place.
                     </p>
                 </div>
-                <button
-                    type="button"
-                    className="btn btn-primary"
-                    aria-haspopup="dialog"
-                    onClick={() => setShowAI(true)}
-                >
-                    <FontAwesomeIcon
-                        icon={faWandMagicSparkles}
-                        aria-hidden="true"
-                        className="mr-2"
-                    />
-                    Draft with AI
-                </button>
             </div>
 
             <section aria-label="Templates">
@@ -214,39 +195,6 @@ export default function TemplatesPage() {
                     </>
                 )}
             </section>
-
-            <AITemplateModal
-                open={showAI}
-                isApplying={applyTemplate.isPending}
-                onClose={() => setShowAI(false)}
-                onGenerated={(result) => {
-                    // Same pooling rationale as buildApplyInput above — a
-                    // brand-new board has nothing in progress yet. With prompt
-                    // guidance the model still occasionally sprinkles cards
-                    // across stages, so this is the safety net.
-                    const allCards = result.lists.flatMap((l) =>
-                        l.cards.map((c) => ({
-                            title: c.title,
-                            description: c.description ?? undefined,
-                            priority: normalizePriority(c.priority),
-                            checklist: c.checklist?.filter(
-                                (s) =>
-                                    typeof s === 'string' &&
-                                    s.trim().length > 0,
-                            ),
-                        })),
-                    );
-                    applyTemplate.mutate({
-                        title: result.board_title,
-                        description: result.board_description ?? undefined,
-                        lists: result.lists.map((l, i) => ({
-                            title: l.title,
-                            cards: i === 0 ? allCards : [],
-                        })),
-                    });
-                    setShowAI(false);
-                }}
-            />
         </div>
     );
 }

@@ -2,17 +2,6 @@ import { pgTable, uuid, text, timestamp, numeric, jsonb } from 'drizzle-orm/pg-c
 import { boards } from './boards';
 import { profiles } from './profiles';
 
-export const aiInteractions = pgTable('ai_interactions', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').notNull().references(() => profiles.id),
-  query: text('query').notNull(),
-  responseType: text('response_type').notNull(),
-  context: jsonb('context'),
-  confidenceScore: numeric('confidence_score'),
-  feedbackRating: text('feedback_rating'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-});
-
 export const analyticsSnapshots = pgTable('analytics_snapshots', {
   id: uuid('id').defaultRandom().primaryKey(),
   boardId: uuid('board_id').references(() => boards.id, { onDelete: 'cascade' }),

@@ -64,5 +64,6 @@ Hanko's signature moves (see the skill for the full list):
 - DaisyUI semantic classes (`bg-primary`, `text-base-content`, `btn`, `card`) by default — they auto-flip between light/dark themes. Reach for raw hex only when a color must NOT theme-flip (rare).
 - FontAwesome icons via `@fortawesome/react-fontawesome` (not lucide-react).
 - Apache ECharts via `echarts-for-react` for charts (not recharts).
-- All data flows through the Fastify API via `src/lib/api-client.ts` + React Query hooks. The frontend's only direct Supabase usage is Realtime broadcast/presence in `src/lib/supabase-client.ts`.
+- All data flows through the Fastify API via `src/lib/api-client.ts` + React Query hooks. Realtime (board broadcast + presence) is a WebSocket to that same API — see `src/hooks/use-realtime-board.ts`. The frontend never talks to the database or to any third-party backend.
+- Auth is Better Auth via `src/lib/auth-client.ts` (client) and `src/lib/auth-server.ts` (server components). The session is a cookie, so `api-client.ts` sends `credentials: 'include'` and there is no token to pass around.
 - Files should be 200 lines or less.

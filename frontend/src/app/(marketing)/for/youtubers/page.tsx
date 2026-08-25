@@ -37,8 +37,8 @@ const data: PersonaData = {
             body: 'A board for partnerships. Cards for each deal — brief, fee, deliverable, payment. When a brand asks "did you run that yet?", the answer is one card.',
         },
         {
-            title: 'AI for breaking down a series.',
-            body: 'Planning a 10-part series? Ask the AI to break it into episode cards. Adjust to your voice. Save the brain space for the actual ideas.',
+            title: 'A channel board, already running.',
+            body: 'Start from "A board for the channel" — idea, script, shoot, edit, publish. Adjust to your voice. Save the brain space for the ideas.',
         },
     ],
     faqs: [

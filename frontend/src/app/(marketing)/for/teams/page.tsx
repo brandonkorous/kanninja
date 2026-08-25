@@ -10,7 +10,7 @@ const data: PersonaData = {
         headlineBefore: 'A board your team',
         headlineItalic: 'will actually use.',
         subtitle:
-            'Real-time presence, AI suggestions, honest analytics. Built for teams of two to twenty — without the enterprise weight.',
+            'Real-time presence, 42 MCP tools for your own agent, honest analytics. Built for teams of two to twenty — without the enterprise weight.',
     },
     intro:
         'Most kanban tools were either built for one person or scaled past you to enterprise. kanNINJA is built for the team in between — the duo, the squad, the small product or ops team where every seat is doing real work. The features feel ready on day one, and they stay sharp at thirty seats.',
@@ -33,11 +33,11 @@ const data: PersonaData = {
             body: 'Burndown, velocity, cycle time. Not because it is a leaderboard — because it is the slope, and the slope tells you the truth.',
         },
         {
-            title: 'AI as a quiet second pair of eyes.',
-            body: "Twelve techniques (gated to Pro). The AI suggests next steps, breaks down work, drafts standups. Your team accepts or ignores. No takeover.",
+            title: 'A product-team board, already shaped.',
+            body: 'Start from "A board for a small product team" — the columns that hold up past ten people, without the ceremony that does not.',
         },
         {
-            title: 'MCP server for your AI agents.',
+            title: 'MCP server for your agents.',
             body: 'Wire kanNINJA into Claude, Cursor, or any agent that speaks MCP. Fifteen tools. The board moves from inside the agent your team already uses.',
         },
     ],
@@ -60,7 +60,7 @@ const data: PersonaData = {
         },
         {
             q: 'How much for a 5-person team?',
-            a: 'Free until the AI is needed. The Pro tier is $8 per user per month — about $40 a month for a team of five. Two months free if you pay yearly.',
+            a: 'Free until you outgrow it. The Pro tier is $8 per user per month — about $40 a month for a team of five. Two months free if you pay yearly.',
         },
     ],
     close: {
@@ -72,7 +72,7 @@ const data: PersonaData = {
 export const metadata: Metadata = buildPageMetadata({
     title: 'kanNINJA for small teams',
     description:
-        'A kanban built for teams of 2 to 20. Real-time presence, AI suggestions, honest analytics. Without the enterprise weight.',
+        'A kanban built for teams of 2 to 20. Real-time presence, MCP access for your own agent, honest analytics. Without the enterprise weight.',
     path: '/for/teams',
     ogTitle: 'kanNINJA for small teams',
     ogEyebrow: 'For teams',
