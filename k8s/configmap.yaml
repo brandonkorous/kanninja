@@ -29,8 +29,16 @@ data:
   #   Resend rejected the message (403): "The kanninja.com domain is not
   #   verified. Please, add and verify your domain on resend.com/domains"
   #
-  # The verified domain is `send.katana.kanninja.com` — it carries
-  # `v=spf1 include:amazonses.com ~all` and the SES MX.
+  # The verified domain is `katana.kanninja.com`, and the `send.` prefix is a
+  # decoy: Resend's DNS layout for a domain X is
+  #
+  #   resend._domainkey.X   TXT   the DKIM key      <- X is the sending domain
+  #   send.X                TXT   SPF for SES
+  #   send.X                MX    feedback-smtp...  <- bounce handling only
+  #
+  # so the DKIM key living at `resend._domainkey.katana.kanninja.com` is what
+  # identifies the domain. `send.katana.kanninja.com` carries only the SPF and
+  # MX and is NOT a sender — using it earned the same 403 the apex did.
   #
   # WORSE THAN A PLAIN OUTAGE: Better Auth sends in a BACKGROUND TASK, so the
   # request still returns {"success":true} and the UI still says to check your
@@ -39,12 +47,12 @@ data:
   # both affected.
   #
   # DMARC still passes. `_dmarc.kanninja.com` is `p=reject` with relaxed
-  # alignment (adkim=r), and a subdomain From with DKIM d=send.katana.kanninja.com
-  # aligns under the organizational domain.
+  # alignment (adkim=r), and a From at katana.kanninja.com signed with
+  # d=katana.kanninja.com aligns exactly, under the same organizational domain.
   #
   # To send from the apex instead, verify kanninja.com in Resend first — then
   # this line can change back.
-  EMAIL_FROM: "kanNINJA <noreply@send.katana.kanninja.com>"
+  EMAIL_FROM: "kanNINJA <noreply@katana.kanninja.com>"
   AZURE_STORAGE_CONTAINER: "card-attachments"
 ---
 apiVersion: v1
