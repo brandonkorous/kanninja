@@ -12,6 +12,9 @@ export const createCardSchema = z.object({
   startDate: z.string().datetime().optional(),
   dueDate: z.string().datetime().optional(),
   estimatedHours: z.number().nonnegative().optional(),
+  /** Where the new kata lands in its list. Defaults to 'bottom' so
+   *  existing API and MCP callers keep their current behaviour. */
+  position: z.enum(['top', 'bottom']).optional(),
 });
 
 export const updateCardSchema = z.object({

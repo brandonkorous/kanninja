@@ -16,14 +16,27 @@ export function generateIndexAfter(after: string): string {
   return after + CHARS[MID];
 }
 
-/** Generate an index before the given one */
-export function generateIndexBefore(before: string): string {
-  // Find a midpoint character before the first char
-  const firstCharIdx = CHARS.indexOf(before[0]);
-  if (firstCharIdx > 1) {
-    return CHARS[Math.floor(firstCharIdx / 2)];
+/**
+ * Generate an index strictly before the given one, or `null` when the key
+ * space below `before` is exhausted (i.e. `before` is all 'a's, the floor
+ * of this alphabet). Callers that must succeed — inserting at the head of
+ * a list — handle `null` by renormalizing the whole list; see
+ * `cardRepo.headIndexFor`.
+ *
+ * Walks left-to-right and halves the first decrementable character,
+ * keeping the shared prefix. 'an' yields 'ag', not another 'an' — the
+ * previous implementation only inspected `before[0]`, so every key with
+ * an 'a' prefix mapped back onto itself and head-inserts silently
+ * collided.
+ */
+export function generateIndexBefore(before: string): string | null {
+  for (let i = 0; i < before.length; i++) {
+    const idx = CHARS.indexOf(before[i]);
+    if (idx > 0) {
+      return before.slice(0, i) + CHARS[Math.floor(idx / 2)];
+    }
   }
-  return CHARS[0] + CHARS[MID];
+  return null;
 }
 
 /** Generate an index between two existing indices */

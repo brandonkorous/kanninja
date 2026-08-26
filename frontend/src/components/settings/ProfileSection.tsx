@@ -6,6 +6,7 @@ import { useApi } from '@/hooks/use-api';
 import { useToast } from '@/providers/ToastProvider';
 import { getToastErrorMessage } from '@/lib/toast-errors';
 import { Field, Input, Textarea } from '@/components/ui';
+import { AvatarField } from './AvatarField';
 
 interface Profile {
     id: string;
@@ -101,6 +102,11 @@ export function ProfileSection() {
 
             {profile && !error && (
                 <div className="mt-8 space-y-6">
+                    <AvatarField
+                        avatarUrl={profile.avatarUrl}
+                        displayName={profile.displayName}
+                        email={profile.email}
+                    />
                     <Field
                         label="Email"
                         htmlFor="profile-email"

@@ -33,12 +33,28 @@ describe('order-index', () => {
       expect(before < 'n').toBe(true);
     });
 
-    it('handles low characters by prepending', () => {
-      const before = generateIndexBefore('a');
-      expect(before < 'a').toBe(false); // 'a' + 'n' = 'an' which is > 'a'
-      // but lexicographically 'an' > 'a', so this is actually "after" —
-      // the function prepends for low chars
-      expect(before).toBe('an');
+    it('keeps the shared prefix and halves the first decrementable char', () => {
+      // Regression: the old implementation only looked at before[0], so
+      // every 'a'-prefixed key mapped back onto itself and head-inserts
+      // collided instead of ordering.
+      expect(generateIndexBefore('an')).toBe('ag');
+      expect(generateIndexBefore('ag')).toBe('ad');
+    });
+
+    it('stays strictly decreasing across repeated head inserts', () => {
+      let key: string | null = 'n';
+      let previous = key;
+      for (let i = 0; i < 4; i++) {
+        key = generateIndexBefore(previous);
+        expect(key).not.toBeNull();
+        expect(key! < previous).toBe(true);
+        previous = key!;
+      }
+    });
+
+    it('returns null when the key space below is exhausted', () => {
+      expect(generateIndexBefore('a')).toBeNull();
+      expect(generateIndexBefore('aaa')).toBeNull();
     });
   });
 

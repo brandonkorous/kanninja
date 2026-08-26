@@ -14,10 +14,12 @@ export class ApiClientError extends Error {
 
 interface RequestOptions extends Omit<RequestInit, 'body'> {
     body?: unknown;
+    /** Sent verbatim, bypassing JSON serialisation. For file uploads. */
+    rawBody?: BodyInit;
 }
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-    const { body, ...init } = options;
+    const { body, rawBody, ...init } = options;
     const hasBody = body !== undefined;
 
     const headers: Record<string, string> = {
@@ -35,7 +37,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
         // so the Better Auth session cookie only rides along with an explicit
         // credentials mode. Without this every request is anonymous.
         credentials: 'include',
-        body: hasBody ? JSON.stringify(body) : undefined,
+        body: rawBody ?? (hasBody ? JSON.stringify(body) : undefined),
     });
 
     if (!response.ok) {
@@ -63,4 +65,18 @@ export const api = {
     put: <T>(path: string, body?: unknown) => request<T>(path, { method: 'PUT', body }),
 
     delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
+
+    /**
+     * POSTs raw bytes with the file's own content type.
+     *
+     * `request` JSON-stringifies whatever it is handed, which turns a Blob
+     * into the string "[object Object]". Image uploads send the bytes
+     * themselves, so they need their own path through fetch.
+     */
+    postBinary: <T>(path: string, file: Blob) =>
+        request<T>(path, {
+            method: 'POST',
+            headers: { 'Content-Type': file.type },
+            rawBody: file,
+        }),
 };

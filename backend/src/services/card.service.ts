@@ -26,6 +26,7 @@ export const cardService = {
       startDate: input.startDate,
       dueDate: input.dueDate,
       estimatedHours: input.estimatedHours,
+      position: input.position,
       createdBy: userId,
     });
   },
