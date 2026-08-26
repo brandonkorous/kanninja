@@ -26,23 +26,16 @@ const subprocessors: Subprocessor[] = [
     },
     {
         name: 'Microsoft Azure',
-        purpose: 'Database and file storage',
-        data: 'All customer content stored in kanNINJA — boards, lists, cards, comments, attachments, profile data, audit logs. Account credentials, including hashed passwords.',
+        purpose: 'Application hosting, database, and file storage',
+        data: 'All customer content stored in kanNINJA — boards, lists, cards, comments, attachments, profile data, audit logs — and that content while the application is processing it. Account credentials, including hashed passwords. Application logs and metrics.',
         location: 'United States (Central US)',
         privacyUrl: 'https://www.microsoft.com/privacy',
-    },
-    {
-        name: 'Google Cloud',
-        purpose: 'Application hosting',
-        data: 'All customer content while it is being processed by the application; logs and metrics.',
-        location: 'United States (us-central1)',
-        privacyUrl: 'https://cloud.google.com/terms/cloud-privacy-notice',
     },
     {
         name: 'Azure OpenAI (Microsoft)',
         purpose: 'Voice-note transcription',
         data: 'The audio clip you record when creating a card by voice, used only to produce a transcript. Not used to train models. We do not retain the audio.',
-        location: 'United States',
+        location: 'United States (East US 2)',
         privacyUrl: 'https://privacy.microsoft.com/privacystatement',
     },
     {
@@ -95,7 +88,7 @@ export default function SubprocessorsPage() {
             eyebrow="Subprocessors"
             headlineBefore="The names"
             headlineItalic="behind the scenes."
-            lastUpdatedISO="2026-08-07"
+            lastUpdatedISO="2026-08-26"
             effectiveISO="2026-04-24"
             contactEmail="privacy@kanninja.com"
             intro={

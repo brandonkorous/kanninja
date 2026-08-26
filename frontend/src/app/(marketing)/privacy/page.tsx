@@ -19,7 +19,7 @@ export default function PrivacyPage() {
             eyebrow="Privacy"
             headlineBefore="Plain English,"
             headlineItalic="no fine print."
-            lastUpdatedISO="2026-04-24"
+            lastUpdatedISO="2026-08-26"
             effectiveISO="2026-04-24"
             contactEmail="privacy@kanninja.com"
             intro={

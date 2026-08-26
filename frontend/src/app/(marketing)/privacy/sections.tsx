@@ -139,10 +139,10 @@ export const privacySections: LegalSectionData[] = [
                     contract that limits what they can do with it. The current list
                     is on our{' '}
                     <Link href="/subprocessors">Subprocessors page</Link>. It
-                    includes Stripe (payments), Microsoft Azure (database and file
-                    storage), Google Cloud (application hosting), Azure OpenAI
-                    (voice transcription), Microsoft Clarity (session replay),
-                    Google Analytics (web analytics), and Resend (email).
+                    includes Stripe (payments), Microsoft Azure (application
+                    hosting, database, and file storage), Azure OpenAI (voice
+                    transcription), Microsoft Clarity (session replay), Google
+                    Analytics (web analytics), and Resend (email).
                 </p>
                 <p>
                     Beyond subprocessors, we share information only:

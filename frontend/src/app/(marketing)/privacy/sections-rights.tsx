@@ -195,8 +195,8 @@ export const privacyRightsSections: LegalSectionData[] = [
                 <h3>International transfers</h3>
                 <p>
                     kanNINJA is operated from the United States and your data is
-                    processed in the United States (Google Cloud us-central1 and
-                    Microsoft Azure Central US). If you use
+                    processed in the United States (Microsoft Azure Central US,
+                    and East US 2 for voice transcription). If you use
                     the service from outside the United States, you consent to
                     that transfer and processing.
                 </p>
