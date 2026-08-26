@@ -299,16 +299,7 @@ jobs:
                   # DATABASE_ADMIN_URL is read separately below — it is used by
                   # the migration Jobs and must NOT reach the running app, which
                   # connects as the restricted `kanninja_app` role.
-                  #
-                  # CLERK_* are here rather than in `required` because they are
-                  # OUTGOING: they keep the legacy verification branch in
-                  # require-auth.ts alive as the rollback during the Better Auth
-                  # window, and clearing them at T+7d is what disables it. A
-                  # deploy after that point must not start failing for their
-                  # absence.
                   optional=(
-                    CLERK_SECRET_KEY
-                    CLERK_WEBHOOK_SECRET
                     # Vestigial: still declared in config/env.ts, read by
                     # nothing since built-in AI was removed. Carried as optional
                     # rather than deleted so an existing vault entry does not

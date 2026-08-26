@@ -22,10 +22,6 @@ export default defineConfig({
         // Schema migrations. Reads ./drizzle relative to the working directory,
         // which is why the Dockerfile copies that folder into /app.
         'src/db/migrate.ts',
-        // The Clerk -> Better Auth data migration (docs/migration-runbook.md
-        // Track D Phase 2). One-shot, but it runs against the private database
-        // exactly like the migrator does.
-        'src/scripts/migrate-clerk-users.ts',
         'src/scripts/backfill-profile-user-id.ts',
         'src/scripts/seed-auth-users-from-profiles.ts',
         // Copies Clerk-hosted profile pictures into our own storage. One-shot,

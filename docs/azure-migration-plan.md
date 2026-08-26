@@ -20,36 +20,48 @@
 >
 > ### What is NOT done
 >
-> **1. Avatar preservation - TIME-BOXED, do before deleting Clerk.**
-> All 9 `profiles.avatar_url` values point at `img.clerk.com`. They are fetchable
-> only while the Clerk instance exists; once it is deleted they are gone and every
-> user drops to initials. kanNINJA has **no avatar upload path at all** - Clerk
-> supplied every image, and `avatarUrl` is only ever read.
->
-> Building upload is a separate, unhurried job with one decision worth making
-> deliberately: card attachments use short-lived SAS URLs, which is right for
-> private files and wrong for `<img src>` (the URL expires and caching breaks).
-> Either a public container with unguessable paths, or stream through the API the
-> way sparx does for media.
->
-> **2. Cleanup.**
-> - `SUPABASE-DATABASE-URL` in Key Vault - a live credential to a deleted project
-> - `data-migration-creds` Secret in the `kanninja` namespace
-> - `v2/infra/gcp/` - documents a cluster nobody can reach
-> - `.github/workflows/seed-keyvault.yml` - one-shot, never needed
-> - the Clerk code (8 files). **Already inert**: no `CLERK_*` key was ever loaded
->   into the vault, so the legacy branch in `require-auth.ts` cannot activate.
->   Removing it is cosmetic, not a cutover step.
-> - 5 dead Clerk DNS records in Cloudflare: `accounts`, `clerk`, `clk._domainkey`,
->   `clk2._domainkey`, `clkmail`
-> - `img.clerk.com` and `*.supabase.co` in `frontend/next.config.ts`
-> - this document, and `docs/deployment.md`, which still describe the move as
->   pending
->
-> **3. Blocked - the GCP account is unreachable.**
+> **Blocked - the GCP account is unreachable.**
 > The GKE `kanninja` namespace, the Artifact Registry repo, the `kanninja-pool`
 > WIF provider and the `kanninja-deployer` service account all still exist and
 > keep billing. They cannot be deleted, and there is no rollback to GKE.
+>
+> **Yours to do.**
+> - Delete the Clerk instance. Safe as of 2026-08-26: the avatars are off it
+>   (see below) and no `CLERK_*` value is read by anything.
+> - Delete 5 dead Clerk DNS records in Cloudflare: `accounts`, `clerk`,
+>   `clk._domainkey`, `clk2._domainkey`, `clkmail`.
+>
+> **Deferred, deliberately.**
+> `profiles.clerk_user_id` is still in the schema. Dropping a column is a
+> migration against live data for no functional gain, so it waits for a change
+> that touches that table anyway.
+>
+> ### Done since the cutover
+>
+> **Avatars are ours (2026-08-26).**
+> All 9 avatars were `img.clerk.com` URLs and there was no upload path at all -
+> Clerk supplied every image. `preserve-clerk-avatars` sorted them into the two
+> things a Clerk URL can be: a `proxy` payload is a real Google photo (4 of
+> them, copied into the `avatars` container), a `default` payload is Clerk's
+> generated grey-initials placeholder (5 of them, NULLed so the app's own
+> initials render instead of another vendor's default being baked in). Verified
+> from outside the cluster: all four serve 200 from `api.kanninja.com` with the
+> right byte counts, and the served bytes hash to the name in their own path.
+>
+> A real upload control now exists in settings, and `avatarUrl` is no longer
+> accepted by `PATCH /users/me` - it let any member point every other member's
+> browser at a host of their choosing.
+>
+> **Clerk is out of the code.** The legacy branch in `require-auth`, the
+> webhook route, the `CLERK_*` env vars, `@clerk/fastify` and `svix` are gone.
+> Historical comments explaining why things are shaped the way they are stayed.
+>
+> **Cleanup.** `infra/gcp/` (documented a cluster nobody can reach),
+> `seed-keyvault.yml` (one-shot), `migrate-clerk-users.ts`, the
+> `SUPABASE-DATABASE-URL` vault secret, the `data-migration-creds` Secret, and
+> the `img.clerk.com` / `*.supabase.co` entries in `next.config.ts`.
+> `deployment.md` described GKE, Artifact Registry, GitHub Actions secrets and
+> uncopied migrations - all four wrong since the cutover - and was rewritten.
 >
 > ### Two things that cost the most time
 >

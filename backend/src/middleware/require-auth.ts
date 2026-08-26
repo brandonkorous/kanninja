@@ -1,5 +1,4 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { verifyToken } from '@clerk/fastify';
 import { fromNodeHeaders } from 'better-auth/node';
 import { env } from '../config/env.js';
 import { auth } from '../lib/auth.js';
@@ -13,19 +12,14 @@ const API_KEY_PREFIX = 'ninja_live_';
 
 /**
  * The single authentication chokepoint — every protected route runs through
- * this preHandler. Four credential shapes reach it, in this order:
+ * this preHandler. Three credential shapes reach it, in this order:
  *
  *   1. `Authorization: Bearer ninja_live_…`  → API key (stdio MCP, scripts)
  *   2. `Authorization: Bearer <jwt>`         → MCP OAuth token (local HMAC)
  *   3. Session cookie                        → Better Auth (browsers)
- *   4. `Authorization: Bearer <jwt>`         → Clerk (LEGACY, see below)
  *
  * Bearer tokens are checked before the cookie because machine clients never
- * send cookies, so a bearer header is an unambiguous signal — and it keeps the
- * pre-existing API-key and MCP paths byte-for-byte unchanged.
- *
- * Branch 4 exists only for the Better Auth rollback window. It is disabled by
- * clearing CLERK_SECRET_KEY, and the whole branch is deleted at T+7d.
+ * send cookies, so a bearer header is an unambiguous signal.
  */
 export async function requireAuth(request: FastifyRequest, _reply: FastifyReply) {
   const authHeader = request.headers.authorization;
@@ -40,7 +34,7 @@ export async function requireAuth(request: FastifyRequest, _reply: FastifyReply)
       return;
     }
 
-    // MCP JWT — local HMAC, no network. Tried before Clerk because it's free.
+    // MCP JWT — local HMAC, no network. Tried early because it's free.
     if (env.MCP_JWT_SECRET && token.split('.').length === 3) {
       try {
         const claims = oauthService.verifyAccessToken(token);
@@ -65,10 +59,9 @@ export async function requireAuth(request: FastifyRequest, _reply: FastifyReply)
 
     let profileId = await resolveProfileId({ userId: session.user.id });
     if (!profileId) {
-      // A session exists but no profile does. Happens for users created by the
-      // Clerk import (which seeds auth_users but leaves provisioning to the
-      // backfill) and if a databaseHooks failure ever slipped through.
-      // provisionProfile is idempotent, so this is safe to race.
+      // A session exists but no profile does — the case a databaseHooks
+      // failure would leave behind. provisionProfile is idempotent, so this is
+      // safe to race.
       profileId = await provisionProfile({
         userId: session.user.id,
         email: session.user.email,
@@ -81,35 +74,5 @@ export async function requireAuth(request: FastifyRequest, _reply: FastifyReply)
     return;
   }
 
-  // ---------------------------------------------------------------------
-  // LEGACY: Clerk bearer token. Delete this block, the @clerk/fastify
-  // dependency, and CLERK_SECRET_KEY once the rollback window has closed.
-  // ---------------------------------------------------------------------
-  if (token && env.CLERK_SECRET_KEY) {
-    const clerkUserId = await verifyClerkToken(token);
-    const profileId = await resolveProfileId({ clerkUserId });
-    if (profileId) {
-      request.clerkUserId = clerkUserId;
-      request.profileId = profileId;
-      return;
-    }
-    // No profile for a valid Clerk token means the user was created after the
-    // Better Auth cutover and rolled back into. There is nothing sensible to
-    // do but reject — the old lazy Clerk sync would create a *second* profile
-    // and silently fork their data.
-    throw AppError.unauthorized('Account not available on this authentication method');
-  }
-
   throw AppError.unauthorized('Missing or invalid credentials');
-}
-
-async function verifyClerkToken(token: string): Promise<string> {
-  try {
-    const payload = await verifyToken(token, { secretKey: env.CLERK_SECRET_KEY });
-    if (!payload.sub) throw AppError.unauthorized('Invalid token: no subject');
-    return payload.sub;
-  } catch (error) {
-    if (error instanceof AppError) throw error;
-    throw AppError.unauthorized('Invalid or expired token');
-  }
 }

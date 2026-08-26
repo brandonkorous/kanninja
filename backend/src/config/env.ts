@@ -25,17 +25,10 @@ const envSchema = z.object({
   PUBLIC_API_URL: z.string().default('http://localhost:3001'),
 
 
-  // Clerk — OUTGOING. Kept only so the legacy verification branch in
-  // require-auth.ts stays live through the Better Auth rollback window.
-  // Removing these vars is what disables that branch. Delete at T+7d.
-  CLERK_SECRET_KEY: z.string().default(''),
-  CLERK_PUBLISHABLE_KEY: z.string().default(''),
-  CLERK_WEBHOOK_SECRET: z.string().default(''),
-
   // Better Auth — signs session cookies and the cookie cache. Rotating this
   // signs every user out, so treat it as long-lived. Defaults to '' rather
-  // than being required so the existing Clerk-only deploy keeps booting;
-  // src/lib/auth.ts fails loudly if it's empty in production.
+  // than being required so a local dev boot doesn't need one; src/lib/auth.ts
+  // fails loudly if it's empty in production.
   BETTER_AUTH_SECRET: z.string().default(''),
   // Public origin of the API itself (where /api/auth/* is served from), e.g.
   // https://api.kanninja.com. Better Auth builds OAuth callback URLs from it.

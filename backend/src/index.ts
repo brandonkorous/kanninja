@@ -9,7 +9,6 @@ import { authPlugin } from './plugins/auth.js';
 import { betterAuthPlugin } from './plugins/better-auth.js';
 import { auditMcpPlugin } from './plugins/audit-mcp.js';
 import { healthRoutes } from './routes/health.js';
-import { clerkWebhookRoutes } from './routes/auth/webhooks.js';
 import { realtimeRoutes } from './routes/realtime/index.js';
 import { boardRoutes } from './routes/boards/index.js';
 import { boardClansRoutes } from './routes/boards/clans.js';
@@ -80,7 +79,7 @@ async function start() {
   });
 
   // Capture the raw request body on opt-in routes (config: { rawBody: true }).
-  // Webhook signature verification (Stripe, Clerk/svix, integration HMACs) must
+  // Webhook signature verification (Stripe, integration HMACs) must
   // hash the exact bytes the sender signed — a re-serialized request.body won't
   // match. Registered before the routes; global:false keeps it off every other
   // route, runFirst captures before the JSON body parser runs.
@@ -109,7 +108,6 @@ async function start() {
 
   // Routes
   await fastify.register(healthRoutes);
-  await fastify.register(clerkWebhookRoutes);
   await fastify.register(realtimeRoutes);
   await fastify.register(boardRoutes);
   await fastify.register(boardClansRoutes);

@@ -27,10 +27,6 @@ const nextConfig: NextConfig = {
     // Clerk and Supabase hosts that used to be here are gone with them.
     remotePatterns: [
       { protocol: 'https', hostname: 'api.kanninja.com' },
-      // Still here ONLY until preserve-clerk-avatars has run against
-      // production. Removing it before then breaks the four real photos that
-      // are still Clerk URLs. Goes out with the rest of the Clerk cleanup.
-      { protocol: 'https', hostname: 'img.clerk.com' },
       { protocol: 'http', hostname: 'localhost', port: '3001' },
     ],
   },

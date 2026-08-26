@@ -17,10 +17,11 @@ kanNINJA v2 is a ground-up rebuild of a Kanban board SaaS designed to be driven 
 | DB Layer | Drizzle ORM → Azure Database for PostgreSQL | 0.45 |
 | Auth | Better Auth (self-hosted, custom UI) | 1.6 |
 | Payments | Stripe | 17.7 |
-| Storage | Azure Blob Storage (card attachments) | |
+| Storage | Azure Blob Storage — `card-attachments` (SAS URLs) and `avatars` (private, streamed through the API) | |
 | Email | Resend (verification codes, password resets) | |
 | Real-time | WebSocket (@fastify/websocket) broadcast + presence | |
 | Monorepo | pnpm workspaces | |
+| Hosting | Azure AKS (`aks-sparx-prod-cus`, Central US), GHCR images, Key Vault secrets | |
 | Validation | Zod (shared between FE/BE) | 3.25 |
 
 ## Commands
@@ -106,7 +107,7 @@ Better Auth runs **inside the Fastify backend** at `/api/auth/*` — there is no
 4. Fastify `require-auth` resolves the session, then `profiles.user_id` → `profiles.id`
 5. Sign-up provisioning (profile + personal clan + admin membership) runs in Better Auth's `databaseHooks.user.create.after` — see `services/profile-provisioning.service.ts`
 
-`require-auth` accepts four credential shapes, in this order: `ninja_live_*` API keys, MCP OAuth JWTs, the session cookie, and — until T+7d after cutover — legacy Clerk tokens.
+`require-auth` accepts three credential shapes, in this order: `ninja_live_*` API keys, MCP OAuth JWTs, then the session cookie. Bearer tokens are checked first because machine clients never send cookies.
 
 ## Database
 

@@ -7,8 +7,6 @@ declare module 'fastify' {
   interface FastifyRequest {
     /** Better Auth `auth_users.id`. Set on the browser session path. */
     authUserId?: string;
-    /** Clerk user id. LEGACY — set only by the outgoing Clerk branch. */
-    clerkUserId?: string;
     /** `profiles.id`. The only identity the rest of the app should read. */
     profileId?: string;
     apiKeyId?: string;
@@ -20,7 +18,6 @@ declare module 'fastify' {
 
 export const authPlugin = fp(async (fastify) => {
   fastify.decorateRequest('authUserId', undefined);
-  fastify.decorateRequest('clerkUserId', undefined);
   fastify.decorateRequest('profileId', undefined);
   fastify.decorateRequest('apiKeyId', undefined);
   fastify.decorateRequest('mcpScopes', undefined);
@@ -29,21 +26,16 @@ export const authPlugin = fp(async (fastify) => {
 });
 
 /**
- * Translates an auth-provider id into the application identity
- * (`profiles.id`). Exactly one of the two keys should be supplied.
+ * Translates a Better Auth user id into the application identity
+ * (`profiles.id`), which is the only identity the rest of the app reads.
  */
-export async function resolveProfileId(key: {
-  userId?: string;
-  clerkUserId?: string;
-}): Promise<string | null> {
-  const where = key.userId
-    ? eq(profiles.userId, key.userId)
-    : key.clerkUserId
-      ? eq(profiles.clerkUserId, key.clerkUserId)
-      : null;
+export async function resolveProfileId(key: { userId?: string }): Promise<string | null> {
+  if (!key.userId) return null;
 
-  if (!where) return null;
-
-  const [profile] = await db.select({ id: profiles.id }).from(profiles).where(where).limit(1);
+  const [profile] = await db
+    .select({ id: profiles.id })
+    .from(profiles)
+    .where(eq(profiles.userId, key.userId))
+    .limit(1);
   return profile?.id ?? null;
 }

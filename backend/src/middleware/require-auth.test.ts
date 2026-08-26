@@ -7,7 +7,7 @@ import Fastify from 'fastify';
  * which is exactly the code you don't want to swap providers in blind.
  *
  * Each collaborator is mocked so the branches can be exercised without a
- * database, a Clerk instance, or a real session.
+ * database or a real session.
  */
 
 const mocks = vi.hoisted(() => ({
@@ -16,10 +16,8 @@ const mocks = vi.hoisted(() => ({
   getSession: vi.fn(),
   resolveProfileId: vi.fn(),
   provisionProfile: vi.fn(),
-  verifyClerkToken: vi.fn(),
   env: {
     MCP_JWT_SECRET: 'test-mcp-secret',
-    CLERK_SECRET_KEY: 'sk_test_legacy',
     NODE_ENV: 'test' as const,
   },
 }));
@@ -38,7 +36,6 @@ vi.mock('../plugins/auth.js', () => ({ resolveProfileId: mocks.resolveProfileId 
 vi.mock('../services/profile-provisioning.service.js', () => ({
   provisionProfile: mocks.provisionProfile,
 }));
-vi.mock('@clerk/fastify', () => ({ verifyToken: mocks.verifyClerkToken }));
 
 const { requireAuth } = await import('./require-auth.js');
 
@@ -46,7 +43,6 @@ const { requireAuth } = await import('./require-auth.js');
 async function buildApp() {
   const app = Fastify({ logger: false });
   app.decorateRequest('authUserId', undefined);
-  app.decorateRequest('clerkUserId', undefined);
   app.decorateRequest('profileId', undefined);
   app.decorateRequest('apiKeyId', undefined);
   app.decorateRequest('mcpScopes', undefined);
@@ -61,7 +57,6 @@ async function buildApp() {
   app.get('/probe', { preHandler: [requireAuth] }, async (request) => ({
     profileId: request.profileId,
     authUserId: request.authUserId,
-    clerkUserId: request.clerkUserId,
     apiKeyId: request.apiKeyId,
     mcpClientId: request.mcpClientId,
   }));
@@ -72,7 +67,6 @@ async function buildApp() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.env.CLERK_SECRET_KEY = 'sk_test_legacy';
   mocks.env.MCP_JWT_SECRET = 'test-mcp-secret';
   mocks.getSession.mockResolvedValue(null);
 });
@@ -99,9 +93,8 @@ describe('requireAuth', () => {
 
       expect(res.statusCode).toBe(200);
       expect(res.json()).toMatchObject({ profileId: 'profile-1', apiKeyId: 'key-9' });
-      // The whole point of ordering the branches: no session lookup, no Clerk.
+      // The whole point of ordering the branches: no session lookup at all.
       expect(mocks.getSession).not.toHaveBeenCalled();
-      expect(mocks.verifyClerkToken).not.toHaveBeenCalled();
     });
 
     it('propagates a rejected key as an error rather than falling through', async () => {
@@ -207,62 +200,24 @@ describe('requireAuth', () => {
     });
   });
 
-  describe('legacy Clerk branch', () => {
-    it('accepts a Clerk token for a user who already has a profile', async () => {
+  describe('an unrecognised bearer token', () => {
+    it('is rejected rather than falling through to anonymous access', async () => {
+      // This used to reach the legacy Clerk branch. With Clerk gone there is
+      // nothing left to try, and the one behaviour that must not regress is
+      // the request being refused instead of quietly arriving unauthenticated.
       mocks.verifyAccessToken.mockImplementation(() => {
         throw new Error('not mcp');
       });
-      mocks.verifyClerkToken.mockResolvedValue({ sub: 'user_2clerk' });
-      mocks.resolveProfileId.mockImplementation(async (key: { clerkUserId?: string }) =>
-        key.clerkUserId === 'user_2clerk' ? 'profile-6' : null,
-      );
       const app = await buildApp();
 
       const res = await app.inject({
         method: 'GET',
         url: '/probe',
-        headers: { authorization: 'Bearer clerk.jwt.token' },
-      });
-
-      expect(res.statusCode).toBe(200);
-      expect(res.json()).toMatchObject({ profileId: 'profile-6', clerkUserId: 'user_2clerk' });
-    });
-
-    it('rejects rather than forking data when a Clerk user has no profile', async () => {
-      // Post-cutover signup, rolled back into. Creating a second profile here
-      // would silently split the user's data across two identities.
-      mocks.verifyAccessToken.mockImplementation(() => {
-        throw new Error('not mcp');
-      });
-      mocks.verifyClerkToken.mockResolvedValue({ sub: 'user_2new' });
-      mocks.resolveProfileId.mockResolvedValue(null);
-      const app = await buildApp();
-
-      const res = await app.inject({
-        method: 'GET',
-        url: '/probe',
-        headers: { authorization: 'Bearer clerk.jwt.token' },
+        headers: { authorization: 'Bearer some.other.jwt' },
       });
 
       expect(res.statusCode).toBe(401);
       expect(mocks.provisionProfile).not.toHaveBeenCalled();
-    });
-
-    it('is disabled by clearing CLERK_SECRET_KEY', async () => {
-      mocks.env.CLERK_SECRET_KEY = '';
-      mocks.verifyAccessToken.mockImplementation(() => {
-        throw new Error('not mcp');
-      });
-      const app = await buildApp();
-
-      const res = await app.inject({
-        method: 'GET',
-        url: '/probe',
-        headers: { authorization: 'Bearer clerk.jwt.token' },
-      });
-
-      expect(res.statusCode).toBe(401);
-      expect(mocks.verifyClerkToken).not.toHaveBeenCalled();
     });
   });
 });
