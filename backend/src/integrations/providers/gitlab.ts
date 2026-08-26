@@ -12,7 +12,7 @@ import type {
 export const gitlabProvider: IntegrationProvider = {
   id: 'gitlab',
   name: 'GitLab',
-  requiredTier: 'pro',
+  requiredTier: 'clan',
 
   getAuthUrl(state: string, redirectUri: string): string {
     const baseUrl = env.GITLAB_INSTANCE_URL || 'https://gitlab.com';

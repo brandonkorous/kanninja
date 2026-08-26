@@ -7,24 +7,24 @@
 
 export const PRICING_FAQS: { q: string; a: string }[] = [
     {
-        q: 'Why is one of the tiers called "Clan"?',
-        a: "A clan in kanNINJA is the group of people you share boards with. A wedding party. A soccer team. A gaming group. The Clan tier is for life — the people you live and play with, not the people you go to work with.",
+        q: 'Why is the paid plan called "Clan"?',
+        a: "A clan is the group you share boards with, and a seat is one person in it — so the plan is named after the thing you are actually buying. Everyone else calls this tier Pro, which tells you nothing.",
     },
     {
         q: 'Where is the AI?',
         a: "There isn't one, and that's deliberate. kanNINJA used to ship its own assistant; we took it out. You already pay for an agent that is better than anything we would run on a $10 plan, so we gave it 42 tools instead and got out of the way.",
     },
     {
-        q: 'So what does a plan actually buy me?',
-        a: "Seats, storage, templates, and how fast your agent may call us. There is no monthly token cap — your agent runs on your LLM, not ours, so the only thing worth metering is throughput.",
+        q: 'Why only two tiers?',
+        a: "Because we could only defend two. The old grid sold five tiers on eight differences, and six of those were never enforced anywhere in the product — single sign-on was a checkbox with nothing behind it. Rather than build four features to justify a price list, we deleted the price list.",
     },
     {
-        q: 'What happens when I hit my seat limit?',
-        a: "On Pro and Business, additional seats are billed at $4 and $6 respectively — no upgrade required. On Free and Clan, you'll need to move up a tier. Your boards stay where they are. Nobody loses access mid-week.",
+        q: 'What happens when I add someone?',
+        a: "On the Clan plan there is no seat limit — a new person is another $12 on the next invoice, and removing them takes it back off. Free stops at 10 seats, which is more than most households and soccer teams ever need. Either way your boards stay where they are and nobody loses access mid-week.",
     },
     {
-        q: 'Can I downgrade later?',
-        a: "Yes. The features you upgraded for stop working at the next billing cycle. Your data stays put.",
+        q: 'Can I go back to Free?',
+        a: "Yes, at the next billing cycle. If you are over 10 seats you will need to remove people first — we will not delete anyone for you. Your boards stay put either way.",
     },
     {
         q: 'Do you send my boards to a model?',

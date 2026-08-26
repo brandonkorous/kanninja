@@ -14,7 +14,7 @@ const SCOPES = ['Files.ReadWrite', 'offline_access'];
 export const onedriveProvider: IntegrationProvider = {
   id: 'onedrive',
   name: 'OneDrive',
-  requiredTier: 'business',
+  requiredTier: 'clan',
 
   getAuthUrl(state: string, redirectUri: string): string {
     const tenant = env.MICROSOFT_TENANT_ID || 'common';

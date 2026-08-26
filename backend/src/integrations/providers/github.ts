@@ -15,7 +15,7 @@ const SCOPES = ['repo', 'read:org'];
 export const githubProvider: IntegrationProvider = {
   id: 'github',
   name: 'GitHub',
-  requiredTier: 'pro',
+  requiredTier: 'clan',
 
   getAuthUrl(state: string, redirectUri: string): string {
     const params = new URLSearchParams({

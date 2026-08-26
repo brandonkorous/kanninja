@@ -56,10 +56,24 @@ const envSchema = z.object({
 
   // Azure OpenAI — Whisper transcription only. kanNINJA runs no reasoning
   // models of its own; agents bring their own via MCP. See config/azure-openai.ts.
-  AZURE_OPENAI_ENDPOINT: z.string().default('https://oai-jotdojo-prod-eus2.openai.azure.com/'),
+  // Whisper transcription for voice capture — kanNINJA's OWN Azure OpenAI
+  // account (oai-kanninja-prod-eus2), supplied from Key Vault.
+  //
+  // DEFAULTS TO EMPTY, and that is the point. This used to default to
+  // `https://oai-jotdojo-prod-eus2.openai.azure.com/` with the deployment
+  // defaulting to `jotdojo-speech`, so a deployment that set neither silently
+  // transcribed on ANOTHER PRODUCT'S account, against its key and inside its
+  // rate limit. A default that quietly works by borrowing someone else's
+  // resource is worse than one that does nothing: the failure only appears when
+  // that other team rotates a key.
+  //
+  // Empty is a supported state. config/azure-openai.ts builds its client
+  // lazily and returns a 503 naming these variables, so voice capture switches
+  // off and the rest of the API is unaffected.
+  AZURE_OPENAI_ENDPOINT: z.string().default(''),
   AZURE_OPENAI_API_KEY: z.string().default(''),
   AZURE_OPENAI_API_VERSION: z.string().default('2024-06-01'),
-  AZURE_OPENAI_SPEECH_DEPLOYMENT: z.string().default('jotdojo-speech'),
+  AZURE_OPENAI_SPEECH_DEPLOYMENT: z.string().default(''),
 
   // Integration system
   INTEGRATION_ENCRYPTION_KEY: z.string().default(''),

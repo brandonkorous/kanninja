@@ -19,7 +19,7 @@ const SCOPES = [
 export const confluenceProvider: IntegrationProvider = {
   id: 'confluence',
   name: 'Confluence',
-  requiredTier: 'business',
+  requiredTier: 'clan',
 
   getAuthUrl(state: string, redirectUri: string): string {
     const params = new URLSearchParams({

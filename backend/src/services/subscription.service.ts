@@ -4,9 +4,10 @@ import { profiles } from '../db/schema/profiles.js';
 import { stripe } from '../config/stripe.js';
 import { eq } from 'drizzle-orm';
 import { AppError } from '../utils/errors.js';
-import { SubscriptionTier } from '@kanninja/shared';
+import { SubscriptionTier, isPerSeat, billableSeats } from '@kanninja/shared';
 import { env } from '../config/env.js';
-import { STRIPE_PRICE_IDS, tierFromPriceId, isBasePriceId, isOveragePriceId } from '../config/stripe-prices.js';
+import { getBasePriceId, tierFromPriceId, isBasePriceId } from '../config/stripe-prices.js';
+import { countOwnedSeats } from './seat-billing.service.js';
 
 export const subscriptionService = {
   async getSubscription(userId: string) {
@@ -71,9 +72,10 @@ export const subscriptionService = {
     }
 
     const sub = stripeSubs.data[0];
-    // Pick the BASE item (not the seat-overage item) when mapping tier.
+    // Map the tier off the base item. A subscription migrated from the flat
+    // model can still carry a stale overage item, so falling back to
+    // items.data[0] is a last resort rather than the normal path.
     const baseItem = sub.items.data.find((i) => isBasePriceId(i.price.id));
-    const overageItem = sub.items.data.find((i) => isOveragePriceId(i.price.id));
     const basePriceId = baseItem?.price.id ?? sub.items.data[0]?.price.id;
     const tier = basePriceId ? tierFromPriceId(basePriceId) : 'free';
     const periodEnd = (sub as { current_period_end?: number }).current_period_end;
@@ -87,7 +89,6 @@ export const subscriptionService = {
         stripeCustomerId: customer.id,
         stripeSubscriptionId: sub.id,
         stripePriceId: basePriceId,
-        stripeOverageSubscriptionItemId: overageItem?.id ?? null,
         subscribed: true,
         subscriptionTier: tier,
         subscriptionEnd,
@@ -98,8 +99,7 @@ export const subscriptionService = {
           stripeCustomerId: customer.id,
           stripeSubscriptionId: sub.id,
           stripePriceId: basePriceId,
-          stripeOverageSubscriptionItemId: overageItem?.id ?? null,
-          subscribed: true,
+            subscribed: true,
           subscriptionTier: tier,
           subscriptionEnd,
           updatedAt: new Date(),
@@ -136,14 +136,18 @@ export const subscriptionService = {
     if (input.tier === SubscriptionTier.FREE) {
       throw AppError.validationError('Invalid tier for checkout');
     }
-    if (input.tier === SubscriptionTier.ENTERPRISE) {
-      throw AppError.validationError('Enterprise is sales-only — contact us instead of self-serve checkout');
-    }
+    // Throws with a message naming the missing price rather than handing
+    // Stripe an empty string.
+    const priceId = getBasePriceId(input.tier, input.interval);
 
-    const priceId = STRIPE_PRICE_IDS[input.tier]?.base[input.interval];
-    if (!priceId) {
-      throw AppError.validationError('Invalid tier/interval combination');
-    }
+    // Per-seat tiers check out for the seats the buyer already has, floored at
+    // the tier minimum — Business is a 5-seat product even on day one. Flat
+    // tiers are always quantity 1. Getting this wrong in either direction bills
+    // the wrong amount from the first invoice, so it is computed, not assumed.
+    const seatsUsed = await countOwnedSeats(input.userId);
+    const quantity = isPerSeat(input.tier)
+      ? Math.max(billableSeats(input.tier, seatsUsed), 1)
+      : 1;
 
     const [profile] = await db
       .select()
@@ -156,11 +160,11 @@ export const subscriptionService = {
       mode: 'subscription',
       payment_method_types: ['card'],
       customer_email: profile.email,
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [{ price: priceId, quantity }],
       allow_promotion_codes: true,
       success_url: input.successUrl,
       cancel_url: input.cancelUrl,
-      metadata: { userId: input.userId, tier: input.tier },
+      metadata: { userId: input.userId, tier: input.tier, seats: String(quantity) },
     });
 
     return { url: session.url };

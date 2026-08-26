@@ -34,9 +34,9 @@ resources:
 # via `kustomize edit set image`. Defaults below are used for manual
 # `kubectl apply -k .` runs.
 images:
-  - name: ghcr.io/brandonkorous/kanninja/backend
+  - name: ghcr.io/brandonkorous/kanninja-backend
     newTag: latest
-  - name: ghcr.io/brandonkorous/kanninja/frontend
+  - name: ghcr.io/brandonkorous/kanninja-frontend
     newTag: latest
-  - name: ghcr.io/brandonkorous/kanninja/mcp-remote
+  - name: ghcr.io/brandonkorous/kanninja-mcp-remote
     newTag: latest

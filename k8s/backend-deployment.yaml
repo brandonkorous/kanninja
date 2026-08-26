@@ -32,7 +32,7 @@ spec:
       # SA pulls them natively. The old GHCR pull-token rotator is retired.
       containers:
         - name: backend
-          image: ghcr.io/brandonkorous/kanninja/backend:latest
+          image: ghcr.io/brandonkorous/kanninja-backend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

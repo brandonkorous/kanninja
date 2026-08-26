@@ -15,7 +15,7 @@ import type {
 export const togglProvider: IntegrationProvider = {
   id: 'toggl',
   name: 'Toggl Track',
-  requiredTier: 'pro',
+  requiredTier: 'clan',
 
   getAuthUrl(_state: string, _redirectUri: string): string {
     // Toggl uses API key auth — no OAuth flow.

@@ -14,7 +14,7 @@ const SCOPES = ['bot', 'applications.commands'];
 export const discordProvider: IntegrationProvider = {
   id: 'discord',
   name: 'Discord',
-  requiredTier: 'pro',
+  requiredTier: 'clan',
 
   getAuthUrl(state: string, redirectUri: string): string {
     const params = new URLSearchParams({

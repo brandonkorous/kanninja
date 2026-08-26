@@ -12,7 +12,7 @@ import type {
 export const genericWebhooksProvider: IntegrationProvider = {
   id: 'generic_webhooks',
   name: 'Webhooks',
-  requiredTier: 'pro',
+  requiredTier: 'clan',
 
   getAuthUrl(_state: string, _redirectUri: string): string {
     // No OAuth — direct connection with auto-generated secret.

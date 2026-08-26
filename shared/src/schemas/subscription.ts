@@ -22,14 +22,21 @@ export const createCheckoutSchema = z.object({
   cancelUrl: z.string().url(),
 });
 
-/** Seat usage snapshot for the billing UI. seatsIncluded is null for
- *  Enterprise (custom). seatOveragePriceMonthly is null on tiers without
- *  overage (Free, Clan, Enterprise). */
+/** Seat snapshot for the billing UI.
+ *
+ *  `seatCap` is non-null ONLY on the tiers that still refuse the next person
+ *  (Free, Clan). Per-seat tiers have no cap, so a UI that reads a null cap as
+ *  "unlimited" and says nothing is wrong — the next seat costs
+ *  `perSeatPriceMonthly` and the invite flow has to say so.
+ *
+ *  `seatsBilled` is what Stripe's quantity should be. It can exceed `seatsUsed`
+ *  because Business bills a 5-seat minimum. */
 export const subscriptionUsageSchema = z.object({
   seatsUsed: z.number().int().min(0),
-  seatsIncluded: z.number().int().min(0).nullable(),
-  seatOverage: z.number().int().min(0),
-  seatOveragePriceMonthly: z.number().nullable(),
+  seatCap: z.number().int().min(0).nullable(),
+  seatsBilled: z.number().int().min(0),
+  minSeats: z.number().int().min(0),
+  perSeatPriceMonthly: z.number().nullable(),
 });
 
 export type Subscription = z.infer<typeof subscriptionSchema>;

@@ -26,7 +26,7 @@ export const transcriptionService = {
       );
     }
 
-    const transcription = await azureOpenAI.audio.transcriptions.create({
+    const transcription = await azureOpenAI().audio.transcriptions.create({
       file: new File([new Uint8Array(audioBuffer)], 'audio.webm', { type: 'audio/webm' }),
       model: SPEECH_DEPLOYMENT,
     });

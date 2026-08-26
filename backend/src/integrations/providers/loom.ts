@@ -12,7 +12,7 @@ import type {
 export const loomProvider: IntegrationProvider = {
   id: 'loom',
   name: 'Loom',
-  requiredTier: 'pro',
+  requiredTier: 'clan',
 
   getAuthUrl(state: string, redirectUri: string): string {
     const params = new URLSearchParams({

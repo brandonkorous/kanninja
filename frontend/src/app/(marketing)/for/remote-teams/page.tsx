@@ -60,7 +60,7 @@ const data: PersonaData = {
         },
         {
             q: 'How much for a 10-person remote team?',
-            a: 'Pro tier: $8 per user per month, roughly $80 a month. Two months free if billed yearly.',
+            a: 'The Clan plan: $12 per seat per month, so $120 a month for ten. Two months free if billed yearly.',
         },
     ],
     close: {

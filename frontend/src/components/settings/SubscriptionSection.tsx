@@ -117,15 +117,19 @@ export function SubscriptionSection() {
 }
 
 function SeatUsageBlock({ usage }: { usage: SubscriptionUsage }) {
-    const { seatsUsed, seatsIncluded, seatOverage, seatOveragePriceMonthly } = usage;
-    const overageCharge =
-        seatOverage > 0 && seatOveragePriceMonthly !== null
-            ? seatOverage * seatOveragePriceMonthly
-            : 0;
-    const atHardCap =
-        seatsIncluded !== null &&
-        seatOveragePriceMonthly === null &&
-        seatsUsed >= seatsIncluded;
+    const { seatsUsed, seatCap, seatsBilled, minSeats, perSeatPriceMonthly } = usage;
+
+    // Three shapes, and they are genuinely different questions:
+    //   capped   (Free, Clan) — "how many left?"
+    //   perSeat  (Pro, Business) — "what does this cost?"
+    //   custom   (Enterprise) — neither; the contract answers it.
+    const capped = seatCap !== null;
+    const perSeat = perSeatPriceMonthly !== null;
+    const atHardCap = capped && seatsUsed >= seatCap;
+    const monthly = perSeat ? seatsBilled * perSeatPriceMonthly : 0;
+    // Business bills five seats whether or not five people are using it, so a
+    // team of three is already paying for the fourth and fifth.
+    const paidAhead = perSeat && seatsBilled > seatsUsed;
 
     return (
         <div className="mt-10 pt-8 border-t border-base-300/60">
@@ -134,15 +138,17 @@ function SeatUsageBlock({ usage }: { usage: SubscriptionUsage }) {
             </p>
             <p className="mt-4 font-display text-2xl font-medium tracking-tight">
                 <span className="font-mono">{seatsUsed}</span>
-                {seatsIncluded !== null ? (
+                {capped ? (
                     <>
                         <span className="text-base-content/40"> of </span>
-                        <span className="font-mono">{seatsIncluded}</span>
+                        <span className="font-mono">{seatCap}</span>
                     </>
                 ) : (
-                    <span className="text-base-content/40"> seats </span>
+                    <span className="text-base-content/40">
+                        {seatsUsed === 1 ? ' seat' : ' seats'}
+                    </span>
                 )}
-                {seatsIncluded === null && (
+                {!capped && !perSeat && (
                     <span className="ml-2 text-eyebrow font-mono uppercase tracking-widest text-base-content/60">
                         Custom
                     </span>
@@ -153,11 +159,21 @@ function SeatUsageBlock({ usage }: { usage: SubscriptionUsage }) {
                     </span>
                 )}
             </p>
-            {seatOverage > 0 && seatOveragePriceMonthly !== null && (
+
+            {perSeat && (
                 <p className="mt-3 text-sm text-base-content/70">
-                    {seatsIncluded} included + <span className="font-mono">{seatOverage}</span>{' '}
-                    extra at <span className="font-mono">${seatOveragePriceMonthly}</span> ={' '}
-                    <span className="font-mono">${overageCharge}</span>/mo overage
+                    <span className="font-mono">{seatsBilled}</span> billed at{' '}
+                    <span className="font-mono">${perSeatPriceMonthly}</span> ={' '}
+                    <span className="font-mono">${monthly}</span>/mo
+                </p>
+            )}
+            {paidAhead && (
+                <p className="mt-2 text-sm text-base-content/70 max-w-md">
+                    Your plan bills a {minSeats}-seat minimum, so the next{' '}
+                    {seatsBilled - seatsUsed === 1
+                        ? 'seat is'
+                        : `${seatsBilled - seatsUsed} seats are`}{' '}
+                    already paid for.
                 </p>
             )}
             {atHardCap && (

@@ -37,12 +37,18 @@ env:
     RESOURCE_GROUP: rg-sparx-prod-cus
     CLUSTER: aks-sparx-prod-cus
     NAMESPACE: kanninja
-    # GHCR, matching jotDOJO and sparx. THESE PACKAGES MUST BE PUBLIC: nothing
-    # in k8s/ carries an imagePullSecret, because the cluster pulls anonymously.
-    # GHCR creates a package PRIVATE on first push, so the first successful
-    # build is followed by a one-time visibility change per package, or every
-    # pod sits in ImagePullBackOff with a 401 that reads like a missing tag.
-    REGISTRY: ghcr.io/brandonkorous/kanninja
+    # GHCR, matching jotDOJO and sparx. Nothing in k8s/ carries an
+    # imagePullSecret because the cluster pulls anonymously, which requires the
+    # packages to be public.
+    #
+    # THE NAMES ARE HYPHENATED — `kanninja-backend`, NOT `kanninja/backend`.
+    # These packages already exist and are already public, with tag history
+    # going back to the first AKS deployment; verified by an anonymous pull
+    # against ghcr.io, which is the same path the kubelet takes. A slash would
+    # address a DIFFERENT, non-existent package, and the first deploy would fail
+    # on a 401 that reads like a missing tag while the real images sat untouched
+    # beside it.
+    REGISTRY: ghcr.io/brandonkorous
     IMAGE_OWNER: brandonkorous
 
 jobs:
@@ -104,7 +110,7 @@ jobs:
               id: meta
               uses: docker/metadata-action@v5
               with:
-                  images: ${{ env.REGISTRY }}/${{ matrix.name }}
+                  images: ${{ env.REGISTRY }}/kanninja-${{ matrix.name }}
                   tags: |
                       type=sha,prefix=sha-,format=short
                       type=raw,value=latest,enable={{is_default_branch}}
@@ -230,12 +236,23 @@ jobs:
             # missing costs exactly one provider, the connect flow reports it,
             # and nothing else degrades.
             #
-            # AZURE_OPENAI_API_KEY is required because it is the ONLY model call
-            # left in the product: Whisper transcription for voice capture
-            # (services/transcription.service.ts). It defaults to '' in env.ts,
-            # so its absence does not stop the server booting — voice capture
+            # The AZURE_OPENAI_* trio is required because Whisper transcription
+            # for voice capture (services/transcription.service.ts) is the ONLY
+            # model call left in the product. All three default to '' in env.ts,
+            # so their absence does not stop the server booting — voice capture
             # simply fails at the moment a user speaks, which is precisely the
             # silent-green failure this list exists to refuse.
+            #
+            # IT USED TO BE THE KEY ALONE, which refused nothing. config/
+            # azure-openai.ts needs ENDPOINT and SPEECH_DEPLOYMENT as well, and
+            # both had been carried by jotDOJO-shaped defaults in env.ts. When
+            # those defaults were correctly emptied, a deploy that read only the
+            # key would have left the pod with no endpoint and no deployment
+            # name: green rollout, healthy pods, and voice 503ing on first use
+            # — with the values sitting in the vault the whole time.
+            #
+            # API_VERSION is NOT here. It has a real default ('2024-06-01') that
+            # is correct unless Azure retires it, so it belongs in `optional`.
             # -----------------------------------------------------------------
             - name: Read secrets from Key Vault
               env:
@@ -255,7 +272,9 @@ jobs:
                     GOOGLE_AUTH_CLIENT_SECRET
                     STRIPE_SECRET_KEY
                     STRIPE_WEBHOOK_SECRET
+                    AZURE_OPENAI_ENDPOINT
                     AZURE_OPENAI_API_KEY
+                    AZURE_OPENAI_SPEECH_DEPLOYMENT
                     INTEGRATION_ENCRYPTION_KEY
                     MCP_JWT_SECRET
                     MCP_S2S_TOKEN
@@ -282,6 +301,10 @@ jobs:
                     # would have failed every deploy on a secret that does
                     # nothing.
                     OPENAI_API_KEY
+                    # Real default in env.ts ('2024-06-01'), so a missing entry
+                    # is correct behaviour rather than a broken deploy. Set it
+                    # in the vault only to pin a different Azure API version.
+                    AZURE_OPENAI_API_VERSION
                     GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET
                     SLACK_CLIENT_ID SLACK_CLIENT_SECRET SLACK_SIGNING_SECRET
                     GITHUB_CLIENT_ID GITHUB_CLIENT_SECRET GITHUB_WEBHOOK_SECRET
@@ -413,7 +436,7 @@ jobs:
                         enableServiceLinks: false
                         containers:
                           - name: migrate
-                            image: ${REGISTRY}/backend:${SHA_TAG}
+                            image: ${REGISTRY}/kanninja-backend:${SHA_TAG}
                             command: ['node', 'dist/db/migrate.js']
                             env:
                               # The MIGRATOR reads DATABASE_URL, so the owner
@@ -535,9 +558,9 @@ jobs:
               run: |
                   set -euo pipefail
                   SHA_TAG="sha-${GITHUB_SHA::7}"
-                  kustomize edit set image "${REGISTRY}/backend=${REGISTRY}/backend:${SHA_TAG}"
-                  kustomize edit set image "${REGISTRY}/frontend=${REGISTRY}/frontend:${SHA_TAG}"
-                  kustomize edit set image "${REGISTRY}/mcp-remote=${REGISTRY}/mcp-remote:${SHA_TAG}"
+                  kustomize edit set image "${REGISTRY}/kanninja-backend=${REGISTRY}/kanninja-backend:${SHA_TAG}"
+                  kustomize edit set image "${REGISTRY}/kanninja-frontend=${REGISTRY}/kanninja-frontend:${SHA_TAG}"
+                  kustomize edit set image "${REGISTRY}/kanninja-mcp-remote=${REGISTRY}/kanninja-mcp-remote:${SHA_TAG}"
                   echo "--- resolved kustomization.yaml ---"
                   cat kustomization.yaml
 

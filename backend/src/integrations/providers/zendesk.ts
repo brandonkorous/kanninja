@@ -13,7 +13,7 @@ import type {
 export const zendeskProvider: IntegrationProvider = {
   id: 'zendesk',
   name: 'Zendesk',
-  requiredTier: 'business',
+  requiredTier: 'clan',
 
   getAuthUrl(state: string, redirectUri: string): string {
     const params = new URLSearchParams({

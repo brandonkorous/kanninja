@@ -11,7 +11,7 @@ import { AppError } from '../../utils/errors.js';
 import { createClanSchema, updateClanSchema } from '@kanninja/shared';
 import {
   assertCanAddSeat,
-  syncSeatOverageToStripe,
+  syncSeatQuantityToStripe,
   getSeatUsage,
 } from '../../services/seat-billing.service.js';
 
@@ -107,9 +107,9 @@ export async function clanRoutes(fastify: FastifyInstance) {
     // Best-effort Stripe sync. Failures are logged but don't block the API
     // response — the seat-state truth is in our DB; Stripe can be reconciled.
     try {
-      await syncSeatOverageToStripe(request.profileId!);
+      await syncSeatQuantityToStripe(request.profileId!);
     } catch (err) {
-      request.log.error({ err, ownerId: request.profileId }, 'syncSeatOverageToStripe failed');
+      request.log.error({ err, ownerId: request.profileId }, 'syncSeatQuantityToStripe failed');
     }
 
     return reply.status(201).send({ data: clan });
@@ -153,9 +153,9 @@ export async function clanRoutes(fastify: FastifyInstance) {
       // Re-sync overage for the clan owner — deleting the clan can drop their
       // unique-seat count, which may reduce or remove the overage line.
       try {
-        await syncSeatOverageToStripe(target.createdBy);
+        await syncSeatQuantityToStripe(target.createdBy);
       } catch (err) {
-        request.log.error({ err, ownerId: target.createdBy }, 'syncSeatOverageToStripe failed');
+        request.log.error({ err, ownerId: target.createdBy }, 'syncSeatQuantityToStripe failed');
       }
       return reply.status(204).send();
     },
@@ -257,9 +257,9 @@ export async function clanRoutes(fastify: FastifyInstance) {
 
       if (clan) {
         try {
-          await syncSeatOverageToStripe(clan.createdBy);
+          await syncSeatQuantityToStripe(clan.createdBy);
         } catch (err) {
-          request.log.error({ err, ownerId: clan.createdBy }, 'syncSeatOverageToStripe failed');
+          request.log.error({ err, ownerId: clan.createdBy }, 'syncSeatQuantityToStripe failed');
         }
       }
       return reply.status(204).send();

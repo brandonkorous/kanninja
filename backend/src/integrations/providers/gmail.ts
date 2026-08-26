@@ -17,7 +17,7 @@ const SCOPES = [
 export const gmailProvider: IntegrationProvider = {
   id: 'gmail',
   name: 'Gmail',
-  requiredTier: 'pro',
+  requiredTier: 'clan',
 
   getAuthUrl(state: string, redirectUri: string): string {
     const params = new URLSearchParams({

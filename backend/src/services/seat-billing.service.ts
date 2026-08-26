@@ -5,11 +5,15 @@ import { eq, and, sql } from 'drizzle-orm';
 import { stripe } from '../config/stripe.js';
 import { AppError } from '../utils/errors.js';
 import {
-  SubscriptionTier,
   SUBSCRIPTION_TIERS,
+  getSeatCap,
+  getMinSeats,
+  billableSeats,
+  isPerSeat,
+  normalizeTier,
   type SubscriptionUsage,
 } from '@kanninja/shared';
-import { getOveragePriceId, isOveragePriceId } from '../config/stripe-prices.js';
+import { isBasePriceId, isPerSeatPriceId } from '../config/stripe-prices.js';
 
 /**
  * Seats are *unique people across owned clans*. A user has one subscription on
@@ -20,27 +24,30 @@ import { getOveragePriceId, isOveragePriceId } from '../config/stripe-prices.js'
  *
  * The same person appearing in two of my clans is one seat, not two.
  */
-/** Snapshot of the owner's current seat usage relative to their tier.
- *  Used by the billing UI. seatsIncluded is null for Enterprise (custom).
- *  seatOveragePriceMonthly is null on tiers without overage (Free, Clan, Enterprise). */
+/** Snapshot of the owner's seat position, for the billing UI.
+ *
+ *  `seatCap` is non-null only on the tiers that still refuse a 16th person
+ *  (Free, Clan). On a per-seat tier there is no cap — the next seat is another
+ *  line on the invoice — so the UI must show a PRICE there, never a limit.
+ *  `seatsBilled` is what Stripe's quantity should be, which on Business is the
+ *  5-seat minimum even when three people are using it. */
 export async function getSeatUsage(ownerId: string): Promise<SubscriptionUsage> {
   const [sub] = await db
     .select({ tier: subscriptions.subscriptionTier })
     .from(subscriptions)
     .where(eq(subscriptions.userId, ownerId))
     .limit(1);
-  const tier = (sub?.tier ?? 'free') as SubscriptionTier;
+  const tier = normalizeTier(sub?.tier);
   const config = SUBSCRIPTION_TIERS[tier];
   const seatsUsed = await countOwnedSeats(ownerId);
-  const seatsIncluded =
-    config.maxUsers === Number.POSITIVE_INFINITY ? null : config.maxUsers;
-  const seatOverage =
-    seatsIncluded === null ? 0 : Math.max(0, seatsUsed - seatsIncluded);
+  const pricing = config.pricing;
+
   return {
     seatsUsed,
-    seatsIncluded,
-    seatOverage,
-    seatOveragePriceMonthly: config.seatOveragePrice,
+    seatCap: getSeatCap(tier),
+    seatsBilled: billableSeats(tier, seatsUsed),
+    minSeats: getMinSeats(tier),
+    perSeatPriceMonthly: pricing.model === 'per_seat' ? pricing.monthly : null,
   };
 }
 
@@ -58,7 +65,6 @@ interface SubRow {
   subscribed: boolean;
   stripeSubscriptionId: string | null;
   stripePriceId: string | null;
-  stripeOverageSubscriptionItemId: string | null;
 }
 
 async function getSub(ownerId: string): Promise<SubRow | null> {
@@ -68,7 +74,6 @@ async function getSub(ownerId: string): Promise<SubRow | null> {
       subscribed: subscriptions.subscribed,
       stripeSubscriptionId: subscriptions.stripeSubscriptionId,
       stripePriceId: subscriptions.stripePriceId,
-      stripeOverageSubscriptionItemId: subscriptions.stripeOverageSubscriptionItemId,
     })
     .from(subscriptions)
     .where(eq(subscriptions.userId, ownerId))
@@ -89,115 +94,83 @@ async function wouldConsumeNewSeat(ownerId: string, newMemberId: string): Promis
 }
 
 /**
- * Throw if adding `newMemberId` to a clan owned by `ownerId` would push the
- * owner past their tier's seat cap on a hard-cap tier (Free, Clan).
+ * Throw if adding `newMemberId` would push the owner past a HARD seat cap.
  *
- * Tiers with seatOveragePrice (Pro, Business) accept overage and don't throw —
- * the caller should still call syncSeatOverageToStripe AFTER the insert to
- * update Stripe quantity.
+ * Only Free and Clan have one. Per-seat tiers pass through: another seat is
+ * billable, not forbidden, and the caller must still run
+ * syncSeatQuantityToStripe AFTER the insert so Stripe's quantity follows.
  *
  * Call this BEFORE inserting the new clan_members row.
  */
 export async function assertCanAddSeat(ownerId: string, newMemberId: string): Promise<void> {
-  // If this person is already in another of the owner's clans, no new seat
-  // is consumed — allow regardless of cap.
+  // Already in another clan this owner runs? Then no new seat is consumed and
+  // the cap is irrelevant.
   if (!(await wouldConsumeNewSeat(ownerId, newMemberId))) return;
 
   const sub = await getSub(ownerId);
-  const tier = (sub?.subscriptionTier ?? 'free') as SubscriptionTier;
+  const tier = normalizeTier(sub?.subscriptionTier);
   const config = SUBSCRIPTION_TIERS[tier];
   if (!config) return;
 
-  // Hard-cap tiers reject when the new seat would exceed maxUsers.
-  // Overage tiers (seatOveragePrice != null) and Enterprise (Infinity) pass through.
-  if (config.seatOveragePrice !== null) return;
-  if (config.maxUsers === Number.POSITIVE_INFINITY) return;
+  const cap = getSeatCap(tier);
+  if (cap === null) return;
 
   const currentSeats = await countOwnedSeats(ownerId);
-  if (currentSeats + 1 > config.maxUsers) {
+  if (currentSeats + 1 > cap) {
     throw AppError.subscriptionRequired(
-      `Your ${config.name} plan allows ${config.maxUsers} seats. Upgrade to add more.`,
+      `Your ${config.name} plan allows ${cap} seats. Upgrade to add more.`,
     );
   }
 }
 
 /**
- * Recompute the owner's unique seat count and update the Stripe subscription's
- * seat-overage line item to match. Idempotent — safe to call after every
- * member add/remove.
+ * Point Stripe's seat quantity at reality.
  *
- * No-ops when:
- *   - The owner has no Stripe subscription (Free or Enterprise tier).
- *   - The owner's tier doesn't support overage (Free, Clan, Enterprise).
+ * Per-seat tiers bill the BASE subscription item with quantity = billable
+ * seats, so there is one line and one number to keep honest. This replaces the
+ * old separate seat-overage item, which only existed because a flat bundle
+ * needed somewhere to put the 16th seat.
  *
- * Creates the overage subscription item on first overage; updates its quantity
- * thereafter; deletes it when seats drop back to or below the included quota.
+ * Idempotent — safe after every member add or remove.
+ *
+ * No-ops when the owner has no Stripe subscription (Free, Enterprise) or is on
+ * a flat tier (Clan), where quantity is always 1.
  */
-export async function syncSeatOverageToStripe(ownerId: string): Promise<void> {
+export async function syncSeatQuantityToStripe(ownerId: string): Promise<void> {
   const sub = await getSub(ownerId);
   if (!sub || !sub.subscribed || !sub.stripeSubscriptionId || !sub.stripePriceId) return;
 
-  const tier = sub.subscriptionTier as SubscriptionTier;
-  const config = SUBSCRIPTION_TIERS[tier];
-  if (!config || config.seatOveragePrice === null) return;
+  const tier = normalizeTier(sub.subscriptionTier);
+  if (!isPerSeat(tier)) return;
+
+  // Refuse to touch a subscription still sitting on a legacy FLAT price. Those
+  // are per-unit too, so setting quantity would bill N x the whole bundle
+  // rather than N seats — the $25 Pro price would become $25 a head. Such a
+  // subscription must be moved onto a per-seat price before its seats can sync.
+  if (!isPerSeatPriceId(sub.stripePriceId)) return;
 
   const seats = await countOwnedSeats(ownerId);
-  const overage = Math.max(0, seats - config.maxUsers);
+  const quantity = billableSeats(tier, seats);
 
-  // Determine billing interval from the base price ID. Cheapest reliable way:
-  // fetch the Stripe subscription and read the base item's price.recurring.interval.
   const stripeSub = await stripe.subscriptions.retrieve(sub.stripeSubscriptionId, {
     expand: ['items.data.price'],
   });
-  const baseItem = stripeSub.items.data.find((i) => i.price.id === sub.stripePriceId);
-  const interval = baseItem?.price.recurring?.interval === 'year' ? 'yearly' : 'monthly';
 
-  const overagePriceId = getOveragePriceId(tier, interval);
-  if (!overagePriceId) return;
+  // Match on the configured base price rather than "the first item": a
+  // subscription migrated from the flat model can still carry a stale overage
+  // item, and updating that one instead would bill seats at the overage rate.
+  const baseItem =
+    stripeSub.items.data.find((i) => i.price.id === sub.stripePriceId) ??
+    stripeSub.items.data.find((i) => i.price.id && isBasePriceId(i.price.id));
+  if (!baseItem) return;
 
-  const existingOverageItem = stripeSub.items.data.find(
-    (i) => i.price.id && isOveragePriceId(i.price.id),
-  );
-
-  if (overage === 0) {
-    if (existingOverageItem) {
-      // Drop the overage line entirely. Stripe will prorate a credit on next invoice.
-      await stripe.subscriptionItems.del(existingOverageItem.id);
-      await db
-        .update(subscriptions)
-        .set({ stripeOverageSubscriptionItemId: null, updatedAt: new Date() })
-        .where(eq(subscriptions.userId, ownerId));
-    }
-    return;
+  if (baseItem.quantity !== quantity) {
+    await stripe.subscriptionItems.update(baseItem.id, { quantity });
   }
-
-  if (existingOverageItem) {
-    if (existingOverageItem.quantity !== overage) {
-      await stripe.subscriptionItems.update(existingOverageItem.id, { quantity: overage });
-    }
-    if (sub.stripeOverageSubscriptionItemId !== existingOverageItem.id) {
-      await db
-        .update(subscriptions)
-        .set({ stripeOverageSubscriptionItemId: existingOverageItem.id, updatedAt: new Date() })
-        .where(eq(subscriptions.userId, ownerId));
-    }
-    return;
-  }
-
-  // First-time overage: add the new subscription item.
-  const created = await stripe.subscriptionItems.create({
-    subscription: sub.stripeSubscriptionId,
-    price: overagePriceId,
-    quantity: overage,
-  });
-  await db
-    .update(subscriptions)
-    .set({ stripeOverageSubscriptionItemId: created.id, updatedAt: new Date() })
-    .where(eq(subscriptions.userId, ownerId));
 }
 
 /**
- * Iterate every active paid subscription and re-sync its overage to Stripe.
+ * Iterate every active paid subscription and re-sync its seat quantity.
  * Safety net for the rare case where a request-time sync silently failed
  * (Stripe outage, transient error). Continues on per-row failure and returns
  * a summary; intended to run from a scheduled job (e.g. K8s CronJob).
@@ -215,7 +188,7 @@ export async function reconcileAllSubscriptions(): Promise<{
   const failures: Array<{ userId: string; error: string }> = [];
   for (const row of rows) {
     try {
-      await syncSeatOverageToStripe(row.userId);
+      await syncSeatQuantityToStripe(row.userId);
     } catch (err) {
       failures.push({
         userId: row.userId,

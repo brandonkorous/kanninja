@@ -14,7 +14,7 @@ const SCOPES = ['repository', 'pullrequest', 'issue', 'webhook'];
 export const bitbucketProvider: IntegrationProvider = {
   id: 'bitbucket',
   name: 'Bitbucket',
-  requiredTier: 'pro',
+  requiredTier: 'clan',
 
   getAuthUrl(state: string, _redirectUri: string): string {
     const params = new URLSearchParams({

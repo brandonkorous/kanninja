@@ -19,7 +19,7 @@ const SCOPES = [
 export const microsoftTeamsProvider: IntegrationProvider = {
   id: 'microsoft_teams',
   name: 'Microsoft Teams',
-  requiredTier: 'pro',
+  requiredTier: 'clan',
 
   getAuthUrl(state: string, redirectUri: string): string {
     const tenant = env.MICROSOFT_TENANT_ID || 'common';

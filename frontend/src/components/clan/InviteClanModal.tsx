@@ -29,21 +29,26 @@ export function InviteClanModal({
     const dialogRef = useRef<HTMLDialogElement>(null);
     const titleId = useId();
 
-    // Show a warning when the next seat will hit a hard cap or trigger overage.
-    // Caveat: an invite to someone already in another of the owner's clans
-    // doesn't actually consume a new seat — but we don't know that until the
-    // invitee accepts (we don't have their profile id yet). Best guess from
-    // the email alone is "this might cost extra," which is the right thing
-    // to surface to the admin.
+    // Warn when the next seat costs something, or is refused outright.
+    //
+    // Under per-seat pricing EVERY new seat is billable, so this is no longer a
+    // threshold warning — it fires on every invite unless the tier's minimum
+    // has already paid for the seat. Caveat: inviting someone already in
+    // another of the owner's clans consumes no new seat, but we cannot know
+    // that from an email alone (no profile id until they accept). "This may
+    // cost extra" is the honest thing to tell an admin.
     const seatWarning = (() => {
         if (!usage) return null;
-        const { seatsUsed, seatsIncluded, seatOveragePriceMonthly } = usage;
-        if (seatsIncluded === null) return null; // Enterprise — custom
-        if (seatsUsed < seatsIncluded) return null; // under cap, no warning
-        if (seatOveragePriceMonthly === null) {
-            return { kind: 'cap' as const };
+        const { seatsUsed, seatCap, seatsBilled, perSeatPriceMonthly } = usage;
+
+        if (seatCap !== null) {
+            return seatsUsed >= seatCap ? { kind: 'cap' as const } : null;
         }
-        return { kind: 'overage' as const, price: seatOveragePriceMonthly };
+        if (perSeatPriceMonthly === null) return null; // Enterprise — custom
+
+        // Already paying a minimum above head count: the next seat is free.
+        if (seatsBilled > seatsUsed) return null;
+        return { kind: 'seat' as const, price: perSeatPriceMonthly };
     })();
 
     useEffect(() => {
@@ -130,7 +135,7 @@ export function InviteClanModal({
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-                        {seatWarning?.kind === 'overage' && (
+                        {seatWarning?.kind === 'seat' && (
                             <div
                                 role="status"
                                 className="rounded-md bg-base-200/60 border border-base-300 px-4 py-3"
@@ -139,10 +144,10 @@ export function InviteClanModal({
                                     Heads up
                                 </p>
                                 <p className="mt-2 text-sm text-base-content/80">
-                                    You&rsquo;re at your included seat count. This invite
-                                    will add{' '}
+                                    Your plan bills per seat. This invite adds{' '}
                                     <span className="font-mono">${seatWarning.price}/mo</span>{' '}
-                                    to the next bill if accepted by someone new.
+                                    to the next bill if accepted by someone new to your
+                                    clans.
                                 </p>
                             </div>
                         )}
@@ -155,7 +160,7 @@ export function InviteClanModal({
                                     At seat limit
                                 </p>
                                 <p className="mt-2 text-sm text-base-content/80">
-                                    Your tier is at its included seat count. The invite
+                                    Your tier is at its seat limit. The invite
                                     will be rejected on accept unless you{' '}
                                     <a
                                         href="/pricing"

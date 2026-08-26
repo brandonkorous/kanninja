@@ -17,7 +17,7 @@ const SCOPES = [
 export const googleDocsProvider: IntegrationProvider = {
   id: 'google_docs',
   name: 'Google Docs',
-  requiredTier: 'pro',
+  requiredTier: 'clan',
 
   getAuthUrl(state: string, redirectUri: string): string {
     const params = new URLSearchParams({

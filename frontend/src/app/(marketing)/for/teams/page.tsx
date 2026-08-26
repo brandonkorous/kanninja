@@ -60,7 +60,7 @@ const data: PersonaData = {
         },
         {
             q: 'How much for a 5-person team?',
-            a: 'Free until you outgrow it. The Pro tier is $8 per user per month — about $40 a month for a team of five. Two months free if you pay yearly.',
+            a: 'Free up to ten seats. Past that the Clan plan is $12 per seat per month — $60 a month for a team of five. Two months free if you pay yearly.',
         },
     ],
     close: {

@@ -83,8 +83,8 @@ and Clerk leave the list; Microsoft Azure joins (database, storage, compute);
 Resend joins (transactional email). **Google Cloud now leaves too** — the
 runbook had it staying as application hosting, which is no longer true.
 
-**Gate 5 — the TLS bootstrap trap.** *(found 2026-08-25, fixed in the repo,
-not yet applied)*
+**Gate 5 — the TLS bootstrap trap. CLOSED** *(found and fixed 2026-08-25;
+released 2026-08-25T12:22Z and verified live)*
 
 kanNINJA's Caddy host blocks existed already and used `import tls_managed` — an
 explicit managed certificate issued at startup. **That can never work on this
@@ -118,10 +118,11 @@ hostnames with no certificate.
 > |---|---|
 > | Postgres | `psql-kanninja-prod-cus` — PG 18, `Standard_B1ms`, 32 GiB, public access **Disabled**, state Ready |
 > | Database | `kanninja` |
-> | Key Vault | `kv-kanninja-prod-cus` — 6 Terraform-owned secrets present |
+> | Key Vault | `kv-kanninja-prod-cus` — 10 Terraform-owned secrets present |
 > | Storage | `stkanninjaprodcus` / `card-attachments` (private), CORS `GET,HEAD,PUT,OPTIONS` from `https://kanninja.com` |
 > | Subnet | `snet-psql-kanninja` `10.20.16.32/28` |
 > | CI identity | `gha-kanninja-prod`, client `1d3c51d4-4ee7-4b17-bba6-87c7daa6e71a` |
+> | Azure OpenAI | `oai-kanninja-prod-eus2` (eastus2) — deployment `kanninja-speech`, whisper-001, **Standard** SKU, capacity 1 |
 >
 > Repo variables `AZURE_CLIENT_ID` / `AZURE_TENANT_ID` /
 > `AZURE_SUBSCRIPTION_ID` / `AZURE_KEY_VAULT_NAME` are set on
@@ -227,18 +228,47 @@ operator would actually look.
 >
 > **Three manual steps remain before the first deploy can succeed:**
 >
-> 1. **Load the vault.** Nine required secrets are still absent:
+> 1. **Load the vault.** Eight required secrets are still absent:
 >    `RESEND-API-KEY`, `GOOGLE-AUTH-CLIENT-ID`, `GOOGLE-AUTH-CLIENT-SECRET`,
->    `STRIPE-SECRET-KEY`, `STRIPE-WEBHOOK-SECRET`, `OPENAI-API-KEY`,
->    `INTEGRATION-ENCRYPTION-KEY`, `MCP-JWT-SECRET`, `MCP-S2S-TOKEN`.
->    Use [`scripts/load-keyvault.ps1`](../scripts/load-keyvault.ps1). These
->    cannot be scripted out of GitHub: **Actions secrets are write-only**, so
->    every value has to come from its original source.
-> 2. **Make the three GHCR packages public** after the first build. GHCR creates
->    a package private, nothing in `k8s/` carries an `imagePullSecret`, and the
->    symptom is `ImagePullBackOff` with a 401 that reads like a missing tag.
-> 3. **Apply the Caddy + `PLATFORM_HOSTNAMES` change** (Gate 5) in the
->    `sparx.works` repo, in a coordinated window.
+>    `STRIPE-SECRET-KEY`, `STRIPE-WEBHOOK-SECRET`, `INTEGRATION-ENCRYPTION-KEY`,
+>    `MCP-JWT-SECRET`, `MCP-S2S-TOKEN`.
+>
+>    Six of those exist as GitHub Actions secrets and can be recovered without
+>    anyone reading them, via
+>    [`.github/workflows/seed-keyvault.yml`](../.github/workflows/seed-keyvault.yml)
+>    — but **Actions secrets are write-only to every API**, so the only reader
+>    is a workflow, which means that file has to reach `main` first and the
+>    deploy identity needs a temporary `Key Vault Secrets Officer` grant.
+>
+>    `RESEND-API-KEY` and the `GOOGLE-AUTH-*` pair are absent from GitHub too —
+>    correctly, because Resend and the separate sign-in OAuth client are both
+>    **new** for Better Auth (runbook Track D Phase 0). They were always going
+>    to be created fresh. Use
+>    [`scripts/load-keyvault.ps1`](../scripts/load-keyvault.ps1) for those.
+>
+>    Of the six, only **`MCP-JWT-SECRET`** genuinely must be preserved: it signs
+>    MCP access tokens and there are 1064 outstanding. `STRIPE-*` are viewable
+>    in the Stripe dashboard, `INTEGRATION-ENCRYPTION-KEY` can be regenerated
+>    freely (0 rows in `integration_connections`), and `MCP-S2S-TOKEN` rotates
+>    safely because both sides read the new value.
+>
+>    `OPENAI-API-KEY` is **no longer required** — built-in AI was removed, and
+>    the variable survives in `env.ts` read by nothing. `AZURE-OPENAI-API-KEY`
+>    replaced it in the required list and is already in the vault, written by
+>    Terraform.
+> 2. ~~Make the GHCR packages public~~ — **already done.** The packages are
+>    `ghcr.io/brandonkorous/kanninja-{backend,frontend,mcp-remote}` (HYPHEN),
+>    public, with tag history back to the first AKS deployment. Verified by
+>    anonymous pull against ghcr.io, the same path the kubelet takes.
+>
+>    This nearly went wrong: the workflow was first written against
+>    `kanninja/backend` (slash), a namespace that has never existed. The first
+>    deploy would have failed on a 401 reading like a missing tag, while the
+>    real, public images sat untouched beside it.
+> 3. ~~Apply the Caddy + `PLATFORM_HOSTNAMES` change~~ (Gate 5) — **already
+>    released**, 2026-08-25T12:22Z, by the sparx pipeline. The mounted
+>    ConfigMap matches the repo, and the live allow-list endpoint answers 200
+>    for all four kanNINJA hostnames and 403 for everything else.
 
 ### 2a. Registry: Artifact Registry → GHCR
 

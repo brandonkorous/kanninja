@@ -150,10 +150,12 @@ export async function analyticsRoutes(fastify: FastifyInstance) {
     },
   );
 
-  // Audit log query (Business+ only)
+  // Audit log query. Gated to the paid tier — it was nominally "Business+"
+  // before, but AUDIT_ENABLED_TIERS was never consulted anywhere, so every
+  // signed-in user could read it regardless of plan.
   fastify.get(
     '/api/v1/audit-logs',
-    { preHandler: [requireAuth, requireSubscription(SubscriptionTier.BUSINESS)] },
+    { preHandler: [requireAuth, requireSubscription(SubscriptionTier.CLAN)] },
     async (request) => {
       const data = await db
         .select()

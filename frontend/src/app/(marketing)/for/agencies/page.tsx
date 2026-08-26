@@ -60,7 +60,7 @@ const data: PersonaData = {
         },
         {
             q: 'How much for a 10-person agency?',
-            a: 'Pro tier: $8 per user per month, so about $80 a month. Bringing in clients on read-only seats is free up to a generous cap. Two months free yearly.',
+            a: 'The Clan plan: $12 per seat per month, so $120 a month for ten. Add and remove seats as engagements start and finish — the invoice follows. Two months free yearly.',
         },
     ],
     close: {

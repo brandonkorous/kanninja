@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useSession } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { useCreateCheckout } from '@/hooks/use-subscription';
-import { SUBSCRIPTION_TIERS, SubscriptionTier } from '@kanninja/shared';
+import { SUBSCRIPTION_TIERS, SubscriptionTier, displayPrice } from '@kanninja/shared';
 
 // Audience-led tier copy. The constants in @kanninja/shared own the source-of-truth
 // pricing data; this owns the voice. Each tier targets a *who*, not a feature checklist.
@@ -13,60 +13,32 @@ import { SUBSCRIPTION_TIERS, SubscriptionTier } from '@kanninja/shared';
 // "Agent calls" are MCP tool calls — the per-minute rate limit in
 // SUBSCRIPTION_TIERS.features.mcpRequestsPerMinute. There is no monthly cap:
 // kanNINJA runs no models, so the agent's own LLM bill is the only meter.
+//
+// Pro and Business are PER SEAT; Clan is deliberately flat. Clan is sold by who
+// it is for — a wedding party, a club — and those groups are large and
+// non-paying, so per-seat there would price 30 guests above a 30-person company.
+// The headline "/seat" suffix comes from displayPrice(), not from this copy.
 const TIERS = [
     {
         key: SubscriptionTier.FREE,
-        label: 'Solo practice. Three seats, unlimited boards, your own agent.',
+        label: 'For the group that is never going to expense a tool. Weddings, soccer teams, households, one person keeping their own life straight.',
         cta: 'Start free',
         features: [
-            'Up to 3 seats',
+            'Up to 10 seats',
             'Unlimited boards',
-            '10 agent calls/min',
-            '100 MB of files',
+            'Your own agent, over MCP',
+            '2 GB of files',
         ],
     },
     {
         key: SubscriptionTier.CLAN,
-        label: 'For the people you live and play with. Weddings, soccer teams, clubs, families.',
-        cta: 'Pick Clan',
+        label: 'For the clan that works together. One price per seat, and nothing held back behind a tier above it.',
+        cta: 'Pick the Clan plan',
         features: [
-            'Up to 15 seats',
-            '30 agent calls/min',
-            'Project templates',
-            '5 GB of files',
-        ],
-    },
-    {
-        key: SubscriptionTier.PRO,
-        label: 'For the work you do. Startups, builders, agencies. Your agent, at speed.',
-        cta: 'Pick Pro',
-        features: [
-            '15 seats included, $4 each after',
-            '120 agent calls/min',
-            'Project templates',
-            '10 GB of files',
-        ],
-    },
-    {
-        key: SubscriptionTier.BUSINESS,
-        label: 'When work needs guardrails. SSO, audit log, the things IT signs off on.',
-        cta: 'Pick Business',
-        features: [
-            '50 seats included, $6 each after',
+            'Unlimited seats, billed per seat',
             '600 agent calls/min',
-            'Single sign-on + audit log',
-            'Priority support',
-        ],
-    },
-    {
-        key: SubscriptionTier.ENTERPRISE,
-        label: 'For when there is a contract, a CSM, and a procurement team in the room.',
-        cta: 'Talk to us',
-        features: [
-            'Custom seats',
-            'Unmetered agent calls',
-            'Dedicated CSM + SLA',
-            'SCIM, dedicated infra',
+            'Everything, with nothing gated',
+            '1 TB of files',
         ],
     },
 ] as const;
@@ -79,10 +51,6 @@ export function TierCardsSection() {
     const checkout = useCreateCheckout();
 
     const handleCheckout = async (tier: SubscriptionTier) => {
-        if (tier === SubscriptionTier.ENTERPRISE) {
-            router.push('/contact?topic=enterprise');
-            return;
-        }
         if (!isSignedIn) {
             router.push('/sign-up');
             return;
@@ -92,7 +60,7 @@ export function TierCardsSection() {
             return;
         }
         const result = await checkout.mutateAsync({
-            tier: tier as 'clan' | 'pro' | 'business' | 'enterprise',
+            tier: 'clan',
             interval,
             successUrl: `${window.location.origin}/dashboard?checkout=success`,
             cancelUrl: `${window.location.origin}/pricing?checkout=cancel`,
@@ -107,13 +75,16 @@ export function TierCardsSection() {
                 <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-12 mb-20">
                     <div className="max-w-2xl">
                         <p className="hanko-eyebrow text-eyebrow font-mono uppercase text-primary">
-                            The five tiers
+                            Two tiers
                         </p>
                         <h2 className="mt-8 font-display text-4xl md:text-5xl font-medium tracking-tight">
-                            Pick where you <span className="italic text-primary">start.</span>
+                            One price, and{' '}
+                            <span className="italic text-primary">nothing above it.</span>
                         </h2>
                         <p className="mt-6 max-w-xl text-lg leading-relaxed text-base-content/70">
-                            Move when the work earns the move. Not before.
+                            There used to be five tiers. Four of the things they sold you
+                            were never enforced, so we stopped selling them. What is left
+                            is free, or twelve dollars a seat.
                         </p>
                     </div>
                     <div className="inline-flex self-start md:self-end rounded-full bg-base-300/40 p-1">
@@ -140,13 +111,14 @@ export function TierCardsSection() {
                     </div>
                 </div>
 
-                {/* Five tier cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                {/* Two tier cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
                     {TIERS.map((t) => {
                         const tier = SUBSCRIPTION_TIERS[t.key];
-                        const price = interval === 'yearly' ? tier.price.yearly : tier.price.monthly;
-                        const isPro = t.key === SubscriptionTier.PRO;
-                        const isEnterprise = t.key === SubscriptionTier.ENTERPRISE;
+                        const { amount: price, perSeat } = displayPrice(t.key, interval);
+                        // The Clan plan carries the vermillion seal — one stamp
+                        // per section, and it is the only thing being sold.
+                        const isPaid = t.key === SubscriptionTier.CLAN;
                         return (
                             <article
                                 key={t.key}
@@ -156,7 +128,7 @@ export function TierCardsSection() {
                                     {tier.name}
                                 </p>
                                 <p className="mt-6 font-display text-4xl font-medium tracking-tight">
-                                    {isEnterprise ? (
+                                    {price === null ? (
                                         <span className="text-3xl">Custom</span>
                                     ) : price === 0 ? (
                                         'Free'
@@ -167,7 +139,8 @@ export function TierCardsSection() {
                                             </span>
                                             {price}
                                             <span className="ml-1 text-sm font-sans font-normal text-base-content/40">
-                                                /{interval === 'yearly' ? 'yr' : 'mo'}
+                                                /{perSeat ? 'seat/' : ''}
+                                                {interval === 'yearly' ? 'yr' : 'mo'}
                                             </span>
                                         </>
                                     )}
@@ -186,23 +159,14 @@ export function TierCardsSection() {
                                         </li>
                                     ))}
                                 </ul>
-                                {isEnterprise ? (
-                                    <Link
-                                        href="/contact?topic=enterprise"
-                                        className="mt-10 btn btn-outline btn-secondary"
-                                    >
-                                        {t.cta}
-                                    </Link>
-                                ) : (
-                                    <button
-                                        type="button"
-                                        onClick={() => handleCheckout(t.key)}
-                                        disabled={checkout.isPending}
-                                        className={`mt-10 btn ${isPro ? 'btn-primary' : 'btn-outline btn-secondary'}`}
-                                    >
-                                        {t.cta}
-                                    </button>
-                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => handleCheckout(t.key)}
+                                    disabled={checkout.isPending}
+                                    className={`mt-10 btn ${isPaid ? 'btn-primary' : 'btn-outline btn-secondary'}`}
+                                >
+                                    {t.cta}
+                                </button>
                             </article>
                         );
                     })}

@@ -13,7 +13,7 @@ import type {
 export const intercomProvider: IntegrationProvider = {
   id: 'intercom',
   name: 'Intercom',
-  requiredTier: 'business',
+  requiredTier: 'clan',
 
   getAuthUrl(state: string, redirectUri: string): string {
     const params = new URLSearchParams({
