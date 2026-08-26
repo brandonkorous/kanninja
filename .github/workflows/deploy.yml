@@ -366,10 +366,30 @@ jobs:
                   done
 
                   # The owner credential, for the Jobs only.
-                  az keyvault secret show --vault-name "$VAULT" --name DATABASE-ADMIN-URL \
-                    --query value -o tsv > /tmp/admin-url
-                  az keyvault secret show --vault-name "$VAULT" --name KANNINJA-APP-PASSWORD \
-                    --query value -o tsv > /tmp/app-password
+                  # printf %s with command substitution, NOT a plain redirect.
+                  #
+                  # `az ... -o tsv` terminates its output with a newline, and
+                  # `kubectl create secret --from-file` stores a file's bytes VERBATIM.
+                  # So `> file` produced a connection string ending in sslmode=require
+                  # plus a newline, and psql rejected it with:
+                  #
+                  #     psql: error: invalid sslmode value: "require<newline>"
+                  #
+                  # Command substitution strips trailing newlines and printf %s adds
+                  # none, so this writes exactly the bytes the vault holds.
+                  #
+                  # The same bug in KANNINJA_APP_PASSWORD is quieter and worse: the role
+                  # job would set a password ending in a newline while Terraform's
+                  # DATABASE-URL carries it without one. The job would report success,
+                  # and every backend pod would then fail to authenticate against a
+                  # password that looks identical in every log and dashboard.
+                  #
+                  # The --from-env-file path above is unaffected: it builds its lines
+                  # with value=$(az ...), and command substitution already strips it.
+                  printf '%s' "$(az keyvault secret show --vault-name "$VAULT" \
+                    --name DATABASE-ADMIN-URL --query value -o tsv)" > /tmp/admin-url
+                  printf '%s' "$(az keyvault secret show --vault-name "$VAULT" \
+                    --name KANNINJA-APP-PASSWORD --query value -o tsv)" > /tmp/app-password
 
             - name: Apply the Secrets
               run: |
