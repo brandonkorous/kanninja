@@ -143,44 +143,41 @@ export default function AcceptableUsePage() {
                 {
                     id: 'ai',
                     number: '04',
-                    title: 'AI-specific restrictions',
+                    title: 'Agents and automated access',
                     body: (
                         <>
                             <p>
-                                kanNINJA's AI features are subject to the
-                                same prohibitions above plus a few that
-                                are particular to generative AI:
+                                kanNINJA runs no AI of its own. You may
+                                connect your own agent over MCP, and
+                                everything above applies to what that
+                                agent does on your account, plus:
                             </p>
                             <ul>
                                 <li>
-                                    Do not use AI features to generate
-                                    CSAM, non-consensual sexual imagery
-                                    or text, or content that impersonates
-                                    a real person in a misleading way.
+                                    You are responsible for what your
+                                    agent does. Actions it takes with your
+                                    credentials are your actions.
                                 </li>
                                 <li>
-                                    Do not use AI features to generate
-                                    targeted harassment, defamation, or
-                                    dangerous misinformation about
-                                    identifiable people or organizations.
+                                    Do not use agent access to bulk-extract
+                                    boards you do not own, or to scrape the
+                                    service beyond the rate limits on your
+                                    plan.
                                 </li>
                                 <li>
-                                    Do not use AI outputs from kanNINJA
-                                    to train or fine-tune another model
-                                    that competes with us.
+                                    Do not use kanNINJA data to train or
+                                    fine-tune a model that competes with us.
                                 </li>
                                 <li>
-                                    Do not represent AI outputs as
-                                    human-authored when context requires
-                                    disclosure (regulated advice, journalism,
-                                    academic submissions).
+                                    Keep API keys and agent grants to
+                                    yourself. Revoke them on the Agents page
+                                    when a client is no longer in use.
                                 </li>
                             </ul>
                             <p>
-                                Use of AI features must also comply with
-                                the policies of the underlying providers
-                                we use (currently OpenAI). Their usage
-                                policies apply on top of this one.
+                                Your agent's own provider has usage policies
+                                of its own. Those apply on top of this one,
+                                and we are not a party to them.
                             </p>
                         </>
                     ),

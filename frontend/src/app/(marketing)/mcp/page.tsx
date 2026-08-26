@@ -195,9 +195,9 @@ export default function McpPage() {
                     </div>
 
                     <p className="mt-16 max-w-2xl text-base text-base-content/60 italic">
-                        Forty-two tools across read, write, compose, and integrations. AI-native
-                        tools (break down, estimate, suggest next, draft standup) and clan tools
-                        are on the roadmap.
+                        Forty-two tools across read, write, compose, and integrations. Clan
+                        tools are on the roadmap. The thinking is not — that is your agent&apos;s
+                        job, and it is already better at it than we would be.
                     </p>
                 </div>
             </section>

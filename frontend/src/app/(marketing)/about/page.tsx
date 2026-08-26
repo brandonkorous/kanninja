@@ -16,7 +16,7 @@ export const metadata: Metadata = buildPageMetadata({
 const TODAY_WORKING = [
     'The kanban itself, the way it should work',
     'Real-time presence and the clan system',
-    'Twelve AI techniques, gated to the Pro tier',
+    'Forty-two MCP tools, so your own agent runs the board',
     'The brand system, top to bottom',
 ];
 
@@ -67,9 +67,9 @@ export default function AboutPage() {
                         </p>
                         <p>
                             Every other tool we tried wanted to be the hero of the page. More
-                            features. Bigger dashboards. AI that promised to do the thinking
-                            for us. We wanted the opposite. A tool that watched, then helped,
-                            then got out of the way.
+                            features. Bigger dashboards. An assistant that promised to do the
+                            thinking for us. We wanted the opposite. A tool that watched, then
+                            helped, then got out of the way.
                         </p>
                         <p>So we built one.</p>
                         <p>

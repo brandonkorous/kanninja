@@ -14,7 +14,7 @@ const SCOPES = ['Calendars.ReadWrite', 'offline_access'];
 export const outlookProvider: IntegrationProvider = {
   id: 'outlook',
   name: 'Outlook Calendar',
-  requiredTier: 'pro',
+  requiredTier: 'clan',
 
   getAuthUrl(state: string, redirectUri: string): string {
     const tenant = env.MICROSOFT_TENANT_ID || 'common';

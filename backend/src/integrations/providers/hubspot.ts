@@ -15,7 +15,7 @@ const SCOPES = ['crm.objects.deals.read', 'crm.objects.deals.write', 'crm.object
 export const hubspotProvider: IntegrationProvider = {
   id: 'hubspot',
   name: 'HubSpot',
-  requiredTier: 'business',
+  requiredTier: 'clan',
 
   getAuthUrl(state: string, redirectUri: string): string {
     const params = new URLSearchParams({

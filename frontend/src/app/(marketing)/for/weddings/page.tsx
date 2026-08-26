@@ -37,8 +37,8 @@ const data: PersonaData = {
             body: "A separate board for the wedding day itself. Hour-by-hour. The maid of honor, the photographer, and the venue manager all see the same plan.",
         },
         {
-            title: 'AI for the parts you keep forgetting.',
-            body: "Ask the AI to break down 'rehearsal dinner planning' into cards. Accept what it got right. Save the brainpower for the parts that matter.",
+            title: 'A year of planning, already mapped.',
+            body: 'Start from "A board for the year of planning" — twelve months of the things people forget, already on cards. Save the brainpower for the parts that matter.',
         },
     ],
     faqs: [

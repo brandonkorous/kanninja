@@ -5,64 +5,36 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1775779458052,
-      "tag": "0000_polite_starbolt",
+      "when": 1786153705460,
+      "tag": "0000_baseline",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1775801693655,
-      "tag": "0001_gorgeous_apocalypse",
+      "when": 1786153757954,
+      "tag": "0001_seed_integration_providers",
       "breakpoints": true
     },
     {
       "idx": 2,
       "version": "7",
-      "when": 1775802213190,
-      "tag": "0002_misty_thunderbolt_ross",
+      "when": 1786153830548,
+      "tag": "0002_better_auth_tables",
       "breakpoints": true
     },
     {
       "idx": 3,
       "version": "7",
-      "when": 1775802558363,
-      "tag": "0003_yummy_pete_wisdom",
+      "when": 1786155393077,
+      "tag": "0003_profiles_user_id_required",
       "breakpoints": true
     },
     {
       "idx": 4,
       "version": "7",
-      "when": 1775805414761,
-      "tag": "0004_yellow_oracle",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1775806480547,
-      "tag": "0005_narrow_stepford_cuckoos",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1777272137222,
-      "tag": "0006_charming_ultimatum",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1777276124789,
-      "tag": "0007_dizzy_kitty_pryde",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1777282666613,
-      "tag": "0008_modern_cobalt_man",
+      "when": 1787697481910,
+      "tag": "0004_drop_ai_interactions",
       "breakpoints": true
     }
   ]

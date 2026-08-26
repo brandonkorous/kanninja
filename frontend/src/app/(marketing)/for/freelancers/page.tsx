@@ -34,8 +34,8 @@ const data: PersonaData = {
             body: 'A board for the bookkeeping. Cards for invoices sent, paid, overdue. The column you cannot ignore on the day you have to chase a payment.',
         },
         {
-            title: 'AI for breaking down the proposal.',
-            body: 'Ask the AI to break a project brief into kata. Edit. Quote. Send. The hour you usually lose to "where do I start" goes back to the work.',
+            title: 'A work board, already shaped.',
+            body: 'Start from "A board for the work" — pitch, scope, build, invoice. The hour you usually lose to "where do I start" goes back to the work.',
         },
         {
             title: 'A clear log when the contract goes sideways.',
@@ -57,11 +57,11 @@ const data: PersonaData = {
         },
         {
             q: 'Is the free tier really free for solo work?',
-            a: 'Yes. Forever. The paid tiers are for the AI and for adding teammates — most freelancers stay free for years.',
+            a: 'Yes. Forever. The paid tiers are for adding teammates — most freelancers stay free for years.',
         },
         {
-            q: 'Will the AI write proposals for me?',
-            a: 'It can break a brief into cards. It does not write client-facing copy. You stay the expert; it just clears the runway.',
+            q: 'Is there an AI that writes proposals?',
+            a: 'Not from us. We run no models — connect the agent you already pay for and it can turn a brief into kata on the board. The client-facing writing stays yours, which is the part they are paying for anyway.',
         },
     ],
     close: {

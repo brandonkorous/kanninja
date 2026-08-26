@@ -8,7 +8,6 @@ import { eq } from 'drizzle-orm';
 import { AppError } from '../../utils/errors.js';
 import { createCheckoutSchema, SubscriptionTier } from '@kanninja/shared';
 import { getSeatUsage } from '../../services/seat-billing.service.js';
-import { getAIQuotaStatus } from '../../services/ai-quota.service.js';
 
 const portalSchema = z.object({ returnUrl: z.string().url() });
 
@@ -38,18 +37,6 @@ export async function subscriptionRoutes(fastify: FastifyInstance) {
     async (request) => {
       const usage = await getSeatUsage(request.profileId!);
       return { data: usage };
-    },
-  );
-
-  // AI run consumption snapshot — used vs. limit for the current window.
-  // Drives the in-app indicator and lets the UI gray out AI buttons when
-  // a free user has burned their lifetime taste.
-  fastify.get(
-    '/api/v1/subscription/ai-usage',
-    { preHandler: [requireAuth] },
-    async (request) => {
-      const status = await getAIQuotaStatus(request.profileId!);
-      return { data: status };
     },
   );
 

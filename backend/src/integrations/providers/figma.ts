@@ -12,7 +12,7 @@ import type {
 export const figmaProvider: IntegrationProvider = {
   id: 'figma',
   name: 'Figma',
-  requiredTier: 'pro',
+  requiredTier: 'clan',
 
   getAuthUrl(state: string, redirectUri: string): string {
     const params = new URLSearchParams({

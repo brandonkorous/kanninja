@@ -1,20 +1,20 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { KataDeepdiveSection } from '@/components/marketing/KataDeepdiveSection';
-import { AiTechniquesSection } from '@/components/marketing/AiTechniquesSection';
+import { AgentToolsSection } from '@/components/marketing/AgentToolsSection';
 import { buildPageMetadata } from '@/lib/seo';
 import { JsonLd, breadcrumbLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = buildPageMetadata({
     title: 'Features',
     description:
-        'Four disciplines. Twenty-eight features. Grouped by kata so you can find what you came for. Real-time presence, AI suggestions, honest analytics.',
+        'Four disciplines. Twenty-eight features. Grouped by kata so you can find what you came for. Real-time presence, 42 MCP tools for your own agent, honest analytics.',
     path: '/features',
     ogTitle: 'Every feature, grouped by kata.',
     ogEyebrow: 'kanNINJA · Features',
     keywords: [
         'kanban features',
-        'kanban with AI',
+        'kanban MCP server',
         'real-time kanban',
         'kanban with time tracking',
         'kanban with custom fields',
@@ -142,7 +142,7 @@ export default function FeaturesPage() {
                 features={KATA_02_FEATURES}
             />
 
-            <AiTechniquesSection />
+            <AgentToolsSection />
 
             <KataDeepdiveSection
                 number="04"

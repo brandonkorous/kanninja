@@ -37,8 +37,8 @@ const data: PersonaData = {
             body: "Invite them. They see what you have done; you see what they have done. The lopsided feeling — sometimes deserved, sometimes not — gets replaced by what is actually on the board.",
         },
         {
-            title: 'AI for the planning parts.',
-            body: 'Ask the AI to break "remodel the basement" into a project board. Edit what it got wrong. Save the rest of your weekend for the work itself.',
+            title: 'The dad jobs, already listed.',
+            body: 'Start from "A board for the dad jobs" — the recurring stuff is already on it. Add the basement. Save the rest of your weekend for the work itself.',
         },
     ],
     faqs: [
@@ -56,11 +56,11 @@ const data: PersonaData = {
         },
         {
             q: 'How much does it cost?',
-            a: "Free for one person, forever. Free for two, with shared boards. The paid tiers are for the AI and for bigger groups — most dads never need them.",
+            a: "Free for one person, forever. Free for two, with shared boards. The paid tiers are for bigger groups — most dads never need them.",
         },
         {
-            q: 'Will the AI mansplain my own house to me?',
-            a: 'No. The AI suggests when you ask. It never moves a card on its own. And we tested it on at least one dad who hates being told things.',
+            q: 'Is there an AI in this?',
+            a: 'Not ours. Nothing in here tells you how to do your own house. If you already talk to ChatGPT or Claude you can wire it up and let it add the cards; otherwise the templates do the job.',
         },
     ],
     close: {

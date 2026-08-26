@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { TierCardsSection } from '@/components/marketing/TierCardsSection';
-import { FeatureComparisonTable } from '@/components/marketing/FeatureComparisonTable';
 import { PricingFAQ, PRICING_FAQS } from '@/components/marketing/PricingFAQ';
 import { buildPageMetadata } from '@/lib/seo';
 import { JsonLd, faqLd, breadcrumbLd } from '@/components/seo/JsonLd';
@@ -54,7 +53,6 @@ export default function PricingPage() {
             <TierCardsSection />
 
             {/* Full feature comparison */}
-            <FeatureComparisonTable />
 
             {/* FAQ */}
             <PricingFAQ />

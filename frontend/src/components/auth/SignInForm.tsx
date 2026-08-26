@@ -3,14 +3,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useSignIn } from '@clerk/nextjs';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
-import { getClerkErrorMessage } from './clerk-errors';
+import { authClient } from '@/lib/auth-client';
+import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { Field, Input } from '@/components/ui';
 
 export function SignInForm() {
-    const { signIn, setActive, isLoaded } = useSignIn();
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -19,35 +18,38 @@ export function SignInForm() {
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        if (!isLoaded || !signIn) return;
         setError(null);
         setSubmitting(true);
         try {
-            const result = await signIn.create({ identifier: email, password });
-            if (result.status === 'complete') {
-                await setActive({ session: result.createdSessionId });
-                router.push('/dashboard');
+            // Better Auth resolves rather than throws — the failure is in `error`.
+            const { error: signInError } = await authClient.signIn.email({ email, password });
+            if (signInError) {
+                setError(getAuthErrorMessage(signInError));
                 return;
             }
-            setError('Another step is required. Contact support.');
+            // The session cookie is set by the response; refresh so the server
+            // components behind /dashboard see it.
+            router.push('/dashboard');
+            router.refresh();
         } catch (err) {
-            setError(getClerkErrorMessage(err));
+            setError(getAuthErrorMessage(err));
         } finally {
             setSubmitting(false);
         }
     }
 
     async function handleGoogle() {
-        if (!isLoaded || !signIn) return;
         setError(null);
         try {
-            await signIn.authenticateWithRedirect({
-                strategy: 'oauth_google',
-                redirectUrl: '/sso-callback',
-                redirectUrlComplete: '/dashboard',
+            // Full-page redirect to Google and back to the API's callback,
+            // which then bounces to callbackURL. No /sso-callback page needed.
+            await authClient.signIn.social({
+                provider: 'google',
+                callbackURL: `${window.location.origin}/dashboard`,
+                errorCallbackURL: `${window.location.origin}/sign-in`,
             });
         } catch (err) {
-            setError(getClerkErrorMessage(err));
+            setError(getAuthErrorMessage(err));
         }
     }
 
@@ -103,7 +105,7 @@ export function SignInForm() {
                 </Field>
                 <button
                     type="submit"
-                    disabled={submitting || !isLoaded}
+                    disabled={submitting}
                     className="btn btn-primary w-full"
                 >
                     {submitting ? 'Signing in…' : 'Sign in'}
@@ -121,7 +123,6 @@ export function SignInForm() {
             <button
                 type="button"
                 onClick={handleGoogle}
-                disabled={!isLoaded}
                 className="btn btn-outline btn-secondary w-full mt-8 gap-3"
             >
                 <FontAwesomeIcon icon={faGoogle} />

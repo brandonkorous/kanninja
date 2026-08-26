@@ -10,7 +10,7 @@ import { profiles } from '../../db/schema/profiles.js';
 import { AppError } from '../../utils/errors.js';
 import {
   assertCanAddSeat,
-  syncSeatOverageToStripe,
+  syncSeatQuantityToStripe,
 } from '../../services/seat-billing.service.js';
 
 const inviteClanSchema = z.object({
@@ -148,9 +148,9 @@ export async function clanInvitationRoutes(fastify: FastifyInstance) {
 
       // Best-effort overage sync — failures are logged but don't block accept.
       try {
-        await syncSeatOverageToStripe(clan.createdBy);
+        await syncSeatQuantityToStripe(clan.createdBy);
       } catch (err) {
-        request.log.error({ err, ownerId: clan.createdBy }, 'syncSeatOverageToStripe failed');
+        request.log.error({ err, ownerId: clan.createdBy }, 'syncSeatQuantityToStripe failed');
       }
 
       return { data: { clanId: inv.clanId } };

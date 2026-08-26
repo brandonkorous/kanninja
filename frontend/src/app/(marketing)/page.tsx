@@ -2,7 +2,7 @@ import Link from 'next/link';
 import {
     faBolt,
     faUsers,
-    faRobot,
+    faTerminal,
     faChartLine,
 } from '@fortawesome/free-solid-svg-icons';
 import type { Metadata } from 'next';
@@ -21,7 +21,7 @@ export const metadata: Metadata = buildPageMetadata({
     ogEyebrow: 'wizeworks · kanNINJA',
     keywords: [
         'kanban board',
-        'AI kanban',
+        'kanban MCP server',
         'project management',
         'task management',
         'real-time kanban',
@@ -143,9 +143,9 @@ export default function LandingPage() {
                         />
                         <KataCard
                             number="03"
-                            icon={faRobot}
-                            title="AI as second"
-                            body="Watches how you actually work. Offers next steps you can accept or ignore. A quiet second pair of eyes — no takeover, no magic."
+                            icon={faTerminal}
+                            title="The agent is yours"
+                            body="We ship no model of our own. Connect Claude, ChatGPT, or Cursor and it gets 42 tools on your boards — in the words you already use."
                         />
                         <KataCard
                             className="md:col-span-2"

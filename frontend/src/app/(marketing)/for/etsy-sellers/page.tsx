@@ -37,8 +37,8 @@ const data: PersonaData = {
             body: 'A board for November and December. Order cutoff dates, gift-wrap stock, the day to stop accepting custom work. The rush stops being a wall.',
         },
         {
-            title: 'AI for breaking down the new product line.',
-            body: 'Ask the AI to break "launch new earrings collection" into cards. Adjust to your shop. Get back to the bench.',
+            title: 'A shop board, already stocked.',
+            body: 'Start from "A board for a small Etsy shop" — listings, stock, the holiday rush. Adjust to your shop. Get back to the bench.',
         },
     ],
     faqs: [
@@ -60,7 +60,7 @@ const data: PersonaData = {
         },
         {
             q: 'Is there a holiday-rush template?',
-            a: 'Not yet — but you can ask the AI to break down "Etsy holiday rush prep" and it gets you most of the way. We will probably add real templates as the requests pile up.',
+            a: 'Yes. "A board for a small Etsy shop" is built in — listings, stock, and the holiday rush already on cards.',
         },
     ],
     close: {

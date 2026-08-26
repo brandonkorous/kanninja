@@ -38,8 +38,8 @@ const data: PersonaData = {
             body: 'The cognitive cost of holding a household in your head is real. Cards on a board cost almost nothing — and finishing them feels just as good as it should.',
         },
         {
-            title: 'AI for the parts that repeat.',
-            body: "Ask the AI to break a project into smaller cards (school year prep, summer camp logistics, holiday hosting) and accept what it gets right. A second pair of eyes, not a takeover.",
+            title: 'A household board, already shaped.',
+            body: 'Start from "A board for the household" and the columns and first cards are already there. Rename what does not fit your family. Delete the rest.',
         },
     ],
     faqs: [
@@ -57,11 +57,11 @@ const data: PersonaData = {
         },
         {
             q: 'How much does it cost?',
-            a: "Free for one person, forever. Add a partner or a co-parent and you're still on the free tier. The paid tiers exist for bigger groups and for the AI — most households never need them.",
+            a: "Free for one person, forever. Add a partner or a co-parent and you're still on the free tier. The paid tiers exist for bigger groups — most households never need them.",
         },
         {
-            q: 'Will the AI replace my judgment?',
-            a: 'No. The AI suggests next steps when you ask. You accept or ignore. It never moves a card on its own, and it never decides what your family needs.',
+            q: 'Is there an AI in this?',
+            a: 'Not one of ours. If you already use something like ChatGPT or Claude, you can connect it and ask it to add cards for you. If you do not, nothing here needs it — the templates cover the same ground.',
         },
     ],
     close: {

@@ -12,7 +12,7 @@ import type {
 export const salesforceProvider: IntegrationProvider = {
   id: 'salesforce',
   name: 'Salesforce',
-  requiredTier: 'enterprise',
+  requiredTier: 'clan',
 
   getAuthUrl(state: string, redirectUri: string): string {
     const params = new URLSearchParams({

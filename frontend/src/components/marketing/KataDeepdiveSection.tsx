@@ -1,8 +1,8 @@
 // Reusable deep-dive section for the features page. Each of the four kata
-// (Honed reflexes, Live presence, AI as second, Honest signal) gets its own
-// instance with its own number, headline, intro, and feature list. The AI
-// kata is the exception — it uses AiTechniquesSection because the 12
-// techniques want a numbered grid instead of a feature list.
+// (Honed reflexes, Live presence, The agent is yours, Honest signal) gets its
+// own instance with its own number, headline, intro, and feature list. The
+// agent kata is the exception — it uses AgentToolsSection because the example
+// asks want a numbered grid instead of a feature list.
 
 export function KataDeepdiveSection({
     number,

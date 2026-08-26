@@ -29,13 +29,16 @@ const GENERAL: CopyBlock = {
     body: 'No tiered support queue. No chatbot that apologizes before it helps. Email us directly and someone on the team will read it and reply.',
 };
 
+// There is no Enterprise tier, and this block must not imply one. SSO, SCIM
+// and data residency are not built, and SOC 2 is not paid for — promising any
+// of them here would be the same fiction the five-tier grid was telling.
 const ENTERPRISE: CopyBlock = {
-    eyebrow: 'Enterprise',
+    eyebrow: 'Bigger than this',
     headlineLead: 'Tell us what',
     headlineAccent: "you're moving.",
-    body: 'Most enterprise rollouts come with constraints we should hear up front. The shorter the email, the better — we will book a call.',
-    subject: 'Enterprise inquiry',
-    detail: 'Helpful to include: team size, SSO provider, any SCIM or data-residency requirements, and your procurement timeline.',
+    body: 'There are two plans and no sales team, which suits almost everyone. If your rollout needs something neither plan covers, say so plainly and we will tell you honestly whether it exists yet.',
+    subject: 'Larger rollout',
+    detail: 'Helpful to include: team size, what you need that the Clan plan does not do, and when you need it. We would rather say no early than sell you a roadmap.',
 };
 
 export default async function ContactPage({

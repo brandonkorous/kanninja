@@ -22,30 +22,23 @@ export const createCheckoutSchema = z.object({
   cancelUrl: z.string().url(),
 });
 
-/** Seat usage snapshot for the billing UI. seatsIncluded is null for
- *  Enterprise (custom). seatOveragePriceMonthly is null on tiers without
- *  overage (Free, Clan, Enterprise). */
+/** Seat snapshot for the billing UI.
+ *
+ *  `seatCap` is non-null ONLY on the tiers that still refuse the next person
+ *  (Free, Clan). Per-seat tiers have no cap, so a UI that reads a null cap as
+ *  "unlimited" and says nothing is wrong — the next seat costs
+ *  `perSeatPriceMonthly` and the invite flow has to say so.
+ *
+ *  `seatsBilled` is what Stripe's quantity should be. It can exceed `seatsUsed`
+ *  because Business bills a 5-seat minimum. */
 export const subscriptionUsageSchema = z.object({
   seatsUsed: z.number().int().min(0),
-  seatsIncluded: z.number().int().min(0).nullable(),
-  seatOverage: z.number().int().min(0),
-  seatOveragePriceMonthly: z.number().nullable(),
-});
-
-/** AI run consumption snapshot for the billing UI and pre-call quota gate.
- *  - lifetime: Free tier — never resets
- *  - monthly: Clan/Pro/Business — resets at start of UTC month
- *  - unlimited: Enterprise — limit and resetsAt are null */
-export const aiQuotaStatusSchema = z.object({
-  tier: z.enum(tierValues),
-  windowKind: z.enum(['lifetime', 'monthly', 'unlimited']),
-  used: z.number().int().min(0),
-  limit: z.number().int().min(0).nullable(),
-  remaining: z.number().int().min(0).nullable(),
-  resetsAt: z.string().datetime().nullable(),
+  seatCap: z.number().int().min(0).nullable(),
+  seatsBilled: z.number().int().min(0),
+  minSeats: z.number().int().min(0),
+  perSeatPriceMonthly: z.number().nullable(),
 });
 
 export type Subscription = z.infer<typeof subscriptionSchema>;
 export type CreateCheckoutInput = z.infer<typeof createCheckoutSchema>;
 export type SubscriptionUsage = z.infer<typeof subscriptionUsageSchema>;
-export type AIQuotaStatus = z.infer<typeof aiQuotaStatusSchema>;

@@ -26,8 +26,9 @@ export default function PrivacyPage() {
                 <>
                     <p>
                         We collect what we need to run the service and nothing
-                        else. We do not sell your data. We do not use it to train
-                        AI models. This page is the long version.
+                        else. We do not sell your data, we do not use it to train
+                        AI models, and we do not run an AI of our own. This page is
+                        the long version.
                     </p>
                 </>
             }

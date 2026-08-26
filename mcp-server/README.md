@@ -65,7 +65,7 @@ Forty-two tools, grouped by what they touch.
 
 **Integrations** — `list_connected_integrations`, `list_available_providers`, `get_integration_events`, `sync_integration`
 
-AI-native tools (`break_down_task`, `estimate_task`, `suggest_next`, `summarize_board`, `draft_standup`, `extract_tasks`) and clan tools are on the roadmap.
+Clan tools are on the roadmap. AI-native tools are not: kanNINJA runs no models of its own, and breaking down, estimating, and summarising are your agent's job — it is already better at them than anything we would ship.
 
 ## Configuration
 

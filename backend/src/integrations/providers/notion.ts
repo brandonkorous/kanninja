@@ -12,7 +12,7 @@ import type {
 export const notionProvider: IntegrationProvider = {
   id: 'notion',
   name: 'Notion',
-  requiredTier: 'pro',
+  requiredTier: 'clan',
 
   getAuthUrl(state: string, redirectUri: string): string {
     const params = new URLSearchParams({

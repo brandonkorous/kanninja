@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useSignIn } from '@clerk/nextjs';
-import { getClerkErrorMessage } from './clerk-errors';
+import { authClient } from '@/lib/auth-client';
+import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { ResetPasswordStep } from './ResetPasswordStep';
 import { Field, Input } from '@/components/ui';
 
@@ -11,7 +11,6 @@ import { Field, Input } from '@/components/ui';
 // to ResetPasswordStep which handles the code + new password submission.
 
 export function ForgotPasswordForm() {
-    const { signIn, isLoaded } = useSignIn();
     const [resetting, setResetting] = useState(false);
     const [email, setEmail] = useState('');
     const [error, setError] = useState<string | null>(null);
@@ -19,17 +18,23 @@ export function ForgotPasswordForm() {
 
     async function handleRequest(e: React.FormEvent) {
         e.preventDefault();
-        if (!isLoaded || !signIn) return;
         setError(null);
         setSubmitting(true);
         try {
-            await signIn.create({
-                strategy: 'reset_password_email_code',
-                identifier: email,
+            const { error: requestError } = await authClient.emailOtp.requestPasswordReset({
+                email,
             });
+            // Advance even on error: this endpoint deliberately doesn't reveal
+            // whether an account exists, so branching on the result here would
+            // turn the screen into an enumeration oracle. A wrong email simply
+            // never receives a code.
+            if (requestError && requestError.status === 429) {
+                setError(getAuthErrorMessage(requestError));
+                return;
+            }
             setResetting(true);
         } catch (err) {
-            setError(getClerkErrorMessage(err));
+            setError(getAuthErrorMessage(err));
         } finally {
             setSubmitting(false);
         }
@@ -75,7 +80,7 @@ export function ForgotPasswordForm() {
                 </Field>
                 <button
                     type="submit"
-                    disabled={submitting || !isLoaded}
+                    disabled={submitting}
                     className="btn btn-primary w-full"
                 >
                     {submitting ? 'Sending…' : 'Send the code'}

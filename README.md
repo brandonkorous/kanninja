@@ -1,6 +1,6 @@
 # kanNINJA
 
-> Turn chaos into kata. An AI-powered Kanban platform for solo founders, freelancers, and small teams who take their craft seriously.
+> Turn chaos into kata. A Kanban platform for solo founders, freelancers, and small teams who take their craft seriously — and for the agents they already work with.
 
 **Status:** early development · **License:** [FSL-1.1-Apache-2.0](./LICENSE) · **Hosted:** [kanninja.com](https://kanninja.com)
 
@@ -8,12 +8,12 @@
 
 ## What is this?
 
-kanNINJA is a Kanban board SaaS with first-class AI. The hosted product at kanninja.app is the easiest way to use it. This repository is the source code, published under a source-available license (see below).
+kanNINJA is a Kanban board SaaS built to be driven by your own agent over MCP. It ships no AI of its own — 42 MCP tools instead, so Claude, ChatGPT, or Cursor can run the board with your context and your model. The hosted product at kanninja.app is the easiest way to use it. This repository is the source code, published under a source-available license (see below).
 
 ### Principles
 
 - **Restraint, warmth, mastery.** The interface should feel like a well-made notebook, not a dashboard.
-- **One place for the work.** Boards, AI, time tracking, analytics, integrations — no tab sprawl.
+- **One place for the work.** Boards, time tracking, analytics, integrations, and an open door for your agent — no tab sprawl.
 - **Small teams first.** Solo founders to ~10-person teams. Not built for the Jira crowd.
 
 ## Tech stack
@@ -25,7 +25,7 @@ kanNINJA is a Kanban board SaaS with first-class AI. The hosted product at kanni
 | Database | PostgreSQL (Supabase) + Supabase Realtime               |
 | Auth     | Clerk                                                   |
 | Payments | Stripe                                                  |
-| AI       | OpenAI                                                  |
+| AI       | None — bring your own agent over MCP                    |
 | Monorepo | pnpm workspaces                                         |
 
 ## Monorepo layout
@@ -62,18 +62,20 @@ pnpm --filter @kanninja/backend run db:migrate
 
 ## Deployment
 
-The production target is [Fly.io](https://fly.io). Two apps, one repo:
+Production runs on **Google Kubernetes Engine** — the shared `sparx-prod-autopilot`
+Autopilot cluster (GCP project `sparxworks`, `us-central1`), in the `kanninja`
+namespace. The database and file storage are on **Microsoft Azure** (Central US).
 
-```bash
-# from repo root
-fly launch --config fly.backend.toml --copy-config --no-deploy
-fly launch --config fly.frontend.toml --copy-config --no-deploy
+Deploys are automatic: pushing to `main` runs
+[`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml), which typechecks
+and tests, builds the backend / frontend / mcp-remote images into Artifact
+Registry, and rolls them out via Connect Gateway. Cluster Secrets are regenerated
+from GitHub Actions secrets on every deploy, so GitHub is the source of truth.
 
-fly deploy --config fly.backend.toml
-fly deploy --config fly.frontend.toml
-```
-
-See [`docs/deployment.md`](./docs/deployment.md) for secret setup, region selection, and the full runbook.
+- [`k8s/README.md`](./k8s/README.md) — manifests and the namespace layout
+- [`infra/gcp/README.md`](./infra/gcp/README.md) — cluster bootstrap, WIF, DNS
+- [`docs/migration-runbook.md`](./docs/migration-runbook.md) — the Clerk → Better Auth
+  and Supabase → Azure migration
 
 ## License
 

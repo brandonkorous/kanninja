@@ -31,7 +31,7 @@ const ENTRIES: {
             'Four marketing pages in the new Hanko voice and visual language.',
             'Custom auth surfaces — sign-in, sign-up, forgot-password, invite.',
             'The full kanban board with drag-and-drop, cards, lists, comments, checklists, labels, time tracking, and attachments.',
-            'Twelve AI techniques gated to the Pro tier and above.',
+            'Forty-two MCP tools, so any agent you already use can run the board.',
             'Clans, presence, notifications, analytics, audit log.',
         ],
     },

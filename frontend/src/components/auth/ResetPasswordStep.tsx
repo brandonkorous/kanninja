@@ -2,13 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSignIn } from '@clerk/nextjs';
-import { getClerkErrorMessage } from './clerk-errors';
+import { authClient } from '@/lib/auth-client';
+import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { Field, Input } from '@/components/ui';
 
 // Second step of the forgot-password flow: enter the 6-digit reset code and
-// pick a new password. On success, Clerk sets the active session and we
-// redirect to the dashboard (the user is effectively signed in).
+// pick a new password. Resetting does not create a session, so we hand the
+// user to sign-in with the credentials they just set.
 
 export function ResetPasswordStep({
     email,
@@ -17,7 +17,6 @@ export function ResetPasswordStep({
     email: string;
     onStartOver: () => void;
 }) {
-    const { signIn, setActive, isLoaded } = useSignIn();
     const router = useRouter();
     const [code, setCode] = useState('');
     const [password, setPassword] = useState('');
@@ -26,23 +25,28 @@ export function ResetPasswordStep({
 
     async function handleReset(e: React.FormEvent) {
         e.preventDefault();
-        if (!isLoaded || !signIn) return;
         setError(null);
         setSubmitting(true);
         try {
-            const result = await signIn.attemptFirstFactor({
-                strategy: 'reset_password_email_code',
-                code,
+            const { error: resetError } = await authClient.emailOtp.resetPassword({
+                email,
+                otp: code,
                 password,
             });
-            if (result.status === 'complete') {
-                await setActive({ session: result.createdSessionId });
-                router.push('/dashboard');
+            if (resetError) {
+                setError(getAuthErrorMessage(resetError));
                 return;
             }
-            setError('Reset did not complete. Try again.');
+
+            // Sign straight in so the flow still ends on the dashboard, as it
+            // did under Clerk. If that fails for any reason the password change
+            // still succeeded, so fall back to the sign-in screen rather than
+            // showing an error that implies otherwise.
+            const { error: signInError } = await authClient.signIn.email({ email, password });
+            router.push(signInError ? '/sign-in' : '/dashboard');
+            router.refresh();
         } catch (err) {
-            setError(getClerkErrorMessage(err));
+            setError(getAuthErrorMessage(err));
         } finally {
             setSubmitting(false);
         }

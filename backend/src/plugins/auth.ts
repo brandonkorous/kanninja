@@ -1,16 +1,15 @@
 import fp from 'fastify-plugin';
-import { createClerkClient } from '@clerk/fastify';
-import { env } from '../config/env.js';
 import { db } from '../db/index.js';
 import { profiles } from '../db/schema/profiles.js';
 import { eq } from 'drizzle-orm';
 
 declare module 'fastify' {
-  interface FastifyInstance {
-    clerk: ReturnType<typeof createClerkClient>;
-  }
   interface FastifyRequest {
+    /** Better Auth `auth_users.id`. Set on the browser session path. */
+    authUserId?: string;
+    /** Clerk user id. LEGACY — set only by the outgoing Clerk branch. */
     clerkUserId?: string;
+    /** `profiles.id`. The only identity the rest of the app should read. */
     profileId?: string;
     apiKeyId?: string;
     mcpScopes?: string[];
@@ -20,10 +19,7 @@ declare module 'fastify' {
 }
 
 export const authPlugin = fp(async (fastify) => {
-  const clerk = createClerkClient({ secretKey: env.CLERK_SECRET_KEY });
-
-  fastify.decorate('clerk', clerk);
-
+  fastify.decorateRequest('authUserId', undefined);
   fastify.decorateRequest('clerkUserId', undefined);
   fastify.decorateRequest('profileId', undefined);
   fastify.decorateRequest('apiKeyId', undefined);
@@ -32,14 +28,22 @@ export const authPlugin = fp(async (fastify) => {
   fastify.decorateRequest('mcpClientName', undefined);
 });
 
-/** Resolves a Clerk user ID to a profiles.id UUID. */
-async function resolveProfileId(clerkUserId: string): Promise<string | null> {
-  const [profile] = await db
-    .select({ id: profiles.id })
-    .from(profiles)
-    .where(eq(profiles.clerkUserId, clerkUserId))
-    .limit(1);
+/**
+ * Translates an auth-provider id into the application identity
+ * (`profiles.id`). Exactly one of the two keys should be supplied.
+ */
+export async function resolveProfileId(key: {
+  userId?: string;
+  clerkUserId?: string;
+}): Promise<string | null> {
+  const where = key.userId
+    ? eq(profiles.userId, key.userId)
+    : key.clerkUserId
+      ? eq(profiles.clerkUserId, key.clerkUserId)
+      : null;
+
+  if (!where) return null;
+
+  const [profile] = await db.select({ id: profiles.id }).from(profiles).where(where).limit(1);
   return profile?.id ?? null;
 }
-
-export { resolveProfileId };

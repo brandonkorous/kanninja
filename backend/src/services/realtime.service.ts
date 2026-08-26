@@ -1,18 +1,20 @@
-import { supabase } from '../config/supabase.js';
+import { realtimeHub } from './realtime-hub.js';
 
 /**
  * Broadcast realtime events to a board channel.
- * Frontend subscribes via Supabase Realtime broadcast channel and invalidates React Query caches.
+ *
+ * Transport is now an in-process WebSocket hub (routes/realtime) rather than
+ * Supabase Realtime. The public API and its contract are unchanged: every
+ * method is best-effort and MUST NOT throw — a realtime failure must never
+ * fail the mutation that triggered it.
+ *
+ * Still `async` so the ~20 call sites keep working untouched, even though the
+ * hub is synchronous.
  */
 export const realtimeService = {
   async broadcast(boardId: string, event: string, payload: Record<string, unknown>) {
     try {
-      const channel = supabase.channel(`board:${boardId}`);
-      await channel.send({
-        type: 'broadcast',
-        event,
-        payload,
-      });
+      realtimeHub.publish(boardId, event, payload);
     } catch (err) {
       // Don't fail the request if broadcast fails — it's best-effort
       console.error('Realtime broadcast failed:', err);

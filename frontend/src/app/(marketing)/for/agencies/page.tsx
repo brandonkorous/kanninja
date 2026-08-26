@@ -33,11 +33,11 @@ const data: PersonaData = {
             body: 'A board for new business. Discovery, proposal sent, signed, lost. Where every prospect is, without paying for a CRM that does too much.',
         },
         {
-            title: 'AI for breaking down the brief.',
-            body: 'The brief comes in. Ask the AI to break it into kata. Edit. Quote. Send. The first hour of every engagement gets twenty minutes back.',
+            title: 'A retainer board, already shaped.',
+            body: 'The brief comes in. Start from "A board for a client retainer", edit, quote, send. The first hour of every engagement gets twenty minutes back.',
         },
         {
-            title: 'MCP server for your in-house AI.',
+            title: 'MCP server for your in-house agents.',
             body: 'Wire kanNINJA into your agency Claude or Cursor setup. Drafting status updates, generating slides, querying project state — the agent has direct read/write to the board.',
         },
     ],
@@ -60,7 +60,7 @@ const data: PersonaData = {
         },
         {
             q: 'How much for a 10-person agency?',
-            a: 'Pro tier: $8 per user per month, so about $80 a month. Bringing in clients on read-only seats is free up to a generous cap. Two months free yearly.',
+            a: 'The Clan plan: $12 per seat per month, so $120 a month for ten. Add and remove seats as engagements start and finish — the invoice follows. Two months free yearly.',
         },
     ],
     close: {

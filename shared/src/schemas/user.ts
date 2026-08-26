@@ -1,8 +1,12 @@
 import { z } from 'zod';
 
+/**
+ * The client-facing shape of a profile. Deliberately excludes the auth-provider
+ * link (`userId` / the legacy `clerkUserId`) — those are backend-internal and
+ * have no business crossing the API boundary.
+ */
 export const profileSchema = z.object({
   id: z.string().uuid(),
-  clerkUserId: z.string(),
   displayName: z.string().nullable(),
   avatarUrl: z.string().url().nullable(),
   bio: z.string().nullable(),

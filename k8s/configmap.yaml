@@ -8,6 +8,22 @@ data:
   HOST: "0.0.0.0"
   PORT: "3001"
   FRONTEND_URL: "https://kanninja.com"
+  # Non-secret auth + storage configuration. These lived in the deploy
+  # workflow's secret block, written as `--from-literal` alongside real
+  # credentials, which made three public constants look like things that need
+  # rotating and hid them from anyone reading the manifests.
+  #
+  # BETTER_AUTH_URL is the public origin of the API itself: Better Auth builds
+  # its OAuth callback URLs from it, so it must match the redirect URI
+  # registered with Google exactly, including scheme and absence of a trailing
+  # slash.
+  BETTER_AUTH_URL: "https://api.kanninja.com"
+  # The PARENT domain, leading dot deliberate. This is what lets kanninja.com
+  # send the session cookie to api.kanninja.com; a host-only cookie would be
+  # scoped to the API and the app would appear signed out on every page.
+  AUTH_COOKIE_DOMAIN: ".kanninja.com"
+  EMAIL_FROM: "kanNINJA <noreply@kanninja.com>"
+  AZURE_STORAGE_CONTAINER: "card-attachments"
 ---
 apiVersion: v1
 kind: ConfigMap

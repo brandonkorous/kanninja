@@ -9,7 +9,11 @@ if (!connectionString) {
   process.exit(1);
 }
 
-const client = postgres(connectionString, { max: 1 });
+// Azure Flexible Server enforces TLS (require_secure_transport = ON); a
+// plaintext connection is refused outright. Mirrors src/db/index.ts.
+const isLocal = /@(localhost|127\.0\.0\.1)[:/]/.test(connectionString);
+
+const client = postgres(connectionString, { max: 1, ssl: isLocal ? false : 'require' });
 const db = drizzle(client);
 
 async function main() {

@@ -13,7 +13,7 @@ export const metadata: Metadata = buildPageMetadata({
     keywords: [
         'kanban inside ChatGPT',
         'kanban for Claude',
-        'AI assistant kanban',
+        'kanban for AI agents',
         'plan with ChatGPT',
         'task list ChatGPT',
     ],

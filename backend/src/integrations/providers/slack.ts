@@ -15,7 +15,7 @@ const SCOPES = ['channels:read', 'chat:write', 'commands'];
 export const slackProvider: IntegrationProvider = {
   id: 'slack',
   name: 'Slack',
-  requiredTier: 'pro',
+  requiredTier: 'clan',
 
   getAuthUrl(state: string, redirectUri: string): string {
     const params = new URLSearchParams({

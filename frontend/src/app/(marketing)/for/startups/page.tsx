@@ -29,8 +29,8 @@ const data: PersonaData = {
             body: 'A pipeline of investors. Where each one is — pitched, in diligence, term sheet, signed, passed. The fundraise stops eating the founder’s mental RAM.',
         },
         {
-            title: 'AI for breaking down "ship v1 of the API".',
-            body: 'Ask the AI to break a quarterly objective into weekly cards. Edit for what you actually need. The first hour of the quarter pays back ten.',
+            title: 'An early-stage board, already shaped.',
+            body: 'Start from "A board for an early-stage startup" and cut what you do not need yet. The first hour of the quarter pays back ten.',
         },
         {
             title: 'MCP server for the agent that drafts your investor update.',
@@ -55,8 +55,8 @@ const data: PersonaData = {
             a: 'Not as a separate concept. The "this quarter" column is your OKR list — the kata you have committed to. Cards underneath are the work to deliver them.',
         },
         {
-            q: 'Is the AI suggesting strategy?',
-            a: 'No. The AI breaks work down and drafts updates. It does not pick your strategy. That is your job; we just make sure the work after that decision is visible.',
+            q: 'Where is the AI?',
+            a: 'There is none, on purpose. You already pay for an agent that beats anything we would run on a $10 plan — connect it over MCP and it gets 42 tools on your boards. Strategy was never going to be our job anyway.',
         },
     ],
     close: {

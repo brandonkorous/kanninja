@@ -2,7 +2,7 @@ import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import {
   faGauge,
   faUsersRectangle,
-  faRobot,
+  faTerminal,
   faFileLines,
   faChartLine,
   faPlug,
@@ -23,7 +23,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     eyebrow: 'Practice',
     items: [
-      { href: '/ai-hub', label: 'AI Hub', icon: faRobot },
+      { href: '/agents', label: 'Agents', icon: faTerminal },
       { href: '/templates', label: 'Templates', icon: faFileLines },
     ],
   },

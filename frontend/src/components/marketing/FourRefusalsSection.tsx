@@ -13,8 +13,8 @@ const refusals: { headline: string; body: string }[] = [
         body: 'Counting what does not change behavior is decoration.',
     },
     {
-        headline: 'No AI takeover.',
-        body: 'The model suggests. You decide. In that order.',
+        headline: 'No AI of our own.',
+        body: 'Bring the agent you already trust. We stay out of the way.',
     },
     {
         headline: 'No dashboards-of-dashboards.',

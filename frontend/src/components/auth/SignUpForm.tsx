@@ -2,15 +2,14 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useSignUp } from '@clerk/nextjs';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
-import { getClerkErrorMessage } from './clerk-errors';
+import { authClient } from '@/lib/auth-client';
+import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { VerifyEmailStep } from './VerifyEmailStep';
 import { Field, Input } from '@/components/ui';
 
 export function SignUpForm() {
-    const { signUp, isLoaded } = useSignUp();
     const [verifying, setVerifying] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -19,31 +18,41 @@ export function SignUpForm() {
 
     async function handleCreate(e: React.FormEvent) {
         e.preventDefault();
-        if (!isLoaded || !signUp) return;
         setError(null);
         setSubmitting(true);
         try {
-            await signUp.create({ emailAddress: email, password });
-            await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+            // `name` is required by Better Auth's user model; the email
+            // local-part is the same default the Clerk import uses, and the
+            // user renames it in settings.
+            const { error: signUpError } = await authClient.signUp.email({
+                email,
+                password,
+                name: email.split('@')[0],
+            });
+            if (signUpError) {
+                setError(getAuthErrorMessage(signUpError));
+                return;
+            }
+            // The server sends the code on sign-up (sendVerificationOnSignUp),
+            // so go straight to the code step.
             setVerifying(true);
         } catch (err) {
-            setError(getClerkErrorMessage(err));
+            setError(getAuthErrorMessage(err));
         } finally {
             setSubmitting(false);
         }
     }
 
     async function handleGoogle() {
-        if (!isLoaded || !signUp) return;
         setError(null);
         try {
-            await signUp.authenticateWithRedirect({
-                strategy: 'oauth_google',
-                redirectUrl: '/sso-callback',
-                redirectUrlComplete: '/dashboard',
+            await authClient.signIn.social({
+                provider: 'google',
+                callbackURL: `${window.location.origin}/dashboard`,
+                errorCallbackURL: `${window.location.origin}/sign-up`,
             });
         } catch (err) {
-            setError(getClerkErrorMessage(err));
+            setError(getAuthErrorMessage(err));
         }
     }
 
@@ -98,11 +107,9 @@ export function SignUpForm() {
                         onChange={(e) => setPassword(e.target.value)}
                     />
                 </Field>
-                {/* CAPTCHA target — Clerk renders the bot check here if enabled */}
-                <div id="clerk-captcha" />
                 <button
                     type="submit"
-                    disabled={submitting || !isLoaded}
+                    disabled={submitting}
                     className="btn btn-primary w-full"
                 >
                     {submitting ? 'Creating…' : 'Create account'}
@@ -120,7 +127,6 @@ export function SignUpForm() {
             <button
                 type="button"
                 onClick={handleGoogle}
-                disabled={!isLoaded}
                 className="btn btn-outline btn-secondary w-full mt-8 gap-3"
             >
                 <FontAwesomeIcon icon={faGoogle} />

@@ -16,7 +16,7 @@ import type {
 export const zapierProvider: IntegrationProvider = {
   id: 'zapier',
   name: 'Zapier',
-  requiredTier: 'pro',
+  requiredTier: 'clan',
 
   getAuthUrl(_state: string, _redirectUri: string): string {
     // Zapier uses API key auth, not OAuth.

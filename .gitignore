@@ -9,7 +9,14 @@ dist/
 Thumbs.db
 coverage/
 .turbo/
-drizzle/meta/
+
+# NOTE: do NOT ignore drizzle/meta/. drizzle-kit needs _journal.json and the
+# snapshots committed to generate correct diffs — without them the next
+# `db:generate` silently emits a full CREATE TABLE baseline instead of an ALTER.
+# (There used to be a `drizzle/meta/` rule here. Because the pattern has an
+# interior slash git anchored it to v2/drizzle/meta/, which doesn't exist, so it
+# never actually matched backend/drizzle/meta/ — but it was one normalization to
+# `**/drizzle/meta/` away from deleting our migration history.)
 
 # TypeScript incremental build cache — per-dev state, not shared
 *.tsbuildinfo

@@ -33,8 +33,8 @@ const data: PersonaData = {
             body: 'A column called "for overnight" with cards the next region picks up. The team becomes a 24-hour pipeline instead of a 9-to-5 one.',
         },
         {
-            title: 'AI for drafting the standup.',
-            body: 'Ask the AI to draft a standup from the day’s board activity. Edit. Post. The async ritual stops being a writing chore.',
+            title: 'A remote-team board, already shaped.',
+            body: 'Start from "A board for a 6-person remote team" — the columns that survive timezones, and nothing that needs a meeting to update.',
         },
         {
             title: 'MCP server for the agent that lives in your team chat.',
@@ -44,7 +44,7 @@ const data: PersonaData = {
     faqs: [
         {
             q: 'Does it have a daily summary email?',
-            a: 'Not yet. Daily digests are on the list. For now, the AI standup-drafter and the audit log cover most of the same need.',
+            a: 'Not yet. Daily digests are on the list. For now the audit log covers most of the same need — or point your own agent at the board and ask it.',
         },
         {
             q: 'Can I scope notifications by time zone?',
@@ -60,7 +60,7 @@ const data: PersonaData = {
         },
         {
             q: 'How much for a 10-person remote team?',
-            a: 'Pro tier: $8 per user per month, roughly $80 a month. Two months free if billed yearly.',
+            a: 'The Clan plan: $12 per seat per month, so $120 a month for ten. Two months free if billed yearly.',
         },
     ],
     close: {

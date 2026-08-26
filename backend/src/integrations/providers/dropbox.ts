@@ -12,7 +12,7 @@ import type {
 export const dropboxProvider: IntegrationProvider = {
   id: 'dropbox',
   name: 'Dropbox',
-  requiredTier: 'pro',
+  requiredTier: 'clan',
 
   getAuthUrl(state: string, redirectUri: string): string {
     const params = new URLSearchParams({

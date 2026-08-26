@@ -20,18 +20,18 @@ const data: ComparisonData = {
     pickUsIf: [
         "You're not an engineering team — and Linear's vocabulary (cycles, triage, releases) doesn't fit how you work.",
         "You want the same craftsmanship Linear has, applied to general kanban.",
-        "You need AI suggestions on cards — not a Slackbot integration.",
+        "You want your own agent editing cards directly — not a Slackbot integration.",
         "You'd like a generous free tier instead of a 250-issue cap.",
     ],
     rows: [
         { feature: 'Free tier', kanninja: 'Yes — forever, no issue cap', competitor: 'Yes — 250 issue cap' },
         { feature: 'Built for', kanninja: 'Anyone — kata are universal', competitor: 'Engineering teams primarily' },
         { feature: 'Keyboard navigation', kanninja: 'Yes — first-class', competitor: 'Yes — best-in-class' },
-        { feature: 'AI built in', kanninja: 'Yes — 12 techniques (Pro)', competitor: 'Magic AI (limited, paid)' },
+        { feature: 'Built-in AI', kanninja: 'None, deliberately', competitor: 'Magic AI (limited, paid)' },
         { feature: 'Real-time presence', kanninja: 'Yes, native', competitor: 'Yes' },
         { feature: 'Cycles / sprints concept', kanninja: 'No — boards stand alone', competitor: 'Yes — central to the model' },
         { feature: 'Time tracking', kanninja: 'Yes, in the card', competitor: 'Integration only' },
-        { feature: 'MCP server for AI agents', kanninja: 'Yes — 15 tools', competitor: 'Yes' },
+        { feature: 'MCP server for AI agents', kanninja: 'Yes — 42 tools', competitor: 'Yes' },
         { feature: 'Pricing entry (paid)', kanninja: '$8 / user / month', competitor: '$10 / user / month (Standard)' },
     ],
     faqs: [
@@ -48,8 +48,8 @@ const data: ComparisonData = {
             a: "Honest answer: Linear's keyboard navigation is the best in the industry. We're good — every common action is keyboardable — but we're not at Linear's level yet.",
         },
         {
-            q: 'How does the AI compare to Linear’s Magic AI?',
-            a: "Linear's Magic AI is mostly assistive (write a description, summarize a thread). kanNINJA's AI watches the board and suggests the next move. Different jobs.",
+            q: 'How does this compare to Linear’s Magic AI?',
+            a: "Magic AI is Linear's model, doing assistive writing inside Linear. kanNINJA has no model of its own. Both of us expose MCP — the difference is we are not also charging you for a second assistant you did not ask for.",
         },
         {
             q: 'Can I import from Linear?',

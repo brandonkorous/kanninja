@@ -3,7 +3,6 @@ import { Webhook } from 'svix';
 import { env } from '../../config/env.js';
 import { db } from '../../db/index.js';
 import { profiles } from '../../db/schema/profiles.js';
-import { clans, clanMembers } from '../../db/schema/clans.js';
 import { eq } from 'drizzle-orm';
 
 interface ClerkWebhookPayload {
@@ -15,18 +14,6 @@ interface ClerkWebhookPayload {
     last_name: string | null;
     image_url: string | null;
   };
-}
-
-// Name the personal clan after the user's first name (or email
-// local-part as a fallback). The user can rename it anytime — this is
-// just a sensible default so it doesn't show up as "Untitled clan".
-function personalClanName(displayName: string | null, email: string): string {
-  if (displayName && displayName.trim()) {
-    const first = displayName.trim().split(/\s+/)[0];
-    return `${first}'s clan`;
-  }
-  const local = email.split('@')[0];
-  return `${local}'s clan`;
 }
 
 export async function clerkWebhookRoutes(fastify: FastifyInstance) {
@@ -69,37 +56,19 @@ export async function clerkWebhookRoutes(fastify: FastifyInstance) {
 
       switch (type) {
         case 'user.created': {
-          if (!primaryEmail) break;
-          // Wrap profile + personal-clan creation in a single transaction
-          // so we never end up with a profile that has no personal clan
-          // (which would strand the user with no default "home" for
-          // their boards). If any step fails, Clerk retries the webhook.
-          await db.transaction(async (tx) => {
-            const [profile] = await tx
-              .insert(profiles)
-              .values({
-                clerkUserId: data.id,
-                email: primaryEmail,
-                displayName,
-                avatarUrl: data.image_url,
-              })
-              .returning();
-
-            const [personalClan] = await tx
-              .insert(clans)
-              .values({
-                name: personalClanName(displayName, primaryEmail),
-                createdBy: profile.id,
-                isPersonal: true,
-              })
-              .returning();
-
-            await tx.insert(clanMembers).values({
-              clanId: personalClan.id,
-              userId: profile.id,
-              role: 'admin',
-            });
-          });
+          // Provisioning moved to Better Auth's sign-up hook (see lib/auth.ts
+          // → databaseHooks.user.create.after). A profile now requires an
+          // auth_users row, which a Clerk-only signup doesn't have.
+          //
+          // Clerk sign-ups are frozen for the migration window, so reaching
+          // here means a straggler slipped through. Log it loudly rather than
+          // failing: the delta run of migrate-clerk-users.ts picks these up,
+          // and returning non-2xx would just make Clerk retry forever.
+          request.log.warn(
+            { clerkUserId: data.id, email: primaryEmail },
+            'Clerk user.created received after Better Auth cutover — not provisioned. ' +
+              'Re-run migrate-clerk-users.ts to import this user.',
+          );
           break;
         }
 

@@ -10,7 +10,7 @@ const data: ComparisonData = {
     heroSubtitle:
         "Monday is a spreadsheet that learned to be every other tool. That breadth is its gift and its curse. kanNINJA picks the kanban half and sharpens it instead of branching out.",
     coreDifference:
-        "Monday rewards configuration — boards become whatever you build with formulas, automations, and integrations. kanNINJA rewards restraint — you get a board, the AI, the analytics, and the presence layer with nothing to wire up.",
+        "Monday rewards configuration — boards become whatever you build with formulas, automations, and integrations. kanNINJA rewards restraint — you get a board, the analytics, the presence layer, and an open door for your own agent, with nothing to wire up.",
     pickThemIf: [
         "You want a single tool that becomes your CRM, ticket system, and project tracker.",
         "Your team enjoys building dashboards, formulas, and automation recipes.",
@@ -20,18 +20,18 @@ const data: ComparisonData = {
     pickUsIf: [
         "You don't want to spend a weekend configuring before the team can start working.",
         "The default kanban view should feel finished, not like a starting kit.",
-        "AI should suggest the next move on the card you're looking at, not generate a column.",
+        "You would rather your own agent worked the board than learn another vendor's assistant.",
         "Pricing should be predictable, not climb with every feature you actually need.",
     ],
     rows: [
         { feature: 'Free tier', kanninja: 'Yes — forever', competitor: 'Yes — 2 users only' },
         { feature: 'Kanban as primary view', kanninja: 'Yes', competitor: 'One of many views' },
         { feature: 'Real-time presence avatars', kanninja: 'Yes, native', competitor: 'Yes' },
-        { feature: 'AI built in', kanninja: 'Yes — 12 techniques (Pro)', competitor: 'AI Assistant (paid add-on)' },
+        { feature: 'Built-in AI', kanninja: 'None, deliberately', competitor: 'AI Assistant (paid add-on)' },
         { feature: 'Time tracking', kanninja: 'Yes, in the card', competitor: 'Yes (Pro+)' },
         { feature: 'Custom fields', kanninja: 'Yes, native', competitor: 'Yes — extensive' },
         { feature: 'Automations', kanninja: 'Not yet', competitor: 'Yes — limited per tier' },
-        { feature: 'MCP server for AI agents', kanninja: 'Yes — 15 tools', competitor: 'No' },
+        { feature: 'MCP server for AI agents', kanninja: 'Yes — 42 tools', competitor: 'No' },
         { feature: 'Pricing entry (paid)', kanninja: '$8 / user / month', competitor: '$9 / user / month (3-seat min)' },
     ],
     faqs: [
@@ -48,8 +48,8 @@ const data: ComparisonData = {
             a: "If you're a freelancer or duo, you pay for three seats either way. kanNINJA bills per seat, with no minimum — solo users pay for one seat.",
         },
         {
-            q: 'Is your AI as capable as Monday’s AI Assistant?',
-            a: "Different shape. Monday's AI generates content (status updates, formulas, board templates). kanNINJA's AI watches how you actually work and suggests the next kata. Both are useful — they answer different questions.",
+            q: 'Is there anything like Monday’s AI Assistant?',
+            a: "No, and that is the answer we are happy with. Monday sells you their model on top of your seat. We removed ours and opened 42 MCP tools instead, so Claude or ChatGPT — whichever you already pay for — does the work with your full context.",
         },
         {
             q: 'Can I migrate from Monday?',

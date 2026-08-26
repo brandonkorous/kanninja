@@ -22,7 +22,7 @@ const SYSTEMS = [
     { name: 'App', status: 'operational' },
     { name: 'API', status: 'operational' },
     { name: 'Realtime presence', status: 'operational' },
-    { name: 'AI techniques', status: 'operational' },
+    { name: 'MCP server', status: 'operational' },
     { name: 'File storage', status: 'operational' },
 ] as const;
 

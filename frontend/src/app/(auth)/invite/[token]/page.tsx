@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@clerk/nextjs';
+import { useSession } from '@/lib/auth-client';
 import { useApi } from '@/hooks/use-api';
 
 // Clans are the only thing users get invited to. Boards are reached
@@ -22,7 +22,8 @@ export default function InvitePage() {
     const params = useParams();
     const router = useRouter();
     const token = params.token as string;
-    const { isSignedIn, isLoaded } = useAuth();
+    const { data: session, isPending: sessionPending } = useSession();
+    const isSignedIn = Boolean(session);
     const api = useApi();
     const [invitation, setInvitation] = useState<ClanInvitation | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -51,7 +52,7 @@ export default function InvitePage() {
         }
     }
 
-    if (loading || !isLoaded) {
+    if (loading || sessionPending) {
         return (
             <p
                 role="status"

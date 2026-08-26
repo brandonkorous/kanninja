@@ -2,7 +2,14 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    // The backend is an application — it's bundled by tsup (dts: false) and
+    // nothing imports its types. Emitting declarations forces tsc to *name*
+    // every exported inferred type, and Better Auth's `auth` object resolves
+    // through better-auth's own zod 4 while this package uses zod 3, so the
+    // path isn't nameable from here (TS2742). Only `shared` needs .d.ts files.
+    "declaration": false,
+    "declarationMap": false
   },
   "include": ["src"],
   "exclude": ["src/**/*.test.ts", "src/test/**"],

@@ -1,142 +1,92 @@
 import { SubscriptionTier } from './enums.js';
 
+/**
+ * How a tier charges.
+ *
+ * Two shapes for two tiers. The union survives the collapse from five tiers
+ * because it is what makes "Free is not just a cheap Pro" explicit — and if a
+ * flat or custom shape is ever wanted again, it belongs here rather than in a
+ * new set of nullable columns.
+ */
+export type TierPricing =
+  | { model: 'free' }
+  /** `monthly` / `yearly` are PER SEAT, not per account. */
+  | { model: 'per_seat'; monthly: number; yearly: number; minSeats: number };
+
 export interface TierConfig {
   name: string;
   tier: SubscriptionTier;
-  price: { monthly: number; yearly: number };
-  /** Seats included in the flat price. Overage applies above this on tiers
-   *  where seatOveragePrice is non-null. Enterprise is custom (Infinity). */
-  maxUsers: number;
-  /** Per-seat monthly price for seats over maxUsers. null = hard cap. */
-  seatOveragePrice: number | null;
+  pricing: TierPricing;
+  /** Included storage in MB, pooled across the account. */
+  storageIncludedMb: number;
   features: {
-    /** In-app AI features (kanNINJA pays LLM tokens — metered for margin). */
-    aiFeatures: boolean;
-    /** AI runs allowed per month. Free uses lifetime quota — see aiRunsLifetime. */
-    aiRunsPerMonth: number | null;
-    /** Free-tier taste quota; non-null only on Free. */
-    aiRunsLifetime: number | null;
-    /** MCP tool calls per minute (rate limit only — no monthly cap, since MCP
-     *  uses the user's own LLM, not ours). */
+    /** MCP tool calls per minute — the one capability axis that is actually
+     *  enforced (mcp-remote/src/index.ts) and the one that scales with what an
+     *  agent-driven workload costs us. */
     mcpRequestsPerMinute: number;
-    projectTemplates: boolean;
-    prioritySupport: boolean;
-    ssoScim: boolean;
-    auditLogs: boolean;
-    dedicatedCsm: boolean;
-    fileStorage: string;
   };
 }
 
+/** Yearly is ten months of the monthly rate — two months free. */
+export const YEARLY_MONTHS_CHARGED = 10;
+
+/**
+ * TWO TIERS. Nothing is held back for a tier above.
+ *
+ * The old grid sold five tiers on eight differentiators, six of which were
+ * never enforced anywhere in the codebase — templates, storage, audit logs and
+ * priority support were ungated, and SSO/SCIM was a boolean with no
+ * implementation behind it. Collapsing removed the pretence, not the product.
+ *
+ * Free is sized for the audience that will never pay and should not be asked
+ * to: a wedding party, a soccer team, a household. Ten seats covers almost all
+ * of them, which is the point — they are word of mouth, not a $10 line item.
+ */
 export const SUBSCRIPTION_TIERS: Record<SubscriptionTier, TierConfig> = {
   [SubscriptionTier.FREE]: {
     name: 'Free',
     tier: SubscriptionTier.FREE,
-    price: { monthly: 0, yearly: 0 },
-    maxUsers: 3,
-    seatOveragePrice: null,
+    pricing: { model: 'free' },
+    storageIncludedMb: 2_000,
     features: {
-      aiFeatures: true,
-      aiRunsPerMonth: null,
-      aiRunsLifetime: 50,
-      mcpRequestsPerMinute: 10,
-      projectTemplates: false,
-      prioritySupport: false,
-      ssoScim: false,
-      auditLogs: false,
-      dedicatedCsm: false,
-      fileStorage: '100MB',
+      mcpRequestsPerMinute: 20,
     },
   },
   [SubscriptionTier.CLAN]: {
     name: 'Clan',
     tier: SubscriptionTier.CLAN,
-    price: { monthly: 10, yearly: 100 },
-    maxUsers: 15,
-    seatOveragePrice: null,
+    // $12 sits at Monday Standard, above ClickUp ($7), under Asana ($13.49) —
+    // and unlike any of them there is no tier above holding anything back.
+    pricing: { model: 'per_seat', monthly: 12, yearly: 120, minSeats: 1 },
+    storageIncludedMb: 1_000_000,
     features: {
-      aiFeatures: true,
-      aiRunsPerMonth: 200,
-      aiRunsLifetime: null,
-      mcpRequestsPerMinute: 30,
-      projectTemplates: true,
-      prioritySupport: false,
-      ssoScim: false,
-      auditLogs: false,
-      dedicatedCsm: false,
-      fileStorage: '5GB',
-    },
-  },
-  [SubscriptionTier.PRO]: {
-    name: 'Pro',
-    tier: SubscriptionTier.PRO,
-    price: { monthly: 25, yearly: 250 },
-    maxUsers: 15,
-    seatOveragePrice: 4,
-    features: {
-      aiFeatures: true,
-      aiRunsPerMonth: 2000,
-      aiRunsLifetime: null,
-      mcpRequestsPerMinute: 120,
-      projectTemplates: true,
-      prioritySupport: false,
-      ssoScim: false,
-      auditLogs: false,
-      dedicatedCsm: false,
-      fileStorage: '10GB',
-    },
-  },
-  [SubscriptionTier.BUSINESS]: {
-    name: 'Business',
-    tier: SubscriptionTier.BUSINESS,
-    price: { monthly: 99, yearly: 990 },
-    maxUsers: 50,
-    seatOveragePrice: 6,
-    features: {
-      aiFeatures: true,
-      aiRunsPerMonth: 20000,
-      aiRunsLifetime: null,
       mcpRequestsPerMinute: 600,
-      projectTemplates: true,
-      prioritySupport: true,
-      ssoScim: true,
-      auditLogs: true,
-      dedicatedCsm: false,
-      fileStorage: '50GB',
-    },
-  },
-  [SubscriptionTier.ENTERPRISE]: {
-    name: 'Enterprise',
-    tier: SubscriptionTier.ENTERPRISE,
-    price: { monthly: 0, yearly: 0 },
-    maxUsers: Number.POSITIVE_INFINITY,
-    seatOveragePrice: null,
-    features: {
-      aiFeatures: true,
-      aiRunsPerMonth: null,
-      aiRunsLifetime: null,
-      mcpRequestsPerMinute: 6000,
-      projectTemplates: true,
-      prioritySupport: true,
-      ssoScim: true,
-      auditLogs: true,
-      dedicatedCsm: true,
-      fileStorage: 'Custom',
     },
   },
 };
 
-/** Tiers where in-app AI features are accessible (gated by quota above Free). */
-export const AI_ENABLED_TIERS: SubscriptionTier[] = [
-  SubscriptionTier.FREE,
-  SubscriptionTier.CLAN,
-  SubscriptionTier.PRO,
-  SubscriptionTier.BUSINESS,
-  SubscriptionTier.ENTERPRISE,
-];
+/** Seat ceiling on Free. Per-seat tiers have none — see getSeatCap(). */
+export const FREE_SEAT_CAP = 10;
 
-/** Tiers that include audit logs */
-export const AUDIT_ENABLED_TIERS: SubscriptionTier[] = [
-  SubscriptionTier.BUSINESS,
-  SubscriptionTier.ENTERPRISE,
-];
+/**
+ * Extra storage, sold in blocks on the Clan plan.
+ *
+ * Priced near cost deliberately — Azure Blob is ~$0.02/GB/month, so the $5/GB
+ * some tools charge invites the obvious question. This exists because someone
+ * will occasionally need it, not as a growth lever; the upgrade we sell is
+ * seats.
+ *
+ * NOT YET ENFORCEABLE. Nothing meters attachment bytes today, so a block sold
+ * now would charge for a limit that does not exist. Metering ships first.
+ */
+export const STORAGE_ADD_ON = {
+  blockGb: 100,
+  monthlyPerBlock: 4,
+};
+
+/**
+ * Per-file upload ceiling, both tiers. Independent of the pooled allowance:
+ * it stops kanNINJA being used as a CDN, which is the failure a generous total
+ * actually invites. Trello's equivalent is 10MB on free.
+ */
+export const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;

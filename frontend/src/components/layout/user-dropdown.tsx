@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useUser, useClerk } from '@clerk/nextjs';
+import { authClient, useSession } from '@/lib/auth-client';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faUser,
@@ -24,8 +24,8 @@ export function UserDropdown({
   compact?: boolean;
   placement?: Placement;
 }) {
-  const { user, isLoaded } = useUser();
-  const { signOut } = useClerk();
+  const { data: session, isPending } = useSession();
+  const user = session?.user;
   const { openPreferences } = useConsent();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -50,7 +50,7 @@ export function UserDropdown({
     };
   }, [open]);
 
-  if (!isLoaded || !user) {
+  if (isPending || !user) {
     return (
       <div
         className={
@@ -62,19 +62,22 @@ export function UserDropdown({
     );
   }
 
-  const fullName =
-    [user.firstName, user.lastName].filter(Boolean).join(' ') || 'Account';
-  const email = user.primaryEmailAddress?.emailAddress ?? '';
+  // Better Auth stores one `name` field rather than Clerk's first/last pair,
+  // so initials come from splitting it: "Aiko Tanaka" -> AT, "Aiko" -> A.
+  const fullName = user.name?.trim() || 'Account';
+  const email = user.email ?? '';
+  const nameParts = fullName === 'Account' ? [] : fullName.split(/\s+/);
   const initials =
-    [user.firstName?.[0], user.lastName?.[0]]
+    [nameParts[0]?.[0], nameParts.length > 1 ? nameParts[nameParts.length - 1][0] : undefined]
       .filter(Boolean)
       .join('')
       .toUpperCase() || 'U';
 
   const handleSignOut = async () => {
     setOpen(false);
-    await signOut();
+    await authClient.signOut();
     router.push('/sign-in');
+    router.refresh();
   };
 
   return (
@@ -93,12 +96,12 @@ export function UserDropdown({
             : 'w-full flex items-center gap-3 rounded-md p-3 hover:bg-base-200 transition-colors text-left'
         }
       >
-        <div className={`avatar ${user.imageUrl ? '' : 'placeholder'}`}>
+        <div className={`avatar ${user.image ? '' : 'placeholder'}`}>
           <div className="bg-base-300 text-base-content rounded-full w-10 h-10">
-            {user.imageUrl ? (
+            {user.image ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={user.imageUrl}
+                src={user.image}
                 alt=""
                 width={40}
                 height={40}

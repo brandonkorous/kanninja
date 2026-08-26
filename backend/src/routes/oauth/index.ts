@@ -8,6 +8,8 @@ import { AppError } from '../../utils/errors.js';
 const SUPPORTED_SCOPES = [
   'read:boards',
   'write:tasks',
+  // Deprecated no-op: built-in AI is gone. Kept in the allow-list so
+  // clients with it hardcoded can still complete authorization.
   'ai:capabilities',
   'team:read',
   'integrations:read',

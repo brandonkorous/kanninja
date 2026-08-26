@@ -1,10 +1,9 @@
 'use client';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
+import { faCheck } from '@fortawesome/free-solid-svg-icons';
 import { Field, Input, Textarea, Select, Checkbox } from '@/components/ui';
 import { useBoardMembers } from '@/hooks/use-board-members';
-import { useSuggestStartDate } from '@/hooks/use-suggest-start-date';
 import { CardMetadata } from './CardMetadata';
 
 const PRIORITIES = ['none', 'low', 'medium', 'high', 'urgent'] as const;
@@ -35,8 +34,6 @@ export function DetailsTab({
     onDescriptionBlur,
 }: {
     boardId: string;
-    /** Title is still required — Suggest start date sends it as anchor
-     * context to the AI even when the Title field itself is hidden. */
     title: string;
     description: string;
     priority: string;
@@ -61,24 +58,6 @@ export function DetailsTab({
     onDescriptionBlur?: () => void;
 }) {
     const { data: members } = useBoardMembers(boardId);
-    const suggestStartDate = useSuggestStartDate();
-
-    // Smart-suggest is only useful when there's a dueDate to anchor
-    // against and no startDate already set. Disabled while pending.
-    const canSuggestStart = !!dueDate && !startDate;
-    const handleSuggestStart = async () => {
-        if (!canSuggestStart) return;
-        const result = await suggestStartDate.mutateAsync({
-            title,
-            description: description || undefined,
-            dueDate: new Date(dueDate).toISOString(),
-            estimatedHours: estimatedHours ? parseFloat(estimatedHours) : undefined,
-        });
-        // The suggestion comes back as a YYYY-MM-DD-style ISO; trim to
-        // the date portion for the <input type="date">. The change
-        // handler will commit it through the same path as a manual edit.
-        onStartDateChange(result.suggested_start_date.slice(0, 10));
-    };
 
     return (
         <div className="space-y-6">
@@ -103,39 +82,15 @@ export function DetailsTab({
                 />
             </Field>
             {/* Dates: start + due on the same row so the span reads
-              * left-to-right like the timeline bar. The smart-suggest
-              * button sits inside the start-date field — only visible
-              * when there's a due date to anchor against. */}
+              * left-to-right like the timeline bar. */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <Field label="Start date" htmlFor="card-start-input" optional>
-                    <div className="flex items-center gap-2">
-                        <Input
-                            id="card-start-input"
-                            type="date"
-                            value={startDate}
-                            onChange={(e) => onStartDateChange(e.target.value)}
-                            className="flex-1"
-                        />
-                        {canSuggestStart && (
-                            <button
-                                type="button"
-                                onClick={handleSuggestStart}
-                                disabled={suggestStartDate.isPending}
-                                aria-label="Suggest a start date with AI"
-                                title="AI suggests a start date based on the due date, your estimate, and any connected calendar"
-                                className="btn btn-ghost btn-sm shrink-0 text-base-content/60 hover:text-primary"
-                            >
-                                <FontAwesomeIcon
-                                    icon={faWandMagicSparkles}
-                                    aria-hidden="true"
-                                    className={suggestStartDate.isPending ? 'animate-pulse' : ''}
-                                />
-                                <span className="ml-1.5 hidden md:inline">
-                                    {suggestStartDate.isPending ? 'Thinking…' : 'Suggest'}
-                                </span>
-                            </button>
-                        )}
-                    </div>
+                    <Input
+                        id="card-start-input"
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => onStartDateChange(e.target.value)}
+                    />
                 </Field>
                 <Field label="Due date" htmlFor="card-due-input" optional>
                     <Input
@@ -147,8 +102,8 @@ export function DetailsTab({
                 </Field>
             </div>
             {/* Planning metadata: priority + estimate sit together
-              * because both feed the smart-suggest math (and both
-              * drive how the kata reads on the calendar/timeline). */}
+              * because both drive how the kata reads on the
+              * calendar/timeline. */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <Field label="Priority" htmlFor="card-priority-input">
                     <Select

@@ -37,8 +37,8 @@ const data: PersonaData = {
             body: 'A card per speaker — bio, headshot, hotel, dietary restrictions, A/V needs. Send the green room a clean version the day before.',
         },
         {
-            title: 'AI for breaking down the next event.',
-            body: 'Ask the AI to break down "200-person conference" into cards. Edit for your venue and audience. Six hours of planning becomes ninety minutes.',
+            title: 'An event board, already run once.',
+            body: 'Start from "A board for a 200-person conference" — venue, catering, run-of-show, the follow-up nobody plans for. Edit for your audience.',
         },
     ],
     faqs: [
@@ -60,7 +60,7 @@ const data: PersonaData = {
         },
         {
             q: 'Is there a template for a wedding or conference?',
-            a: 'Not yet — but the AI gets you most of the way from a one-line description. Templates are on the list.',
+            a: 'Yes. "A board for a 200-person conference" is built in — venue, catering, run-of-show, and the follow-up nobody plans for.',
         },
     ],
     close: {

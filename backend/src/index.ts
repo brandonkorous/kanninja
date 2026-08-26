@@ -1,13 +1,16 @@
 import Fastify from 'fastify';
 import rawBody from 'fastify-raw-body';
+import websocket from '@fastify/websocket';
 import { env } from './config/env.js';
 import { corsPlugin } from './plugins/cors.js';
 import { errorHandlerPlugin } from './plugins/error-handler.js';
 import { rateLimitPlugin } from './plugins/rate-limit.js';
 import { authPlugin } from './plugins/auth.js';
+import { betterAuthPlugin } from './plugins/better-auth.js';
 import { auditMcpPlugin } from './plugins/audit-mcp.js';
 import { healthRoutes } from './routes/health.js';
 import { clerkWebhookRoutes } from './routes/auth/webhooks.js';
+import { realtimeRoutes } from './routes/realtime/index.js';
 import { boardRoutes } from './routes/boards/index.js';
 import { boardClansRoutes } from './routes/boards/clans.js';
 import { listRoutes } from './routes/lists/index.js';
@@ -22,7 +25,7 @@ import { clanRoutes } from './routes/clans/index.js';
 import { invitationRoutes } from './routes/invitations/index.js';
 import { subscriptionRoutes } from './routes/subscriptions/index.js';
 import { stripeWebhookRoutes } from './routes/webhooks/stripe.js';
-import { aiRoutes } from './routes/ai/index.js';
+import { transcriptionRoutes } from './routes/transcription/index.js';
 import { analyticsRoutes } from './routes/analytics/index.js';
 import { notificationRoutes } from './routes/notifications/index.js';
 import { templateRoutes } from './routes/templates/index.js';
@@ -87,6 +90,10 @@ async function start() {
     runFirst: true,
   });
 
+  // Board presence + mutation broadcast. Replaces Supabase Realtime; see
+  // services/realtime-hub.ts for the single-pod scaling limit.
+  await fastify.register(websocket);
+
   // Plugins
   await fastify.register(corsPlugin);
   await fastify.register(errorHandlerPlugin);
@@ -94,9 +101,15 @@ async function start() {
   await fastify.register(authPlugin);
   await fastify.register(auditMcpPlugin);
 
+  // Better Auth owns /api/auth/*. Registered as its own encapsulated plugin
+  // because it installs a catch-all content-type parser that must not leak
+  // into the rest of the API.
+  await fastify.register(betterAuthPlugin);
+
   // Routes
   await fastify.register(healthRoutes);
   await fastify.register(clerkWebhookRoutes);
+  await fastify.register(realtimeRoutes);
   await fastify.register(boardRoutes);
   await fastify.register(boardClansRoutes);
   await fastify.register(listRoutes);
@@ -111,7 +124,7 @@ async function start() {
   await fastify.register(invitationRoutes);
   await fastify.register(subscriptionRoutes);
   await fastify.register(stripeWebhookRoutes);
-  await fastify.register(aiRoutes);
+  await fastify.register(transcriptionRoutes);
   await fastify.register(analyticsRoutes);
   await fastify.register(notificationRoutes);
   await fastify.register(templateRoutes);

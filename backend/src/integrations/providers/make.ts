@@ -15,7 +15,7 @@ import type {
 export const makeProvider: IntegrationProvider = {
   id: 'make',
   name: 'Make',
-  requiredTier: 'pro',
+  requiredTier: 'clan',
 
   getAuthUrl(_state: string, _redirectUri: string): string {
     return '';

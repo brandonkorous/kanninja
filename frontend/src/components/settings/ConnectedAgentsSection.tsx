@@ -6,7 +6,7 @@ import type { OAuthGrant } from '@/hooks/use-oauth-grants';
 const SCOPE_SHORT: Record<string, string> = {
   'read:boards': 'Read boards',
   'write:tasks': 'Edit tasks',
-  'ai:capabilities': 'Use AI',
+  'ai:capabilities': 'Unused (legacy)',
   'team:read': 'Read clans',
   'integrations:read': 'See integrations',
 };

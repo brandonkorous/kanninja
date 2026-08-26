@@ -14,7 +14,7 @@ export const metadata: Metadata = buildPageMetadata({
         'project management in ChatGPT',
         'project management in Claude',
         'kanban inside chat',
-        'AI assistant project management',
+        'agent project management',
         'plan with ChatGPT',
         'plan with Claude',
         'MCP project management',

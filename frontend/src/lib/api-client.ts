@@ -14,11 +14,10 @@ export class ApiClientError extends Error {
 
 interface RequestOptions extends Omit<RequestInit, 'body'> {
     body?: unknown;
-    token?: string | null;
 }
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-    const { body, token, ...init } = options;
+    const { body, ...init } = options;
     const hasBody = body !== undefined;
 
     const headers: Record<string, string> = {
@@ -29,13 +28,13 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
         headers['Content-Type'] = 'application/json';
     }
 
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
-
     const response = await fetch(`${API_URL}${path}`, {
         ...init,
         headers,
+        // The API is on a different origin (api.kanninja.com vs kanninja.com),
+        // so the Better Auth session cookie only rides along with an explicit
+        // credentials mode. Without this every request is anonymous.
+        credentials: 'include',
         body: hasBody ? JSON.stringify(body) : undefined,
     });
 
@@ -55,17 +54,13 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 }
 
 export const api = {
-    get: <T>(path: string, token?: string | null) => request<T>(path, { method: 'GET', token }),
+    get: <T>(path: string) => request<T>(path, { method: 'GET' }),
 
-    post: <T>(path: string, body?: unknown, token?: string | null) =>
-        request<T>(path, { method: 'POST', body, token }),
+    post: <T>(path: string, body?: unknown) => request<T>(path, { method: 'POST', body }),
 
-    patch: <T>(path: string, body?: unknown, token?: string | null) =>
-        request<T>(path, { method: 'PATCH', body, token }),
+    patch: <T>(path: string, body?: unknown) => request<T>(path, { method: 'PATCH', body }),
 
-    put: <T>(path: string, body?: unknown, token?: string | null) =>
-        request<T>(path, { method: 'PUT', body, token }),
+    put: <T>(path: string, body?: unknown) => request<T>(path, { method: 'PUT', body }),
 
-    delete: <T>(path: string, token?: string | null) =>
-        request<T>(path, { method: 'DELETE', token }),
+    delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
 };
