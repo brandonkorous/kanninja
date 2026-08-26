@@ -10,7 +10,6 @@ import {
   faTrash,
   faGear,
   faCalendarDays,
-  faEnvelope,
   faBook,
   faBolt,
   faVideo,

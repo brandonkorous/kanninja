@@ -39,12 +39,12 @@ const nextConfig: NextConfig = {
       { source: '/oauth/consent', headers: consentSecurityHeaders },
     ];
   },
-  // TODO: restore proper lint-during-build once frontend has its own flat
-  // eslint.config.mjs wired to eslint-config-next. The workspace-level
-  // eslint.config.js doesn't load the Next.js / react-hooks plugins, so
-  // disable-comments for rules like @next/next/no-img-element and
-  // react-hooks/exhaustive-deps error out during `next build`.
-  // TypeScript's own type-check still runs during build and will fail it.
+  // The flat config the old TODO here asked for now exists at
+  // ./eslint.config.mjs, so lint genuinely works. It still does not run during
+  // the build, deliberately: CI runs `pnpm lint` in the verify job, which fails
+  // the pipeline before any Docker image is built rather than partway through
+  // one. Linting again here would just be the same work, slower and later.
+  // TypeScript's own type-check does still run during build and will fail it.
   eslint: {
     ignoreDuringBuilds: true,
   },

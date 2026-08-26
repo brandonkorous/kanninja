@@ -10,7 +10,10 @@ export function JsonLd({ data }: { data: Record<string, unknown> }) {
     return (
         <script
             type="application/ld+json"
-            // eslint-disable-next-line react/no-danger
+            // Safe: the argument is always an object we built here, run
+            // through JSON.stringify — never user input, never a string
+            // spliced together. (The old eslint-disable pointed at
+            // react/no-danger, which this config does not enable.)
             dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
         />
     );

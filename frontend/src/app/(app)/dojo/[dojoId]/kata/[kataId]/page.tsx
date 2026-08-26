@@ -20,7 +20,7 @@ import { TimeTab } from '@/components/kanban/card-tabs/TimeTab';
 import { AttachmentsTab } from '@/components/kanban/card-tabs/AttachmentsTab';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
-const priorities = ['none', 'low', 'medium', 'high', 'urgent'] as const;
+type Priority = 'none' | 'low' | 'medium' | 'high' | 'urgent';
 
 /**
  * Full-page kata view. Same tabs and form as the CardDetailModal, but laid
@@ -108,7 +108,7 @@ export default function KataPage() {
             cardId: card.id,
             title: title.trim(),
             description: description.trim() || undefined,
-            priority: priority as (typeof priorities)[number],
+            priority: priority as Priority,
             startDate: startDate ? new Date(startDate).toISOString() : null,
             dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
             isCompleted,

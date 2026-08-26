@@ -53,12 +53,13 @@ env:
 
 jobs:
     # ------------------------------------------------------------------
-    # Typecheck + unit tests. Gates every build job below — this pipeline
-    # shipped to production without running either for its first year, which
-    # is not a gap you want while migrating auth and the database at once.
+    # Lint + typecheck + unit tests. Gates every build job below — this
+    # pipeline shipped to production without running any of them for its first
+    # year, which is not a gap you want while migrating auth and the database
+    # at once.
     # ------------------------------------------------------------------
     verify:
-        name: Typecheck & test
+        name: Lint, typecheck & test
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
@@ -91,6 +92,13 @@ jobs:
             # `pnpm -r run test` is a no-op in packages without a test script,
             # so this is backend's vitest suite today.
             - run: pnpm test
+            # Lint gates the deploy from here on. It could not before: the
+            # frontend had no flat config of its own, so `next lint` fell back
+            # to the workspace one, found no Next.js plugins, and errored on
+            # every eslint-disable comment naming a rule it could not resolve.
+            # It failed on a clean checkout of main, which is why it was never
+            # wired in. Warnings do not fail the build; errors do.
+            - run: pnpm lint
 
     # ------------------------------------------------------------------
     # Build & push the three cluster images.
