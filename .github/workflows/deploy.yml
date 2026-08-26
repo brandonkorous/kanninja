@@ -510,11 +510,24 @@ jobs:
             #
             # The password arrives as a psql VARIABLE and is quoted with
             # :'app_password' so psql escapes it. Interpolating it into the SQL
-            # string breaks on any password containing a quote — and the
+            # string breaks on any password containing a quote - and the
             # generated one contains plenty. THE SQL ARRIVES ON STDIN, NOT VIA
             # -c: psql only expands :'var' while lexing input it reads, so a -c
             # string reaches the server literally and fails with `syntax error
             # at or near ":"`.
+            #
+            # THE DOLLAR-QUOTE TAG IS $do$, NOT $$, AND THAT IS NOT STYLE.
+            # Kubernetes expands $(VAR) in a container command/args, and it uses
+            # $$ as the escape for a literal $. So a plain $$ dollar-quote is
+            # collapsed to a single $ BEFORE sh ever runs, and psql receives
+            #
+            #     DO $   ->  ERROR: syntax error at or near "$"
+            #
+            # The heredoc is innocent: it is quoted (<<'SQL') and reproduces $$
+            # faithfully, which is why this only failed inside the cluster and
+            # looked like a bash quoting bug. A named tag contains no $$
+            # sequence at all, so nothing rewrites it. $$$$ would also work and
+            # is far harder to read.
             # -----------------------------------------------------------------
             - name: Ensure the application role
               run: |
@@ -536,22 +549,20 @@ jobs:
                           - name: psql
                             image: postgres:18-alpine
                             command: ['sh', '-c']
-                            # The heredoc below is QUOTED (<<'SQL'), and so is
-                            # the outer <<'YAML'. Nothing expands, which is why
-                            # the dollar-quoted DO block is written `$$` and NOT
-                            # `\$\$`: a backslash here is not an escape, it is a
-                            # literal character that reaches psql and fails with
-                            # `syntax error at or near "\"`. Do not "fix" it.
+                            # The dollar-quote tag is $do$ rather than $$ on purpose:
+                            # Kubernetes collapses $$ to a single $ when it expands
+                            # $(VAR) references in args, so a plain $$ block reaches psql
+                            # as `DO $` and fails. A named tag has no $$ to rewrite.
                             args:
                               - |
                                 cat <<'SQL' | psql "$DATABASE_ADMIN_URL" -v ON_ERROR_STOP=1 -v app_password="$KANNINJA_APP_PASSWORD"
-                                DO $$
+                                DO $do$
                                 BEGIN
                                   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'kanninja_app') THEN
                                     CREATE ROLE kanninja_app LOGIN;
                                   END IF;
                                 END
-                                $$;
+                                $do$;
                                 ALTER ROLE kanninja_app LOGIN PASSWORD :'app_password';
                                 GRANT CONNECT ON DATABASE kanninja TO kanninja_app;
                                 GRANT USAGE ON SCHEMA public TO kanninja_app;
