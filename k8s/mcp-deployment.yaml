@@ -22,7 +22,7 @@ spec:
         app.kubernetes.io/name: mcp
         app.kubernetes.io/part-of: kanninja
     spec:
-      # No imagePullSecrets: Artifact Registry images pulled by the node SA.
+      # No imagePullSecrets: the GHCR packages are public, pulled anonymously.
       containers:
         - name: mcp
           image: ghcr.io/brandonkorous/kanninja-mcp-remote:latest

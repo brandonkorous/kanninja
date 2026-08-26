@@ -31,7 +31,7 @@ spec:
             app.kubernetes.io/part-of: kanninja
         spec:
           restartPolicy: Never
-          # No imagePullSecrets: Artifact Registry images pulled by the node SA.
+          # No imagePullSecrets: the GHCR packages are public, pulled anonymously.
           containers:
             - name: reconcile-seats
               image: ghcr.io/brandonkorous/kanninja-backend:latest

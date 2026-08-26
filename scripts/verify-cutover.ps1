@@ -1,21 +1,20 @@
 <#
 .SYNOPSIS
-    Prove the kanNINJA stack works on AKS BEFORE DNS is flipped to it.
+    Prove the kanNINJA Services actually serve requests, not just that the
+    rollout succeeded.
 
 .DESCRIPTION
-    The dark deploy is the whole safety of this cutover: workloads run in the
-    `kanninja` namespace on AKS while kanninja.com still resolves to GKE, so a
-    broken deploy costs nothing. This script is what turns "the rollout
-    succeeded" into "the stack actually serves requests", which are not the same
-    claim and were previously indistinguishable.
+    Written for the 2026-08-26 cutover, when the stack ran dark on AKS before
+    DNS was flipped. It outlived that: "the rollout succeeded" and "the stack
+    serves requests" are different claims, and this is what separates them.
 
-    IT PROBES FROM INSIDE `sparx-prod`, NOT FROM THIS MACHINE. The public
-    hostnames still point at GKE and the Services have no external address, so
-    there is nothing to curl from here. More importantly, the path that has to
-    work at cutover is Caddy → `<svc>.kanninja.svc.cluster.local`, cross
-    namespace — so the probe runs from Caddy's own namespace and uses the exact
-    addresses the Caddyfile does. A port-forward would prove something easier
-    than the thing that has to be true.
+    IT PROBES FROM INSIDE `sparx-prod`, NOT FROM THIS MACHINE. The Services
+    have no external address, so there is nothing to curl from here — but more
+    importantly the path that has to work is Caddy →
+    `<svc>.kanninja.svc.cluster.local`, cross namespace. The probe runs from
+    Caddy's own namespace and uses the exact addresses the Caddyfile does. A
+    port-forward would prove something easier than the thing that has to be
+    true.
 
 .PARAMETER Namespace
     Where the workloads live. Defaults to kanninja.

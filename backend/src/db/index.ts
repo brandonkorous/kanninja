@@ -33,9 +33,10 @@ const client = postgres(env.DATABASE_URL, {
   max: env.DB_POOL_MAX,
   // Local Postgres in dev usually has no certificate at all.
   ssl: isLocal ? false : 'require',
-  // Cross-cloud (GKE in GCP → Postgres in Azure) means every connection
-  // crosses the public internet, where idle connections get reaped by
-  // intermediaries. Recycle before something else does it for us.
+  // Kept from when compute and database were in different clouds and every
+  // connection crossed the public internet. Both are in Azure now and the
+  // link is private, but recycling idle connections is cheap and still guards
+  // against anything in the path reaping them silently.
   idle_timeout: 60,
   max_lifetime: 60 * 30,
   connect_timeout: 15,

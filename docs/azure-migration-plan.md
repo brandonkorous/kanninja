@@ -20,10 +20,23 @@
 >
 > ### What is NOT done
 >
-> **Blocked - the GCP account is unreachable.**
+> **The old GCP estate still bills, and needs one interactive login.**
 > The GKE `kanninja` namespace, the Artifact Registry repo, the `kanninja-pool`
-> WIF provider and the `kanninja-deployer` service account all still exist and
-> keep billing. They cannot be deleted, and there is no rollback to GKE.
+> WIF provider and the `kanninja-deployer` service account all still exist in
+> project `sparxworks`.
+>
+> An earlier version of this doc called the account "unreachable". That was
+> never verified and looks wrong: gcloud is installed and
+> `brandon@employment-networks.com` is credentialed, it just fails with
+> `Reauthentication failed. cannot prompt during non-interactive execution` -
+> a stale token, not a lost account. Run `gcloud auth login` in a real terminal
+> before concluding otherwise, then:
+>
+> ```bash
+> gcloud artifacts repositories delete kanninja --location us-central1 --project sparxworks
+> gcloud iam service-accounts delete kanninja-deployer@sparxworks.iam.gserviceaccount.com --project sparxworks
+> gcloud iam workload-identity-pools delete kanninja-pool --location global --project sparxworks
+> ```
 >
 > **Yours to do.**
 > - Delete the Clerk instance. Safe as of 2026-08-26: the avatars are off it

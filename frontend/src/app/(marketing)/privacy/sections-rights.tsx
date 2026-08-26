@@ -156,13 +156,11 @@ export const privacyRightsSections: LegalSectionData[] = [
             <>
                 <p>
                     We use TLS 1.2+ for all data in transit and AES-256 for data
-                    at rest in the database. The application runs on Google
-                    Kubernetes Engine in the us-central1 region, with the
-                    database and file storage on Microsoft Azure in the Central
-                    US region. Access to
-                    production systems is limited to the smallest set of people
-                    who need it, behind multi-factor authentication. We log
-                    administrative actions.
+                    at rest in the database. The application, the database, and
+                    file storage all run on Microsoft Azure in the Central US
+                    region. Access to production systems is limited to the
+                    smallest set of people who need it, behind multi-factor
+                    authentication. We log administrative actions.
                 </p>
                 <p>
                     No security program is perfect. If you discover a

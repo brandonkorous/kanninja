@@ -11,8 +11,7 @@ import { env } from './env.js';
 /**
  * Azure Blob Storage, replacing Supabase Storage for card attachments.
  *
- * Auth is the storage account key. Workload identity federation from GKE to
- * Entra is possible (Entra accepts GKE's OIDC issuer) and is the eventual
+ * Auth is the storage account key. Azure Workload Identity is the eventual
  * goal, but it needs a dedicated k8s ServiceAccount — the backend currently
  * runs as `default` — plus projected tokens and user-delegation SAS. The key
  * never leaves the backend: browsers only ever receive short-lived SAS URLs.

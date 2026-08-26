@@ -62,18 +62,20 @@ pnpm --filter @kanninja/backend run db:migrate
 
 ## Deployment
 
-Production runs on **Google Kubernetes Engine** — the shared `sparx-prod-autopilot`
-Autopilot cluster (GCP project `sparxworks`, `us-central1`), in the `kanninja`
-namespace. The database and file storage are on **Microsoft Azure** (Central US).
+Everything runs on **Microsoft Azure**, Central US: the app on the shared
+`aks-sparx-prod-cus` cluster in the `kanninja` namespace, the database on
+PostgreSQL Flexible Server behind a private endpoint, and file storage on Blob
+Storage.
 
 Deploys are automatic: pushing to `main` runs
 [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml), which typechecks
-and tests, builds the backend / frontend / mcp-remote images into Artifact
-Registry, and rolls them out via Connect Gateway. Cluster Secrets are regenerated
-from GitHub Actions secrets on every deploy, so GitHub is the source of truth.
+and tests, builds the backend / frontend / mcp-remote images into GHCR, reads
+secrets from Key Vault, applies the manifests, and runs the migration Jobs.
+**Key Vault is the source of truth for secrets** — a value patched only with
+`kubectl` is reverted by the next push.
 
 - [`k8s/README.md`](./k8s/README.md) — manifests and the namespace layout
-- [`infra/gcp/README.md`](./infra/gcp/README.md) — cluster bootstrap, WIF, DNS
+- [`docs/deployment.md`](./docs/deployment.md) — deploy mechanics, secrets, migrations
 - [`docs/migration-runbook.md`](./docs/migration-runbook.md) — the Clerk → Better Auth
   and Supabase → Azure migration
 
