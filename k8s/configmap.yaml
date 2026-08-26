@@ -54,6 +54,14 @@ data:
   # this line can change back.
   EMAIL_FROM: "kanNINJA <noreply@katana.kanninja.com>"
   AZURE_STORAGE_CONTAINER: "card-attachments"
+  # Profile pictures. A separate, PRIVATE container: unlike attachments
+  # they are streamed back through the API rather than handed out as SAS
+  # URLs, because a signature that expires is wrong for an <img src> that
+  # lives in the database.
+  AZURE_AVATARS_CONTAINER: "avatars"
+  # Baked into profiles.avatar_url by the avatar upload route, so it has
+  # to be the public API origin — not the in-cluster service name.
+  PUBLIC_API_URL: "https://api.kanninja.com"
 ---
 apiVersion: v1
 kind: ConfigMap

@@ -18,7 +18,10 @@ export const profileSchema = z.object({
 export const updateProfileSchema = z.object({
   displayName: z.string().min(1).max(100).optional(),
   bio: z.string().max(500).optional(),
-  avatarUrl: z.string().url().optional(),
+  // Deliberately NOT settable here. The avatar is whatever bytes the user
+  // uploaded to POST /api/v1/users/me/avatar; letting a client PATCH an
+  // arbitrary URL in meant one member could point every other member's
+  // browser at a host of their choosing.
 });
 
 export type Profile = z.infer<typeof profileSchema>;

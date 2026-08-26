@@ -110,9 +110,31 @@ kubectl create secret generic data-migration-creds -n $Namespace `
     --dry-run=client -o yaml | kubectl apply -f - | Out-Null
 
 # --- script ------------------------------------------------------------------
-kubectl create configmap data-migration-script -n $Namespace `
-    --from-file=migrate-data.sh=$scriptPath `
-    --dry-run=client -o yaml | kubectl apply -f - | Out-Null
+# NORMALISED TO LF BEFORE IT SHIPS, and this is not cosmetic.
+#
+# Git checks *.sh out with CRLF on Windows, `kubectl create configmap
+# --from-file` stores the bytes verbatim, and bash inside the container then
+# reads `set -euo pipefail\r` and fails with:
+#
+#     bash: line 1: set: pipefail: invalid option name
+#
+# The carriage return is invisible in every editor and in `kubectl get cm -o
+# yaml`, so the error reads as a broken script rather than a line-ending
+# problem. .gitattributes now pins *.sh to LF, but this conversion stays: it
+# makes the Job correct even from a checkout that predates that rule, or from
+# a tree where someone's editor rewrote the file.
+$scriptLf = [IO.File]::ReadAllText($scriptPath) -replace "`r`n", "`n"
+$tmpScript = Join-Path ([IO.Path]::GetTempPath()) "migrate-data-$([guid]::NewGuid().ToString('N')).sh"
+[IO.File]::WriteAllText($tmpScript, $scriptLf, (New-Object Text.UTF8Encoding $false))
+
+try {
+    kubectl create configmap data-migration-script -n $Namespace `
+        --from-file=migrate-data.sh=$tmpScript `
+        --dry-run=client -o yaml | kubectl apply -f - | Out-Null
+}
+finally {
+    Remove-Item $tmpScript -Force -ErrorAction SilentlyContinue
+}
 
 # --- job ---------------------------------------------------------------------
 kubectl delete job $JobName -n $Namespace --ignore-not-found | Out-Null

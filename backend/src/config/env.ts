@@ -18,6 +18,11 @@ const envSchema = z.object({
   AZURE_STORAGE_ACCOUNT: z.string().default(''),
   AZURE_STORAGE_KEY: z.string().default(''),
   AZURE_STORAGE_CONTAINER: z.string().default('card-attachments'),
+  AZURE_AVATARS_CONTAINER: z.string().default('avatars'),
+  // Absolute origin the avatar-serving route is reachable at. Baked into
+  // `profiles.avatar_url`, so it must be the public API host, not the
+  // in-cluster service name.
+  PUBLIC_API_URL: z.string().default('http://localhost:3001'),
 
 
   // Clerk — OUTGOING. Kept only so the legacy verification branch in

@@ -1,0 +1,7 @@
+# Shell scripts must keep LF even on Windows checkouts.
+#
+# These are read by bash INSIDE LINUX CONTAINERS after being shipped in a
+# ConfigMap, and a CRLF copy fails with "set: pipefail: invalid option
+# name" - a carriage return that is invisible in every editor and in
+# `kubectl get cm -o yaml`.
+*.sh text eol=lf

@@ -5,6 +5,7 @@ import {
   SASProtocol,
   generateBlobSASQueryParameters,
 } from '@azure/storage-blob';
+import { createHash } from 'node:crypto';
 import { env } from './env.js';
 
 /**
@@ -122,4 +123,128 @@ export function buildAttachmentPath(cardId: string, fileName: string): string {
   if (!safe) throw new Error('File name is empty after sanitisation');
 
   return `${cardId}/${Date.now()}-${safe}`;
+}
+
+/* ------------------------------------------------------------------ */
+/* Avatars                                                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Avatars live in their OWN container, and that container is PRIVATE.
+ *
+ * They are deliberately not served the way attachments are. A SAS URL expires,
+ * and an expiring URL is wrong for an `<img src>` that sits in the DB and gets
+ * rendered by every board member for years — the image would 403 the moment
+ * the signature aged out, and the browser could never cache it. So avatar
+ * bytes are streamed back through the API instead, at a stable content-hashed
+ * URL that can be cached forever.
+ *
+ * The alternative was a public container, which would have meant enabling
+ * anonymous blob access on the storage account. That is a Terraform change in
+ * the sparx repo for a benefit we do not need: the API route is a dozen lines
+ * and keeps the account locked down.
+ */
+export const AVATARS_CONTAINER = env.AZURE_AVATARS_CONTAINER;
+
+const AVATAR_MIME_EXTENSIONS: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+};
+
+export const AVATAR_MIME_TYPES = Object.keys(AVATAR_MIME_EXTENSIONS);
+export const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
+
+/** `<uuid>/<64 hex>.<ext>` and nothing else — this value indexes into storage. */
+const AVATAR_BLOB_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/[0-9a-f]{64}\.(?:jpg|png|webp|gif)$/;
+
+export function isValidAvatarBlobPath(blobPath: string): boolean {
+  return AVATAR_BLOB_PATTERN.test(blobPath);
+}
+
+export function extensionForAvatarMime(mimeType: string): string | null {
+  return AVATAR_MIME_EXTENSIONS[mimeType.toLowerCase().split(';')[0].trim()] ?? null;
+}
+
+/**
+ * Content-addressed: the digest of the bytes IS the file name.
+ *
+ * That is what makes `Cache-Control: immutable` honest. Change the picture and
+ * the URL changes with it, so no cache anywhere is ever holding a stale image
+ * under a name that is supposed to be current.
+ */
+export function buildAvatarPath(profileId: string, bytes: Buffer, mimeType: string): string {
+  const ext = extensionForAvatarMime(mimeType);
+  if (!ext) throw new Error(`Unsupported avatar type: ${mimeType}`);
+  const digest = createHash('sha256').update(bytes).digest('hex');
+  return `${profileId}/${digest}.${ext}`;
+}
+
+/** The value that goes in `profiles.avatar_url`. */
+export function avatarPublicUrl(blobPath: string): string {
+  return `${env.PUBLIC_API_URL.replace(/\/+$/, '')}/api/v1/avatars/${blobPath}`;
+}
+
+/** Extracts the blob path back out of a stored avatar URL, or null. */
+export function avatarPathFromUrl(url: string): string | null {
+  const marker = '/api/v1/avatars/';
+  const at = url.indexOf(marker);
+  if (at === -1) return null;
+  const path = url.slice(at + marker.length);
+  return isValidAvatarBlobPath(path) ? path : null;
+}
+
+/**
+ * Creates the container if it is missing. Called once at upload time rather
+ * than at boot so a storage outage cannot stop the API from starting.
+ */
+export async function ensureAvatarsContainer(): Promise<void> {
+  // No public-access argument: the container stays private on purpose.
+  await blobService().getContainerClient(AVATARS_CONTAINER).createIfNotExists();
+}
+
+export async function uploadAvatar(
+  blobPath: string,
+  bytes: Buffer,
+  mimeType: string,
+): Promise<void> {
+  await ensureAvatarsContainer();
+  await blobService()
+    .getContainerClient(AVATARS_CONTAINER)
+    .getBlockBlobClient(blobPath)
+    .uploadData(bytes, {
+      blobHTTPHeaders: {
+        blobContentType: mimeType,
+        blobCacheControl: 'public, max-age=31536000, immutable',
+      },
+    });
+}
+
+export async function downloadAvatar(
+  blobPath: string,
+): Promise<{ body: NodeJS.ReadableStream; contentType: string; contentLength?: number } | null> {
+  const client = blobService().getContainerClient(AVATARS_CONTAINER).getBlockBlobClient(blobPath);
+
+  try {
+    const response = await client.download();
+    if (!response.readableStreamBody) return null;
+    return {
+      body: response.readableStreamBody,
+      contentType: response.contentType ?? 'application/octet-stream',
+      contentLength: response.contentLength,
+    };
+  } catch (error) {
+    // 404 is the ordinary "no such avatar" path, not a failure worth throwing.
+    if ((error as { statusCode?: number }).statusCode === 404) return null;
+    throw error;
+  }
+}
+
+export async function deleteAvatar(blobPath: string): Promise<void> {
+  await blobService()
+    .getContainerClient(AVATARS_CONTAINER)
+    .getBlockBlobClient(blobPath)
+    .deleteIfExists();
 }

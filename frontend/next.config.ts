@@ -23,9 +23,15 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: 'standalone',
   images: {
+    // Avatars are served by our own API, from a private blob container. The
+    // Clerk and Supabase hosts that used to be here are gone with them.
     remotePatterns: [
+      { protocol: 'https', hostname: 'api.kanninja.com' },
+      // Still here ONLY until preserve-clerk-avatars has run against
+      // production. Removing it before then breaks the four real photos that
+      // are still Clerk URLs. Goes out with the rest of the Clerk cleanup.
       { protocol: 'https', hostname: 'img.clerk.com' },
-      { protocol: 'https', hostname: '*.supabase.co' },
+      { protocol: 'http', hostname: 'localhost', port: '3001' },
     ],
   },
   async headers() {

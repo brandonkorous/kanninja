@@ -19,6 +19,7 @@
         "reconcile-seats": "tsx src/scripts/reconcile-seats.ts",
         "migrate-clerk-users": "tsx src/scripts/migrate-clerk-users.ts",
         "seed-auth-users": "tsx src/scripts/seed-auth-users-from-profiles.ts",
+    "preserve-clerk-avatars": "tsx src/scripts/preserve-clerk-avatars.ts",
         "backfill-profile-user-id": "tsx src/scripts/backfill-profile-user-id.ts"
     },
     "dependencies": {

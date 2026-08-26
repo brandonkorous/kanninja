@@ -28,6 +28,9 @@ export default defineConfig({
         'src/scripts/migrate-clerk-users.ts',
         'src/scripts/backfill-profile-user-id.ts',
         'src/scripts/seed-auth-users-from-profiles.ts',
+        // Copies Clerk-hosted profile pictures into our own storage. One-shot,
+        // and it only works while the Clerk instance still exists.
+        'src/scripts/preserve-clerk-avatars.ts',
         // Operational one-off, occasionally needed against production.
         'src/scripts/create-api-key.ts',
     ],

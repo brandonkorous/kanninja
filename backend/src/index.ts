@@ -30,6 +30,7 @@ import { analyticsRoutes } from './routes/analytics/index.js';
 import { notificationRoutes } from './routes/notifications/index.js';
 import { templateRoutes } from './routes/templates/index.js';
 import { userRoutes } from './routes/users/index.js';
+import { avatarRoutes } from './routes/users/avatar.js';
 import { apiKeyRoutes } from './routes/auth/api-keys.js';
 import { verifyKeyRoutes } from './routes/auth/verify-key.js';
 import { myWorkRoutes } from './routes/cards/my-work.js';
@@ -129,6 +130,8 @@ async function start() {
   await fastify.register(notificationRoutes);
   await fastify.register(templateRoutes);
   await fastify.register(userRoutes);
+  // Encapsulated: it installs binary content-type parsers for image uploads.
+  await fastify.register(avatarRoutes);
   await fastify.register(apiKeyRoutes);
   await fastify.register(verifyKeyRoutes);
   await fastify.register(myWorkRoutes);
