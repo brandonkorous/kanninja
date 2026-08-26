@@ -1,5 +1,4 @@
-import fp from 'fastify-plugin';
-import type { FastifyRequest } from 'fastify';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { auth } from '../lib/auth.js';
 
 /**
@@ -48,13 +47,34 @@ function toWebRequest(request: FastifyRequest): Request {
   });
 }
 
-export const betterAuthPlugin = fp(async (fastify) => {
-  // Leave bodies untouched — Better Auth does its own parsing.
-  fastify.addContentTypeParser(
-    '*',
-    { parseAs: 'string' },
-    (_request, payload, done) => done(null, payload),
-  );
+// NOT wrapped in fastify-plugin, and that is the whole point.
+//
+// `fp()` exists to BREAK encapsulation so a plugin's decorators reach the
+// parent scope. This plugin decorates nothing and must not break it: the
+// content-type parsers below have to stay inside this scope or every other
+// route in the API loses normal JSON parsing. index.ts already says as much —
+// "registered as its own encapsulated plugin because it installs a catch-all
+// content-type parser that must not leak" — and wrapping it in fp() quietly
+// did the opposite of what that comment promises.
+export const betterAuthPlugin = async (fastify: FastifyInstance) => {
+  // Leave bodies untouched — Better Auth parses them itself.
+  //
+  // BOTH REGISTRATIONS ARE REQUIRED. `'*'` is not a wildcard over every
+  // content type; Fastify consults it only for types that have no more
+  // specific parser, and it ships a built-in `application/json` one. So a
+  // catch-all alone left JSON going through Fastify's parser, `request.body`
+  // arrived as an OBJECT, and `new Request({ body: object })` stringified it
+  // to "[object Object]" — which Better Auth then rejected with
+  // "Invalid JSON in request body" on every sign-in, sign-up and password
+  // reset. The failure is total and looks like a malformed client request.
+  const asString = (
+    _request: FastifyRequest,
+    payload: unknown,
+    done: (err: Error | null, body?: unknown) => void,
+  ) => done(null, payload);
+
+  fastify.addContentTypeParser('application/json', { parseAs: 'string' }, asString);
+  fastify.addContentTypeParser('*', { parseAs: 'string' }, asString);
 
   fastify.route({
     method: ['GET', 'POST', 'OPTIONS'],
@@ -83,4 +103,4 @@ export const betterAuthPlugin = fp(async (fastify) => {
       }
     },
   });
-});
+};
