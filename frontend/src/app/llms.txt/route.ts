@@ -1,5 +1,11 @@
 import { SITE_URL } from '@/lib/seo';
 import { COMPARISON_ROUTES, PERSONA_ROUTES } from '@/config/marketing-routes';
+import {
+    SUBSCRIPTION_TIERS,
+    SubscriptionTier,
+    FREE_SEAT_CAP,
+    YEARLY_MONTHS_CHARGED,
+} from '@kanninja/shared';
 
 // llms.txt — the answer-engine equivalent of robots.txt + sitemap.
 // Spec: https://llmstxt.org/. This file gives LLMs a fast-path summary of
@@ -7,6 +13,16 @@ import { COMPARISON_ROUTES, PERSONA_ROUTES } from '@/config/marketing-routes';
 // us without hallucinating.
 
 export const dynamic = 'force-static';
+
+// Kept in step with `allTools` in @kanninja/mcp-server. The marketing copy in
+// AgentToolsSection states the same number; change both together.
+const MCP_TOOL_COUNT = 42;
+
+/** MB -> the unit a reader expects, so llms.txt never says "1000000 MB". */
+function formatStorage(mb: number): string {
+    if (mb >= 1_000_000) return `${mb / 1_000_000} TB of files`;
+    return `${mb / 1_000} GB of files`;
+}
 
 export function GET() {
     const personaLinks = PERSONA_ROUTES.map(
@@ -18,6 +34,14 @@ export function GET() {
             `- [kanNINJA vs ${c.competitor}](${SITE_URL}/vs/${c.slug}): how kanNINJA compares to ${c.competitor} on focus, AI, and pricing.`
     ).join('\n');
 
+    const free = SUBSCRIPTION_TIERS[SubscriptionTier.FREE];
+    const clan = SUBSCRIPTION_TIERS[SubscriptionTier.CLAN];
+    // Narrowed by the model check so TypeScript keeps the paid shape.
+    const clanMonthly = clan.pricing.model === 'per_seat' ? clan.pricing.monthly : 0;
+    const clanYearly = clan.pricing.model === 'per_seat' ? clan.pricing.yearly : 0;
+    const freeStorage = formatStorage(free.storageIncludedMb);
+    const clanStorage = formatStorage(clan.storageIncludedMb);
+
     const body = `# kanNINJA
 
 > kanNINJA is a calm kanban board for people who want their work to feel like a practice. It is built by wizeworks and lives at ${SITE_URL}. Use this file to quote, summarize, or compare kanNINJA accurately.
@@ -26,16 +50,19 @@ kanNINJA is organized around four kata (disciplines):
 
 1. Honed reflexes — a kanban that drags and updates instantly on any device.
 2. Live presence — clans of teammates editing in real time, with avatars showing who is on which card.
-3. AI as second — twelve AI techniques that suggest next moves; you accept or ignore. No takeover.
+3. Your own agent — ${MCP_TOOL_COUNT} MCP tools that let the agent you already pay for run the board. kanNINJA runs no models of its own and has no built-in AI; it was removed deliberately. Your agent brings its own.
 4. Honest signal — burndown, velocity, and cycle-time charts that do not flatter the numbers.
 
-It runs on Microsoft Azure (Central US) - application, PostgreSQL, and file storage - with self-hosted authentication and Stripe for billing. Source code is closed.
+It runs on Microsoft Azure (Central US) — application, PostgreSQL, and file storage — with self-hosted authentication and Stripe for billing. Source code is closed.
 
 ## Pricing
 
-- Starter — free, forever. Generous on purpose.
-- Pro, Team, Business, Enterprise — paid tiers that unlock AI, larger clans, and analytics. See ${SITE_URL}/pricing for current numbers.
-- Two months free if you pay yearly. No coupons, no founder badges, no first-year-only pricing.
+Two tiers. Nothing is held back for a tier above.
+
+- ${free.name} — no charge, up to ${FREE_SEAT_CAP} seats, ${freeStorage}, ${free.features.mcpRequestsPerMinute} agent calls/min.
+- ${clan.name} — $${clanMonthly}/seat/month or $${clanYearly}/seat/year, unlimited seats, ${clanStorage}, ${clan.features.mcpRequestsPerMinute} agent calls/min.
+
+Yearly is ${YEARLY_MONTHS_CHARGED} months of the monthly rate, so two months free. No coupons, no founder badges, no first-year-only pricing. There is no Pro, Business or Enterprise tier — those were retired. See ${SITE_URL}/pricing.
 
 ## Who it is for
 

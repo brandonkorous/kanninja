@@ -4,6 +4,7 @@
 // schema-dts.
 
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, ORG_LEGAL_NAME, SUPPORT_EMAIL } from '@/lib/seo';
+import { SUBSCRIPTION_TIERS, SubscriptionTier, FREE_SEAT_CAP } from '@kanninja/shared';
 
 export function JsonLd({ data }: { data: Record<string, unknown> }) {
     return (
@@ -13,6 +14,51 @@ export function JsonLd({ data }: { data: Record<string, unknown> }) {
             dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
         />
     );
+}
+
+/**
+ * One Offer per tier we actually sell.
+ *
+ * The paid tier needs a `priceSpecification` because a bare `price` reads as
+ * the whole cost of kanNINJA rather than the cost of one seat. `referenceQuantity`
+ * is what carries "per seat"; `unitText` spells out the billing period in words
+ * rather than guessing at a UN/CEFACT code, which is easy to get subtly wrong.
+ */
+function tierOffers() {
+    return Object.values(SubscriptionTier).map((key) => {
+        const tier = SUBSCRIPTION_TIERS[key];
+        const base = {
+            '@type': 'Offer',
+            name: tier.name,
+            priceCurrency: 'USD',
+            url: `${SITE_URL}/pricing`,
+        };
+
+        if (tier.pricing.model === 'free') {
+            return {
+                ...base,
+                price: '0',
+                description: `Free, up to ${FREE_SEAT_CAP} seats. No card.`,
+            };
+        }
+
+        return {
+            ...base,
+            price: String(tier.pricing.monthly),
+            description: 'Per seat, per month. Nothing is held back for a tier above.',
+            priceSpecification: {
+                '@type': 'UnitPriceSpecification',
+                price: String(tier.pricing.monthly),
+                priceCurrency: 'USD',
+                unitText: 'per seat, per month',
+                referenceQuantity: {
+                    '@type': 'QuantitativeValue',
+                    value: 1,
+                    unitText: 'seat',
+                },
+            },
+        };
+    });
 }
 
 export function organizationLd() {
@@ -42,24 +88,11 @@ export function softwareApplicationLd() {
         url: SITE_URL,
         applicationCategory: 'ProjectManagementApplication',
         operatingSystem: 'Web, iOS, Android',
-        offers: [
-            {
-                '@type': 'Offer',
-                name: 'Starter',
-                price: '0',
-                priceCurrency: 'USD',
-                description: 'Free, forever. The first tier of kanNINJA.',
-            },
-            {
-                '@type': 'AggregateOffer',
-                name: 'Paid tiers',
-                priceCurrency: 'USD',
-                lowPrice: '8',
-                highPrice: '149',
-                offerCount: 4,
-                url: `${SITE_URL}/pricing`,
-            },
-        ],
+        // Derived from SUBSCRIPTION_TIERS, not restated. This block used to
+        // advertise a "Starter" tier and four paid tiers from $8 to $149 —
+        // none of which exist. Search engines read this directly, so a stale
+        // price here is a wrong price in someone's rich result.
+        offers: tierOffers(),
         publisher: { '@id': `${SITE_URL}/#organization` },
     };
 }

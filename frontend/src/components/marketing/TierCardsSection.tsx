@@ -14,9 +14,6 @@ import { SUBSCRIPTION_TIERS, SubscriptionTier, displayPrice } from '@kanninja/sh
 // SUBSCRIPTION_TIERS.features.mcpRequestsPerMinute. There is no monthly cap:
 // kanNINJA runs no models, so the agent's own LLM bill is the only meter.
 //
-// Pro and Business are PER SEAT; Clan is deliberately flat. Clan is sold by who
-// it is for — a wedding party, a club — and those groups are large and
-// non-paying, so per-seat there would price 30 guests above a 30-person company.
 // The headline "/seat" suffix comes from displayPrice(), not from this copy.
 const TIERS = [
     {
