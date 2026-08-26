@@ -109,7 +109,10 @@ foreach ($s in @('backend-secrets', 'mcp-secrets', 'frontend-secrets')) {
     Test-Step "secret/$s" {
         $json = kubectl get secret $s -n $Namespace -o json 2>$null
         if ($LASTEXITCODE -ne 0) { throw 'missing — the deploy creates it from Key Vault' }
-        $n = ($json | ConvertFrom-Json).data.PSObject.Properties.Count
+        # @(...).Count, not .PSObject.Properties.Count directly: the latter is
+        # evaluated per-element by PowerShell's member enumeration and prints a
+        # column of 1s instead of one total.
+        $n = @(($json | ConvertFrom-Json).data.PSObject.Properties).Count
         "$n key(s)"
     }
 }
@@ -127,14 +130,26 @@ $targets = @(
     @{ label = 'mcp';           url = "http://mcp.$Namespace.svc.cluster.local:80/health" }
 )
 
+# BASE64, because the script does not survive the trip otherwise.
+#
+# Passing this inline as `sh -c $curlScript` means the text crosses PowerShell's
+# argument binder, kubectl's argv handling and finally sh -- and the semicolons,
+# single quotes and % signs in it do not come out the other side intact. The
+# symptom is not an error: the pod runs, prints nothing this script can parse,
+# and every HTTP check reports an empty status while the services are perfectly
+# healthy. Encoding sidesteps every layer of quoting; only base64's own
+# alphabet has to survive, and it contains nothing any shell treats specially.
 $curlScript = ($targets | ForEach-Object {
     "printf '%s ' $($_.label); curl -s -o /dev/null -m 10 -w '%{http_code}\n' '$($_.url)' || printf 'ERR\n'"
 }) -join '; '
 
+$b64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($curlScript))
+
 Write-Host '  starting probe pod ...'
 $raw = kubectl run "cutover-probe-$(Get-Random -Maximum 99999)" `
     -n $IngressNamespace --rm -i --restart=Never --quiet `
-    --image=curlimages/curl:8.11.1 --command -- sh -c $curlScript 2>&1
+    --image=curlimages/curl:8.11.1 --command -- `
+    sh -c "echo $b64 | base64 -d | sh" 2>&1
 
 $codes = @{}
 foreach ($line in ($raw -split "`n")) {
