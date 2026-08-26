@@ -117,7 +117,10 @@ export default function DojoViewsLayout({ children }: { children: React.ReactNod
 
       <ViewSwitcher basePath={`/dojo/${boardId}`} scope="dojo" />
 
-      <div className="flex-1 overflow-hidden mt-6">{children}</div>
+      {/* min-h-0 so this flex child may shrink below its content height —
+        * without it the board would push the page taller instead of
+        * letting each lane scroll internally. */}
+      <div className="flex-1 min-h-0 overflow-hidden mt-6">{children}</div>
 
       <DojoSettingsDialog
         boardId={boardId}

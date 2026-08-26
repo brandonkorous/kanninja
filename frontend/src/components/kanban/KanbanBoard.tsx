@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import {
   DndContext,
   DragOverlay,
@@ -10,14 +9,15 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
+import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { KanbanColumn } from './KanbanColumn';
 import { KanbanCardPreview } from './KanbanCardPreview';
+import { BoardEmptyState } from './BoardEmptyState';
+import { AddListControl } from './AddListControl';
 import { useCreateList } from '@/hooks/use-lists';
 import { useDojoPermissions } from '@/hooks/use-permissions';
 import { useBoardMembers, type BoardMember } from '@/hooks/use-board-members';
-import { useKanbanDrag } from '@/hooks/use-kanban-drag';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import { useBoardDnd } from '@/hooks/use-board-dnd';
 
 interface CardData {
   id: string;
@@ -59,11 +59,10 @@ export function KanbanBoard({ boardId, lists, onCardClick }: KanbanBoardProps) {
   const createList = useCreateList(boardId);
   // Role gate from the cached useBoard query — no prop drilling.
   const { canEdit } = useDojoPermissions(boardId);
-  // dnd-kit handlers live in a hook so the cache-mutation plumbing
-  // doesn't crowd this component. Implements the canonical multiple-
-  // sortable-lists pattern: rearrange in onDragOver, persist on drop.
-  const { activeCardId, handleDragStart, handleDragOver, handleDragEnd } =
-    useKanbanDrag(boardId);
+  // One DndContext drives both cards and columns; the hook routes each
+  // drag to the handler that owns that kind. See use-board-dnd.ts.
+  const { activeCardId, activeListId, moveListBy, handleDragStart, handleDragOver, handleDragEnd } =
+    useBoardDnd(boardId);
   const { data: members } = useBoardMembers(boardId);
   const memberMap = new Map<string, BoardMember>(
     members?.map((m) => [m.userId, m]) ?? [],
@@ -94,107 +93,54 @@ export function KanbanBoard({ boardId, lists, onCardClick }: KanbanBoardProps) {
       onDragEnd={handleDragEnd}
     >
       {lists.length === 0 && !isAddingList ? (
-        /* Empty dojo — matches the canonical Hanko empty-state pattern
-         * used on /dashboard and /clans: card wrapper, ninja icon at
-         * top, text-3xl headline with single-word italic-vermillion
-         * stamp, body copy, primary CTA wrapped in mt-10. For viewers
-         * (canEdit=false), the button is hidden and the copy softens. */
-        <div className="bg-base-100 rounded-lg shadow-e1 p-12 md:p-16 max-w-2xl flex flex-col items-start">
-          <Image
-            src="/brand/nin-icon.svg"
-            alt=""
-            width={80}
-            height={80}
-            className="h-20 w-20"
-          />
-          <h2 className="mt-10 font-display text-3xl font-medium tracking-tight">
-            {canEdit ? (
-              <>
-                A new dojo.{' '}
-                <span className="italic text-primary">Begin.</span>
-              </>
-            ) : (
-              <>
-                Nothing here <span className="italic text-primary">yet.</span>
-              </>
-            )}
-          </h2>
-          <p className="mt-4 text-base text-base-content/70 max-w-md">
-            {canEdit
-              ? 'Lists hold the stances of your practice. Start with the ones you need — backlog, in progress, done. You can rename them later.'
-              : 'This dojo has no lists yet. Check back once an owner adds one.'}
-          </p>
-          {canEdit && (
-            <div className="mt-10">
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => setIsAddingList(true)}
-              >
-                <FontAwesomeIcon icon={faPlus} aria-hidden="true" className="mr-2" />
-                Add your first list
-              </button>
-            </div>
-          )}
-        </div>
+        <BoardEmptyState canEdit={canEdit} onAddList={() => setIsAddingList(true)} />
       ) : (
-        <div className="flex gap-6 overflow-x-auto pb-4 h-full items-start snap-x snap-mandatory scroll-px-4 px-4 sm:px-0 sm:scroll-px-0">
-          {lists.map((list) => (
-            <KanbanColumn
-              key={list.id}
-              id={list.id}
-              boardId={boardId}
-              title={list.title}
-              cards={list.cards}
-              memberMap={memberMap}
-              onCardClick={onCardClick}
-            />
-          ))}
+        /* `h-full` + per-column overflow: the board scrolls sideways, each
+         * lane scrolls on its own, and the page itself never moves. */
+        <div className="flex gap-6 overflow-x-auto pb-4 h-full items-stretch snap-x snap-mandatory scroll-px-4 px-4 sm:px-0 sm:scroll-px-0">
+          <SortableContext
+            items={lists.map((l) => l.id)}
+            strategy={horizontalListSortingStrategy}
+          >
+            {lists.map((list, index) => (
+              <KanbanColumn
+                key={list.id}
+                id={list.id}
+                boardId={boardId}
+                title={list.title}
+                cards={list.cards}
+                memberMap={memberMap}
+                onCardClick={onCardClick}
+                onMoveLeft={() => moveListBy(list.id, -1)}
+                onMoveRight={() => moveListBy(list.id, 1)}
+                isFirstColumn={index === 0}
+                isLastColumn={index === lists.length - 1}
+              />
+            ))}
+          </SortableContext>
 
           {/* Add list — gated on canEdit per editing-patterns.md */}
           {canEdit && (
-          <div className="w-72 shrink-0">
-            {isAddingList ? (
-              <form onSubmit={handleAddList} className="bg-base-200 rounded-xl p-3 space-y-2">
-                <input
-                  className="input input-sm input-bordered w-full"
-                  placeholder="List title"
-                  value={newListTitle}
-                  onChange={(e) => setNewListTitle(e.target.value)}
-                  autoFocus
-                />
-                <div className="flex gap-1">
-                  <button
-                    type="submit"
-                    className="btn btn-secondary btn-sm md:btn-xs"
-                    disabled={!newListTitle.trim()}
-                  >
-                    Add list
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm md:btn-xs"
-                    onClick={() => setIsAddingList(false)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <button
-                className="btn btn-ghost w-full justify-start text-base-content/70 border border-dashed border-base-300 hover:border-base-content/40 hover:bg-transparent"
-                onClick={() => setIsAddingList(true)}
-              >
-                <FontAwesomeIcon icon={faPlus} aria-hidden="true" className="mr-2" /> Add another list
-              </button>
-            )}
-          </div>
+            <AddListControl
+              isAdding={isAddingList}
+              title={newListTitle}
+              onTitleChange={setNewListTitle}
+              onSubmit={handleAddList}
+              onOpen={() => setIsAddingList(true)}
+              onCancel={() => {
+                setNewListTitle('');
+                setIsAddingList(false);
+              }}
+            />
           )}
         </div>
       )}
 
+      {/* Cards drag via an overlay. Columns don't — they translate in place
+        * so the surrounding lanes visibly part to make room. Guarding on
+        * activeListId keeps the two from ever rendering at once. */}
       <DragOverlay>
-        {activeCard && (
+        {activeCard && !activeListId && (
           <KanbanCardPreview
             title={activeCard.title}
             description={activeCard.description}

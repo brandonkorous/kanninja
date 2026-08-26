@@ -5,11 +5,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faEllipsisV,
   faTrash,
-  faPen,
-  faCheck,
+  faGripVertical,
+  faArrowLeft,
+  faArrowRight,
 } from '@fortawesome/free-solid-svg-icons';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Menu } from '@/components/ui/menu';
+import { ColumnTitle } from './ColumnTitle';
 import { useUpdateList, useDeleteList } from '@/hooks/use-lists';
 import { useDojoPermissions } from '@/hooks/use-permissions';
 
@@ -19,34 +21,35 @@ interface Props {
   title: string;
   allSealed: boolean;
   cardsCount: number;
+  /** dnd-kit sortable listeners, spread onto the grip. Only the grip
+   *  drags the column, so the title stays click-to-edit and the overflow
+   *  menu stays clickable. */
+  dragHandleProps: Record<string, unknown>;
+  onMoveLeft: () => void;
+  onMoveRight: () => void;
+  isFirstColumn: boolean;
+  isLastColumn: boolean;
 }
 
-// Column header with inline-edit title per Hanko editing-patterns.md.
-// Extracted from KanbanColumn.tsx so that file stays under the 200-line
-// cap. Owns its own edit + delete state because both are header-local
-// concerns that shouldn't leak into the card-rendering parent. Reads
-// canEdit from the shared useDojoPermissions hook — no prop drilling,
-// per the pattern established in KanbanCard + CardDetailModal.
+// Column header: drag grip, inline-edit title, and the overflow menu.
+// Reads canEdit from the shared useDojoPermissions hook — no prop
+// drilling, per the pattern established in KanbanCard + CardDetailModal.
 export function KanbanColumnHeader({
   id,
   boardId,
   title,
   allSealed,
   cardsCount,
+  dragHandleProps,
+  onMoveLeft,
+  onMoveRight,
+  isFirstColumn,
+  isLastColumn,
 }: Props) {
   const { canEdit } = useDojoPermissions(boardId);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editTitle, setEditTitle] = useState(title);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const updateList = useUpdateList(boardId);
   const deleteList = useDeleteList(boardId);
-
-  const handleRenameList = async () => {
-    if (editTitle.trim() && editTitle !== title) {
-      await updateList.mutateAsync({ listId: id, title: editTitle.trim() });
-    }
-    setIsEditing(false);
-  };
 
   const handleConfirmDelete = async () => {
     await deleteList.mutateAsync(id);
@@ -55,75 +58,29 @@ export function KanbanColumnHeader({
 
   return (
     <>
-      <div className="flex items-center justify-between pr-3 py-3">
-        {isEditing ? (
-          <div className="flex items-center gap-2 flex-1 mr-2">
-            <input
-              className="input input-sm input-bordered flex-1 text-eyebrow font-mono uppercase tracking-widest focus:shadow-focus"
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              onBlur={handleRenameList}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleRenameList();
-                if (e.key === 'Escape') {
-                  setEditTitle(title);
-                  setIsEditing(false);
-                }
-              }}
-              autoFocus
-            />
-            <button
-              type="button"
-              aria-label="Save list title"
-              className="btn btn-ghost btn-sm btn-square shrink-0"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={handleRenameList}
-            >
-              <FontAwesomeIcon icon={faCheck} aria-hidden="true" />
-            </button>
-          </div>
-        ) : canEdit ? (
-          <h3
-            role="button"
-            tabIndex={0}
-            aria-label={`Edit list title: ${title}`}
-            className="group text-eyebrow font-mono uppercase tracking-widest text-base-content/70 flex items-center gap-3 cursor-pointer focus-visible:shadow-focus focus-visible:outline-none rounded-sm"
-            onClick={() => {
-              setEditTitle(title);
-              setIsEditing(true);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                setEditTitle(title);
-                setIsEditing(true);
-              }
-            }}
+      <div className="flex items-center justify-between gap-1 pr-3 py-3">
+        {canEdit && (
+          /* Pointer-only affordance, hidden from the a11y tree: keyboard
+           * and screen-reader users reorder through Move left / Move
+           * right in the menu below. A span rather than a button so it
+           * never becomes a focusable control that does nothing on Enter. */
+          <span
+            {...dragHandleProps}
+            aria-hidden="true"
+            className="shrink-0 px-1 py-2 -ml-1 cursor-grab active:cursor-grabbing text-base-content/20 hover:text-base-content/60 transition-colors touch-none"
           >
-            {title}
-            <FontAwesomeIcon
-              icon={faPen}
-              aria-hidden="true"
-              className="text-xs text-base-content/20 group-hover:text-primary transition-colors"
-            />
-            <span
-              className={`badge badge-sm ${allSealed ? 'badge-primary' : 'badge-ghost'}`}
-              aria-label={allSealed ? `${cardsCount} sealed` : undefined}
-            >
-              {cardsCount}
-            </span>
-          </h3>
-        ) : (
-          <h3 className="text-eyebrow font-mono uppercase tracking-widest text-base-content/70 flex items-center gap-3">
-            {title}
-            <span
-              className={`badge badge-sm ${allSealed ? 'badge-primary' : 'badge-ghost'}`}
-              aria-label={allSealed ? `${cardsCount} sealed` : undefined}
-            >
-              {cardsCount}
-            </span>
-          </h3>
+            <FontAwesomeIcon icon={faGripVertical} />
+          </span>
         )}
+
+        <ColumnTitle
+          title={title}
+          canEdit={canEdit}
+          allSealed={allSealed}
+          cardsCount={cardsCount}
+          onSave={(next) => updateList.mutateAsync({ listId: id, title: next })}
+        />
+
         {canEdit && (
           <Menu
             trigger={
@@ -136,6 +93,12 @@ export function KanbanColumnHeader({
               </button>
             }
           >
+            <Menu.Item icon={faArrowLeft} onClick={onMoveLeft} disabled={isFirstColumn}>
+              Move left
+            </Menu.Item>
+            <Menu.Item icon={faArrowRight} onClick={onMoveRight} disabled={isLastColumn}>
+              Move right
+            </Menu.Item>
             <Menu.Item
               icon={faTrash}
               onClick={() => setShowDeleteDialog(true)}

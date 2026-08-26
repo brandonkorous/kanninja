@@ -1,16 +1,17 @@
 'use client';
 
-import { useState } from 'react';
-import { useDroppable } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import {
+  useSortable,
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { KanbanCard } from './KanbanCard';
 import { KanbanColumnHeader } from './KanbanColumnHeader';
+import { AddCardForm } from './AddCardForm';
 import { pickEmptyPhrase } from './empty-phrases';
-import { generateIndexAfter, generateIndexBefore } from './order-utils';
-import { useCreateCard, useMoveCard } from '@/hooks/use-cards';
+import { useMoveCard } from '@/hooks/use-cards';
 import { useDojoPermissions } from '@/hooks/use-permissions';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import type { BoardMember } from '@/hooks/use-board-members';
 
 interface CardData {
@@ -32,6 +33,13 @@ interface KanbanColumnProps {
   cards: CardData[];
   memberMap: Map<string, BoardMember>;
   onCardClick: (cardId: string) => void;
+  /** Menu fallback for column reordering — the keyboard-reachable
+   *  equivalent of dragging the header grip. Owned by KanbanBoard, which
+   *  holds the full ordered list of columns. */
+  onMoveLeft: () => void;
+  onMoveRight: () => void;
+  isFirstColumn: boolean;
+  isLastColumn: boolean;
 }
 
 export function KanbanColumn({
@@ -41,14 +49,25 @@ export function KanbanColumn({
   cards,
   memberMap,
   onCardClick,
+  onMoveLeft,
+  onMoveRight,
+  isFirstColumn,
+  isLastColumn,
 }: KanbanColumnProps) {
-  const [isAddingCard, setIsAddingCard] = useState(false);
-  const [newCardTitle, setNewCardTitle] = useState('');
-  const createCard = useCreateCard(boardId);
   const moveCard = useMoveCard(boardId);
   const { canEdit } = useDojoPermissions(boardId);
 
-  const { setNodeRef, isOver } = useDroppable({ id, data: { type: 'column' } });
+  // The column is both a sortable item (reordering columns) and the drop
+  // target for cards landing in an empty lane. `useSortable` provides both
+  // — `data.type` is how the drag handlers tell the two apart.
+  const {
+    setNodeRef,
+    listeners,
+    transform,
+    transition,
+    isDragging,
+    isOver,
+  } = useSortable({ id, data: { type: 'column' } });
 
   // Peak brand moment: when every kata in this lane is sealed, the column
   // earns the vermillion stamp. Two quiet signals — the hairline rule turns
@@ -56,41 +75,29 @@ export function KanbanColumn({
   // vermillion stamp. Empty columns never count as sealed.
   const allSealed = cards.length > 0 && cards.every((c) => c.isCompleted);
 
-  const handleAddCard = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCardTitle.trim()) return;
-    await createCard.mutateAsync({ listId: id, title: newCardTitle.trim() });
-    setNewCardTitle('');
-    setIsAddingCard(false);
-  };
-
-  // Menu-driven reposition. The column knows the full ordered card list, so
-  // it's the natural owner of the "move to top/bottom" logic. Passing bound
-  // callbacks down into KanbanCard keeps the card ignorant of its siblings.
+  // Menu-driven reposition. `position` is symbolic rather than a computed
+  // index: the server resolves it against the live list, so it stays
+  // correct even when the fractional key space needs respacing.
   const handleMoveToTop = (cardId: string) => {
-    const firstCard = cards[0];
-    if (!firstCard || firstCard.id === cardId) return;
-    moveCard.mutate({
-      cardId,
-      listId: id,
-      orderIndex: generateIndexBefore(firstCard.orderIndex),
-    });
+    if (cards[0]?.id === cardId) return;
+    moveCard.mutate({ cardId, listId: id, position: 'top' });
   };
 
   const handleMoveToBottom = (cardId: string) => {
-    const lastCard = cards[cards.length - 1];
-    if (!lastCard || lastCard.id === cardId) return;
-    moveCard.mutate({
-      cardId,
-      listId: id,
-      orderIndex: generateIndexAfter(lastCard.orderIndex),
-    });
+    if (cards[cards.length - 1]?.id === cardId) return;
+    moveCard.mutate({ cardId, listId: id, position: 'bottom' });
   };
 
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col w-72 shrink-0 snap-start border-l pl-3 transition-colors ${
+      style={{ transform: CSS.Translate.toString(transform), transition }}
+      className={`flex flex-col h-full w-72 shrink-0 snap-start border-l pl-3 transition-colors ${
+        /* No DragOverlay for columns — the lane itself translates under
+         * the pointer, so it needs to read as picked up and sit above its
+         * neighbours while it travels. */
+        isDragging ? 'z-20 bg-base-100 rounded-r-lg shadow-e2' : ''
+      } ${
         isOver
           ? 'border-l-base-content/40 bg-base-100/40'
           : allSealed
@@ -104,14 +111,29 @@ export function KanbanColumn({
         title={title}
         allSealed={allSealed}
         cardsCount={cards.length}
+        /* Listeners only, not `attributes`. Those advertise keyboard
+         * dragging via role/tabIndex, and no KeyboardSensor is
+         * registered — the menu's Move left / Move right is the
+         * keyboard path instead. */
+        dragHandleProps={listeners ?? {}}
+        onMoveLeft={onMoveLeft}
+        onMoveRight={onMoveRight}
+        isFirstColumn={isFirstColumn}
+        isLastColumn={isLastColumn}
       />
 
-      {/* Cards — intentionally NOT overflow-y-auto. A clip region would
-        * trap dropdown menus inside the column lane, and the kanban already
-        * lives inside the page's own scroll container. Let the lane grow. */}
-      <div className="flex-1 pr-2 pb-2 space-y-3 min-h-[60px]">
+      {/* Add card sits above the list because that is where the new kata
+        * lands. Outside the scroll region so it stays reachable no matter
+        * how deep the lane gets. Gated on canEdit per editing-patterns.md. */}
+      {canEdit && <div className="pr-2 pb-3"><AddCardForm listId={id} boardId={boardId} /></div>}
+
+      {/* Cards scroll within the lane, so a tall column never drags the
+        * whole page with it. Safe to clip: `Menu` portals to document.body
+        * and repositions on capture-phase scroll, so card and column menus
+        * escape this overflow. */}
+      <div className="flex-1 overflow-y-auto overscroll-contain pr-2 pb-2 space-y-3 min-h-[60px]">
         <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-          {cards.length === 0 && !isAddingCard ? (
+          {cards.length === 0 ? (
             <p className="text-sm text-base-content/50 italic px-1 py-2">
               {pickEmptyPhrase(id)}
             </p>
@@ -138,47 +160,6 @@ export function KanbanColumn({
           )}
         </SortableContext>
       </div>
-
-      {/* Add card — gated on canEdit per editing-patterns.md */}
-      {canEdit && (
-        <div className="pr-2 pb-2">
-          {isAddingCard ? (
-            <form onSubmit={handleAddCard} className="space-y-2">
-              <input
-                className="input input-sm input-bordered w-full"
-                placeholder="Kata title"
-                value={newCardTitle}
-                onChange={(e) => setNewCardTitle(e.target.value)}
-                autoFocus
-                onBlur={() => !newCardTitle.trim() && setIsAddingCard(false)}
-              />
-              <div className="flex gap-1">
-                <button
-                  type="submit"
-                  className="btn btn-secondary btn-sm md:btn-xs"
-                  disabled={!newCardTitle.trim()}
-                >
-                  Add
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm md:btn-xs"
-                  onClick={() => setIsAddingCard(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          ) : (
-            <button
-              className="btn btn-ghost btn-sm w-full justify-start text-base-content/70"
-              onClick={() => setIsAddingCard(true)}
-            >
-              <FontAwesomeIcon icon={faPlus} aria-hidden="true" className="mr-2" /> Add a kata
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 }

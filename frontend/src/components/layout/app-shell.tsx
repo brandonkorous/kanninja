@@ -22,13 +22,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     ? 'px-6 py-16 lg:px-8 lg:py-6'
     : 'px-6 py-20 lg:px-12 lg:py-16';
 
+  // Tool routes are pinned to the viewport so the kanban owns its own
+  // scrolling: `h-dvh` gives the flex chain a definite height, which is
+  // what lets the dojo layout's `flex-1 overflow-hidden` and each column's
+  // `overflow-y-auto` actually resolve. Under `min-h-dvh` those never
+  // constrain anything, so a tall lane scrolled the whole page and took
+  // the dojo header with it. Content routes keep min-h-dvh — they want to
+  // grow past the fold and scroll normally.
+
   // Close drawer on route change (mobile).
   useEffect(() => {
     setDrawerOpen(false);
   }, [pathname]);
 
   return (
-    <div className="min-h-dvh flex bg-base-200">
+    <div className={`${isToolRoute ? 'h-dvh overflow-hidden' : 'min-h-dvh'} flex bg-base-200`}>
       {/* Skip link — first in tab order, revealed on focus. */}
       <a
         href="#main-content"
@@ -67,7 +75,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         <main
           id="main-content"
-          className={`flex-1 overflow-auto ${mainPadding}`}
+          className={`flex-1 min-h-0 overflow-auto ${mainPadding}`}
         >
           {children}
         </main>

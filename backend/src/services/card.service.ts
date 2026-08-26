@@ -107,9 +107,19 @@ export const cardService = {
     const card = await cardRepo.findById(cardId);
     if (!card) throw AppError.notFound('Card');
 
+    // `position` wins when both are present: it is resolved against the
+    // list's current state, so it cannot be stale the way a client-computed
+    // index can.
+    let orderIndex = input.orderIndex;
+    if (input.position === 'top') {
+      orderIndex = await cardRepo.headIndexFor(input.listId);
+    } else if (input.position === 'bottom') {
+      orderIndex = await cardRepo.tailIndexFor(input.listId);
+    }
+
     return cardRepo.update(cardId, {
       listId: input.listId,
-      orderIndex: input.orderIndex,
+      orderIndex,
     });
   },
 

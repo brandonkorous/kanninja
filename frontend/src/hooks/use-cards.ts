@@ -61,7 +61,7 @@ export function useMoveCard(boardId: string) {
     mutationFn: ({ cardId, ...input }: MoveCardInput & { cardId: string }) =>
       api.post(`/api/v1/boards/${boardId}/cards/${cardId}/move`, input),
 
-    onMutate: async ({ cardId, listId: targetListId, orderIndex: newOrderIndex }) => {
+    onMutate: async ({ cardId, listId: targetListId, orderIndex: newOrderIndex, position }) => {
       // Cancel in-flight refetches so they can't clobber the optimistic write.
       await queryClient.cancelQueries({ queryKey });
 
@@ -79,7 +79,14 @@ export function useMoveCard(boardId: string) {
       }
       if (!movedCard) return { previous };
 
-      const updatedCard = { ...movedCard, listId: targetListId, orderIndex: newOrderIndex };
+      const updatedCard = {
+        ...movedCard,
+        listId: targetListId,
+        // A `position` move leaves the real index to the server; keep the
+        // old one locally so the card still renders, and place it by array
+        // position below rather than by sort key. onSettled reconciles.
+        orderIndex: newOrderIndex ?? movedCard.orderIndex,
+      };
 
       const nextLists = previous.lists.map((list) => {
         // Remove from any list it currently lives in (also covers same-list reorder).
@@ -89,7 +96,16 @@ export function useMoveCard(boardId: string) {
           return { ...list, cards: withoutMoved };
         }
 
-        // Insert into target and re-sort by fractional orderIndex (lexicographic).
+        // Symbolic moves land at a known end of the list. Explicit-index
+        // moves (drag-and-drop) insert and re-sort by fractional
+        // orderIndex, which is lexicographically ordered.
+        if (position === 'top') {
+          return { ...list, cards: [updatedCard, ...withoutMoved] };
+        }
+        if (position === 'bottom') {
+          return { ...list, cards: [...withoutMoved, updatedCard] };
+        }
+
         const nextCards = [...withoutMoved, updatedCard].sort((a, b) =>
           a.orderIndex < b.orderIndex ? -1 : a.orderIndex > b.orderIndex ? 1 : 0,
         );

@@ -29,10 +29,20 @@ export const updateCardSchema = z.object({
   progress: z.number().min(0).max(100).optional(),
 });
 
-export const moveCardSchema = z.object({
-  listId: z.string().uuid(),
-  orderIndex: z.string(),
-});
+export const moveCardSchema = z
+  .object({
+    listId: z.string().uuid(),
+    /** Explicit fractional index — what drag-and-drop sends, since the
+     *  client already knows the exact neighbours it dropped between. */
+    orderIndex: z.string().optional(),
+    /** Symbolic destination — what the card's move-to-top / move-to-bottom
+     *  menu sends. The server resolves it against the live list, so it
+     *  stays correct even when the fractional key space needs respacing. */
+    position: z.enum(['top', 'bottom']).optional(),
+  })
+  .refine((v) => v.orderIndex !== undefined || v.position !== undefined, {
+    message: 'Provide either orderIndex or position',
+  });
 
 export const cardSchema = z.object({
   id: z.string().uuid(),

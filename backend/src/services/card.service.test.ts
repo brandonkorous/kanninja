@@ -7,6 +7,8 @@ vi.mock('../repositories/card.repo.js', () => ({
     create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
+    headIndexFor: vi.fn(),
+    tailIndexFor: vi.fn(),
   },
 }));
 
@@ -135,6 +137,51 @@ describe('cardService', () => {
       expect(mockRepo.update).toHaveBeenCalledWith(cardId, {
         listId: 'list-2',
         orderIndex: 'n',
+      });
+    });
+
+    it('resolves a symbolic top position against the target list', async () => {
+      mockRepo.findById.mockResolvedValue({ id: cardId } as any);
+      mockRepo.update.mockResolvedValue({ id: cardId } as any);
+      mockRepo.headIndexFor.mockResolvedValue('g');
+
+      await cardService.moveCard(cardId, { listId: 'list-2', position: 'top' });
+
+      expect(mockRepo.headIndexFor).toHaveBeenCalledWith('list-2');
+      expect(mockRepo.update).toHaveBeenCalledWith(cardId, {
+        listId: 'list-2',
+        orderIndex: 'g',
+      });
+    });
+
+    it('resolves a symbolic bottom position against the target list', async () => {
+      mockRepo.findById.mockResolvedValue({ id: cardId } as any);
+      mockRepo.update.mockResolvedValue({ id: cardId } as any);
+      mockRepo.tailIndexFor.mockResolvedValue('nn');
+
+      await cardService.moveCard(cardId, { listId: 'list-2', position: 'bottom' });
+
+      expect(mockRepo.tailIndexFor).toHaveBeenCalledWith('list-2');
+      expect(mockRepo.update).toHaveBeenCalledWith(cardId, {
+        listId: 'list-2',
+        orderIndex: 'nn',
+      });
+    });
+
+    it('prefers the resolved position over a client-supplied index', async () => {
+      mockRepo.findById.mockResolvedValue({ id: cardId } as any);
+      mockRepo.update.mockResolvedValue({ id: cardId } as any);
+      mockRepo.headIndexFor.mockResolvedValue('b');
+
+      await cardService.moveCard(cardId, {
+        listId: 'list-2',
+        orderIndex: 'stale',
+        position: 'top',
+      });
+
+      expect(mockRepo.update).toHaveBeenCalledWith(cardId, {
+        listId: 'list-2',
+        orderIndex: 'b',
       });
     });
   });

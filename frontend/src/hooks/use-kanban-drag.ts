@@ -2,15 +2,11 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { arrayMove } from '@dnd-kit/sortable';
 import type { DragStartEvent, DragOverEvent, DragEndEvent } from '@dnd-kit/core';
 import { useMoveCard } from './use-cards';
 import type { BoardWithChildren } from './use-boards';
-import {
-  generateIndexBetween,
-  generateIndexAfter,
-  generateIndexBefore,
-} from '@/components/kanban/order-utils';
+import { indexForSlot } from '@/components/kanban/order-utils';
+import { rearrangeForDragOver } from './card-rearrange';
 
 /**
  * Drag-and-drop handlers for the kanban board, encapsulated so KanbanBoard
@@ -52,63 +48,18 @@ export function useKanbanDrag(boardId: string) {
       const { active, over } = event;
       if (!over || active.id === over.id) return;
 
-      const activeId = active.id as string;
-      const overId = over.id as string;
-      const overData = over.data.current;
-
       const board = queryClient.getQueryData<BoardWithChildren>(queryKey);
       if (!board) return;
 
-      // Find the source list and the active card's index inside it.
-      const sourceListIdx = board.lists.findIndex((l) =>
-        l.cards.some((c) => c.id === activeId),
+      const newLists = rearrangeForDragOver(
+        board,
+        active.id as string,
+        over.id as string,
+        over.data.current?.type,
       );
-      if (sourceListIdx === -1) return;
-      const sourceList = board.lists[sourceListIdx];
-      const activeIdx = sourceList.cards.findIndex((c) => c.id === activeId);
+      if (!newLists) return;
 
-      // Determine target list + index. Hovering an empty column drops at
-      // the end; hovering a card drops just before that card.
-      let targetListIdx: number;
-      let targetIdx: number;
-      if (overData?.type === 'column') {
-        targetListIdx = board.lists.findIndex((l) => l.id === overId);
-        if (targetListIdx === -1) return;
-        targetIdx = board.lists[targetListIdx].cards.length;
-      } else {
-        targetListIdx = board.lists.findIndex((l) =>
-          l.cards.some((c) => c.id === overId),
-        );
-        if (targetListIdx === -1) return;
-        targetIdx = board.lists[targetListIdx].cards.findIndex((c) => c.id === overId);
-      }
-
-      // No-op: already at this exact slot.
-      if (sourceListIdx === targetListIdx && activeIdx === targetIdx) return;
-
-      // Apply the rearrangement. We don't touch orderIndex here — array
-      // order is what renders, and the final orderIndex is computed once
-      // at drop time from the surviving neighbors' indexes.
-      const newLists = board.lists.map((list, idx) => {
-        if (sourceListIdx === targetListIdx && idx === sourceListIdx) {
-          return { ...list, cards: arrayMove(list.cards, activeIdx, targetIdx) };
-        }
-        if (idx === sourceListIdx) {
-          return { ...list, cards: list.cards.filter((c) => c.id !== activeId) };
-        }
-        if (idx === targetListIdx) {
-          const movedCard = { ...sourceList.cards[activeIdx], listId: list.id };
-          const nextCards = [...list.cards];
-          nextCards.splice(targetIdx, 0, movedCard);
-          return { ...list, cards: nextCards };
-        }
-        return list;
-      });
-
-      queryClient.setQueryData<BoardWithChildren>(queryKey, {
-        ...board,
-        lists: newLists,
-      });
+      queryClient.setQueryData<BoardWithChildren>(queryKey, { ...board, lists: newLists });
     },
     [queryClient, queryKey],
   );
@@ -147,15 +98,27 @@ export function useKanbanDrag(boardId: string) {
           ? targetList.cards[targetIdx + 1]
           : null;
 
-      let newOrderIndex: string;
-      if (prevCard && nextCard) {
-        newOrderIndex = generateIndexBetween(prevCard.orderIndex, nextCard.orderIndex);
-      } else if (prevCard) {
-        newOrderIndex = generateIndexAfter(prevCard.orderIndex);
-      } else if (nextCard) {
-        newOrderIndex = generateIndexBefore(nextCard.orderIndex);
-      } else {
-        newOrderIndex = 'n';
+      const newOrderIndex = indexForSlot(
+        prevCard?.orderIndex ?? null,
+        nextCard?.orderIndex ?? null,
+      );
+
+      // A head drop can exhaust the key space below the first card.
+      // Rather than invent a colliding index, hand the decision to the
+      // server as a symbolic position — it respaces the list and returns
+      // a real head slot. The cache already holds the right array order.
+      if (newOrderIndex === null) {
+        moveCard.mutate(
+          { cardId, listId: targetList.id, position: 'top' },
+          {
+            onError: () => {
+              if (previousBoard) {
+                queryClient.setQueryData(queryKey, previousBoard);
+              }
+            },
+          },
+        );
+        return;
       }
 
       // No-op: dropped exactly where it started — bail before paying the
