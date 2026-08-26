@@ -1,5 +1,72 @@
 # Azure migration plan — finish the move
 
+> ## COMPLETE — cut over 2026-08-26
+>
+> kanNINJA serves from Azure end to end. Verified from outside the cluster after
+> the DNS flip:
+>
+> | check | result |
+> |---|---|
+> | `kanninja.com` | 200, certificate issued on first request |
+> | `www.kanninja.com` | 301 to the apex |
+> | `api.kanninja.com/api/health/ready` | `{"status":"ready"}` - a real `select 1` as `kanninja_app` |
+> | `mcp.kanninja.com/health` | `{"status":"ok"}` |
+> | `POST /api/auth/sign-in/email` | `INVALID_EMAIL_OR_PASSWORD` on bad credentials |
+> | password-reset email | code delivered and confirmed received |
+>
+> 2,963 rows migrated, 49 foreign keys re-applied, 9 profiles each linked to a
+> Better Auth user. Everything below this banner is history; the punch list is
+> here.
+>
+> ### What is NOT done
+>
+> **1. Avatar preservation - TIME-BOXED, do before deleting Clerk.**
+> All 9 `profiles.avatar_url` values point at `img.clerk.com`. They are fetchable
+> only while the Clerk instance exists; once it is deleted they are gone and every
+> user drops to initials. kanNINJA has **no avatar upload path at all** - Clerk
+> supplied every image, and `avatarUrl` is only ever read.
+>
+> Building upload is a separate, unhurried job with one decision worth making
+> deliberately: card attachments use short-lived SAS URLs, which is right for
+> private files and wrong for `<img src>` (the URL expires and caching breaks).
+> Either a public container with unguessable paths, or stream through the API the
+> way sparx does for media.
+>
+> **2. Cleanup.**
+> - `SUPABASE-DATABASE-URL` in Key Vault - a live credential to a deleted project
+> - `data-migration-creds` Secret in the `kanninja` namespace
+> - `v2/infra/gcp/` - documents a cluster nobody can reach
+> - `.github/workflows/seed-keyvault.yml` - one-shot, never needed
+> - the Clerk code (8 files). **Already inert**: no `CLERK_*` key was ever loaded
+>   into the vault, so the legacy branch in `require-auth.ts` cannot activate.
+>   Removing it is cosmetic, not a cutover step.
+> - 5 dead Clerk DNS records in Cloudflare: `accounts`, `clerk`, `clk._domainkey`,
+>   `clk2._domainkey`, `clkmail`
+> - `img.clerk.com` and `*.supabase.co` in `frontend/next.config.ts`
+> - this document, and `docs/deployment.md`, which still describe the move as
+>   pending
+>
+> **3. Blocked - the GCP account is unreachable.**
+> The GKE `kanninja` namespace, the Artifact Registry repo, the `kanninja-pool`
+> WIF provider and the `kanninja-deployer` service account all still exist and
+> keep billing. They cannot be deleted, and there is no rollback to GKE.
+>
+> ### Two things that cost the most time
+>
+> **Local verification lied, five times.** Every CI failure was masked by state a
+> developer machine carries and a fresh checkout does not - a populated
+> `node_modules` hid a stale lockfile, a leftover `mcp-server/dist` hid an unbuilt
+> library, `backend/.env` hid a missing `DATABASE_URL`. Deleting `dist` alone is
+> not enough either: `tsc` reads the leftover `tsconfig.tsbuildinfo`, emits
+> nothing, and reports SUCCESS.
+>
+> **Four separate failures reported success while failing.** A green deploy, a
+> green health check, and `{"success":true}` on an email Resend had rejected with
+> a 403. The readiness/liveness split is the durable fix for one of them: only
+> `/api/health/ready` runs `select 1`, so it is the only probe that can tell you
+> the database is reachable.
+
+
 Companion to [migration-runbook.md](./migration-runbook.md), which covers the
 **application** migrations (Clerk → Better Auth, Supabase → Azure Postgres,
 Supabase Storage → Blob, Supabase Realtime → WebSocket). That document is still
