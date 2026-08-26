@@ -22,7 +22,29 @@ data:
   # send the session cookie to api.kanninja.com; a host-only cookie would be
   # scoped to the API and the app would appear signed out on every page.
   AUTH_COOKIE_DOMAIN: ".kanninja.com"
-  EMAIL_FROM: "kanNINJA <noreply@kanninja.com>"
+  # MUST be a domain VERIFIED IN RESEND, and the apex is not one.
+  #
+  # This read `noreply@kanninja.com` and every send failed:
+  #
+  #   Resend rejected the message (403): "The kanninja.com domain is not
+  #   verified. Please, add and verify your domain on resend.com/domains"
+  #
+  # The verified domain is `send.katana.kanninja.com` — it carries
+  # `v=spf1 include:amazonses.com ~all` and the SES MX.
+  #
+  # WORSE THAN A PLAIN OUTAGE: Better Auth sends in a BACKGROUND TASK, so the
+  # request still returns {"success":true} and the UI still says to check your
+  # email. Nothing arrives, nothing surfaces to the user, and the only evidence
+  # is a 403 in the backend log. Verification codes and password resets were
+  # both affected.
+  #
+  # DMARC still passes. `_dmarc.kanninja.com` is `p=reject` with relaxed
+  # alignment (adkim=r), and a subdomain From with DKIM d=send.katana.kanninja.com
+  # aligns under the organizational domain.
+  #
+  # To send from the apex instead, verify kanninja.com in Resend first — then
+  # this line can change back.
+  EMAIL_FROM: "kanNINJA <noreply@send.katana.kanninja.com>"
   AZURE_STORAGE_CONTAINER: "card-attachments"
 ---
 apiVersion: v1
