@@ -68,9 +68,25 @@ jobs:
                   node-version: '22'
                   cache: 'pnpm'
             - run: pnpm install --frozen-lockfile
-            # shared/ emits the .d.ts files the other packages typecheck
-            # against, so it has to be built before `pnpm -r run typecheck`.
-            - run: pnpm build:shared
+            # BUILD THE LIBRARY PACKAGES FIRST — both of them.
+            #
+            # `@kanninja/shared` and `kanninja-mcp` both expose `./dist/*` in
+            # their package exports, so a consumer cannot typecheck against
+            # either until it has been built. This step used to be
+            # `pnpm build:shared`, which left `kanninja-mcp` unbuilt and made
+            # `mcp-remote` fail with TS2307 on `kanninja-mcp/api-client` and
+            # four siblings.
+            #
+            # IT PASSED LOCALLY AND ONLY EVER FAILED IN CI, which is the whole
+            # trap: a developer machine has a stale `mcp-server/dist` from some
+            # earlier build, so the imports resolve. A fresh checkout has
+            # nothing. Reproduce with `rm -rf mcp-server/dist && pnpm typecheck`.
+            #
+            # The Dockerfiles never had this problem because they build with
+            # `--filter <pkg>...` (trailing dots), which pulls in workspace
+            # dependencies topologically. This job typechecks every package at
+            # once, so it must build the libraries up front instead.
+            - run: pnpm build:deps
             - run: pnpm typecheck
             # `pnpm -r run test` is a no-op in packages without a test script,
             # so this is backend's vitest suite today.
