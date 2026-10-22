@@ -11,7 +11,8 @@ export const corsPlugin = fp(async (fastify) => {
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     // Authorization is still needed: browsers authenticate with the Better
     // Auth cookie, but API keys (ninja_live_*) and MCP OAuth tokens arrive as
-    // bearer headers on the same routes.
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    // bearer headers on the same routes. `traceparent` is WizeLens: the
+    // browser's fetch span and this API's request join one trace.
+    allowedHeaders: ['Content-Type', 'Authorization', 'traceparent'],
   });
 });

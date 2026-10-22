@@ -39,6 +39,16 @@ spec:
                 name: mcp-secrets
             - configMapRef:
                 name: mcp-config
+          # WizeLens ingest key: this app's own (vault `wizelens-key-mcp`), so it
+          # can be revoked alone. Optional: a missing key leaves the app running,
+          # only untraced in the cloud. The other WIZELENS_* are in mcp-config.
+          env:
+            - name: WIZELENS_HUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: mcp-secrets
+                  key: WIZELENS_KEY_MCP
+                  optional: true
           resources:
             requests:
               cpu: '50m'

@@ -54,6 +54,32 @@ Non-secret configuration is in [`../k8s/configmap.yaml`](../k8s/configmap.yaml)
 rather than the workflow, so public constants are readable in the manifests
 instead of looking like credentials that need rotating.
 
+### WizeLens ingest keys
+
+The backend, frontend and MCP remote send traces to WizeLens Cloud
+(`app.wizelens.com`, project `kanninja`), send-only: with `NODE_ENV=production`
+the add-on serves no dashboard or read API. The switch and the hub are in
+[`../k8s/configmap.yaml`](../k8s/configmap.yaml) (`WIZELENS_ENABLED`,
+`WIZELENS_HUB`, `WIZELENS_SAMPLE_RATE`).
+
+Each app has its own ingest key (`wl_ik_…`), so one can be revoked without the
+others. The vault name is `wizelens-key-<app>`; the workflow writes it into
+that app's own Secret as `WIZELENS_KEY_<APP>`, and the Deployment maps it to
+`WIZELENS_HUB_TOKEN`:
+
+```bash
+az keyvault secret set --vault-name kv-kanninja-prod-cus --name wizelens-key-backend --value <wl_ik_…>
+az keyvault secret set --vault-name kv-kanninja-prod-cus --name wizelens-key-frontend --value <wl_ik_…>
+az keyvault secret set --vault-name kv-kanninja-prod-cus --name wizelens-key-mcp --value <wl_ik_…>
+```
+
+The keys are optional: a missing one leaves the app running, and only its
+traces are refused by the cloud. A new key reaches the pods on the next deploy.
+
+Database calls are not traced yet: Drizzle runs on postgres.js, which WizeLens
+does not support. In development each service has a local dashboard at
+`/_wizelens` (backend `:3001`, frontend `:3000`, MCP remote `:3002`).
+
 ## Migrations
 
 Run by CI, as an in-cluster Job, on every deploy — a pod is the only thing that

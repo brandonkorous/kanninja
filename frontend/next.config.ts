@@ -22,6 +22,8 @@ const consentSecurityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: 'standalone',
+  // WizeLens patches node:http and reads its own files: load it from node_modules, not a bundle.
+  serverExternalPackages: ['@wizeworks/lens-node'],
   images: {
     // Avatars are served by our own API, from a private blob container. The
     // Clerk and Supabase hosts that used to be here are gone with them.

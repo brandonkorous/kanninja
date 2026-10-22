@@ -1,3 +1,5 @@
+// FIRST: WizeLens hooks HTTP and fetch before any other module makes a client.
+import { wizelensPlugin } from './lib/wizelens.js';
 import Fastify from 'fastify';
 import rawBody from 'fastify-raw-body';
 import websocket from '@fastify/websocket';
@@ -77,6 +79,10 @@ async function start() {
       level: env.NODE_ENV === 'production' ? 'info' : 'debug',
     },
   });
+
+  // WizeLens goes first, so its request span wraps every other plugin's hooks.
+  // Development, or production with WIZELENS_ENABLED; see lib/wizelens.ts.
+  await fastify.register(wizelensPlugin);
 
   // Capture the raw request body on opt-in routes (config: { rawBody: true }).
   // Webhook signature verification (Stripe, integration HMACs) must

@@ -9,6 +9,7 @@ import { CookieBanner } from '@/components/legal/CookieBanner';
 import { CookiePreferencesDialog } from '@/components/legal/CookiePreferencesDialog';
 import { ClarityScript } from '@/components/legal/ClarityScript';
 import { GoogleAnalyticsScript } from '@/components/legal/GoogleAnalyticsScript';
+import { WizeLens } from '@/components/wizelens/WizeLens';
 import {
     JsonLd,
     organizationLd,
@@ -127,6 +128,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                         </QueryProvider>
                     </FontAwesomeProvider>
                 </ThemeProvider>
+                {/* Tracing (WizeLens): on only when this page's server traces it; no HUD outside development. */}
+                <WizeLens />
             </body>
         </html>
     );
