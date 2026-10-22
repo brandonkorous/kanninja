@@ -20,7 +20,7 @@ kanNINJA v2 is a ground-up rebuild of a Kanban board SaaS designed to be driven 
 | Storage | Azure Blob Storage — `card-attachments` (SAS URLs) and `avatars` (private, streamed through the API) | |
 | Email | Resend (verification codes, password resets) | |
 | Real-time | WebSocket (@fastify/websocket) broadcast + presence | |
-| Tracing | WizeLens (`@wizeworks/lens-node`, `lens-react`): dashboard at `/_wizelens` in dev, send-only to WizeLens Cloud in prod | 0.3.0-alpha.9 |
+| Tracing | WizeLens (`@wizeworks/lens-node`, `lens-react`): dashboard at `/_wizelens` in dev, send-only to WizeLens Cloud in prod; backend SQL via `instrumentDrizzle` | 0.3.0-alpha.10 |
 | Monorepo | pnpm workspaces | |
 | Hosting | Azure AKS (`aks-sparx-prod-cus`, Central US), GHCR images, Key Vault secrets | |
 | Validation | Zod (shared between FE/BE) | 3.25 |

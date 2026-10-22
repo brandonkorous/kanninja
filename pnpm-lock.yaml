@@ -39,14 +39,14 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@wizeworks/lens-node':
-        specifier: 0.3.0-alpha.9
-        version: 0.3.0-alpha.9
+        specifier: 0.3.0-alpha.10
+        version: 0.3.0-alpha.10
       bcryptjs:
         specifier: ^3.0.3
         version: 3.0.3
       better-auth:
         specifier: ^1.6.26
-        version: 1.6.26(@opentelemetry/api@1.10.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@opentelemetry/api@1.10.0)(gel@2.2.0)(kysely@0.29.4)(postgres@3.4.9))(next@15.5.15(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@3.2.4(@types/node@22.19.17)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0))
+        version: 1.6.26(@opentelemetry/api@1.10.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@opentelemetry/api@1.10.0)(gel@2.2.0)(kysely@0.29.4)(postgres@3.4.9))(next@15.5.15(@babel/core@7.29.0)(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@3.2.4(@types/node@22.19.17)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0))
       dotenv:
         specifier: ^16.4.0
         version: 16.6.1
@@ -133,14 +133,14 @@ importers:
         specifier: ^5.65.0
         version: 5.96.2(react@19.2.4)
       '@wizeworks/lens-node':
-        specifier: 0.3.0-alpha.9
-        version: 0.3.0-alpha.9
+        specifier: 0.3.0-alpha.10
+        version: 0.3.0-alpha.10
       '@wizeworks/lens-react':
-        specifier: 0.3.0-alpha.9
-        version: 0.3.0-alpha.9(react@19.2.4)
+        specifier: 0.3.0-alpha.10
+        version: 0.3.0-alpha.10(react@19.2.4)
       better-auth:
         specifier: ^1.6.26
-        version: 1.6.26(@opentelemetry/api@1.10.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@opentelemetry/api@1.10.0)(gel@2.2.0)(kysely@0.29.4)(postgres@3.4.9))(next@15.5.15(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@3.2.4(@types/node@22.19.17)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0))
+        version: 1.6.26(@opentelemetry/api@1.10.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@opentelemetry/api@1.10.0)(gel@2.2.0)(kysely@0.29.4)(postgres@3.4.9))(next@15.5.15(@babel/core@7.29.0)(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@3.2.4(@types/node@22.19.17)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0))
       daisyui:
         specifier: ^5.5.19
         version: 5.5.19
@@ -209,8 +209,8 @@ importers:
         specifier: ^1.12.0
         version: 1.32.1(zod@3.25.76)
       '@wizeworks/lens-node':
-        specifier: 0.3.0-alpha.9
-        version: 0.3.0-alpha.9
+        specifier: 0.3.0-alpha.10
+        version: 0.3.0-alpha.10
       dotenv:
         specifier: ^16.6.1
         version: 16.6.1
@@ -1777,23 +1777,23 @@ packages:
   '@vitest/utils@3.2.4':
     resolution: {integrity: sha512-fB2V0JFrQSMsCo9HiSq3Ezpdv4iYaXRG1Sx8edX3MwxfyNn83mKiGzOcH+Fkxt4MHxr3y42fQi1oeAInqgX2QA==}
 
-  '@wizeworks/lens-browser@0.3.0-alpha.9':
-    resolution: {integrity: sha512-Mhq7cCdjdToGZC9v9deO+2qK999jQLKG3aTDUG51H97meOslnNg5emaQYVGwi7fTsmuuWtenv2UItVGBU+ptrQ==}
+  '@wizeworks/lens-browser@0.3.0-alpha.10':
+    resolution: {integrity: sha512-F2W+YFl/N6LpjKZj1nAMCAONEZDM0Z88LF+fEeaTgbAn2l1OZOXpuWUeFJAw6mQvzoYPA41+Ox5w5b9D4T4PwA==}
 
-  '@wizeworks/lens-core@0.3.0-alpha.9':
-    resolution: {integrity: sha512-kuwiMHA1C3QkZoB6IG8gjUVfDf1ENcHI8VJZps9BFIWyFo4+BsodqLVNfWlnh4kkEiwqx1Rxs10SZc0V3U5U2w==}
+  '@wizeworks/lens-core@0.3.0-alpha.10':
+    resolution: {integrity: sha512-IOYsfvH7odHcCpjy1zd0++TXebXtuIPv7ZfTPzhThmllUIomlfsF4H85KPBj/HigdbrZR+QzCRPWbzLqChRCUw==}
 
-  '@wizeworks/lens-node@0.3.0-alpha.9':
-    resolution: {integrity: sha512-Bf8890YtPPlRtVLoNJGuBwHhOy4kKZnE5FAWBh47+HoKstEmNthpfSzTee240O9D7uzOO43XB/S7JG2UKhjg4g==}
+  '@wizeworks/lens-node@0.3.0-alpha.10':
+    resolution: {integrity: sha512-Wqon8L7JYcKQlsaNRjM7MhE9JW0DUYflNcDHvaOFsPWVm53n93lnjZdyV1G1uASJ/bfwUIINfOiJOAo6HWh2ag==}
     engines: {node: '>=22.13'}
 
-  '@wizeworks/lens-react@0.3.0-alpha.9':
-    resolution: {integrity: sha512-ICa7tKvYdGqrffDcvX1rVwfGeqqY6qjAKjNmymnDAdfsK+acImLqFH3gAetRh+JaIU71IJxCc2iA4GQaLn0QZA==}
+  '@wizeworks/lens-react@0.3.0-alpha.10':
+    resolution: {integrity: sha512-Im4Cvroomr65He2AgajU2vAT2Ajc+8OnOo65ZvFbL5ABYLTTSbD6JOv/pXl/kN9eBhu2VKJRfcc14APOr2zm2Q==}
     peerDependencies:
       react: '>=18'
 
-  '@wizeworks/lens-ui@0.3.0-alpha.9':
-    resolution: {integrity: sha512-gDDwTBDLTogBA1dd1weomclzaExtrF+fOGlcShPF2jttOhi7Ma6TNgJaOmNiiPD/DtBrGM3+4oAexaSKJ48KpA==}
+  '@wizeworks/lens-ui@0.3.0-alpha.10':
+    resolution: {integrity: sha512-PwOcwxTigqNkg2bB4P4pZOSxGFXD+ZNRDWhEveAjezPFAog5BwM63gi5HqWOJm7KWvHP1IiQXdVvr7ouik1RiQ==}
 
   abstract-logging@2.0.1:
     resolution: {integrity: sha512-2BjRTZxTPvheOvGbBslFSYOUkr+SjPtOnrLP33f+VIWLzezQpZcqVg7ja3L4dBXmzzgwT+a029jRx5PCi3JuiA==}
@@ -4293,7 +4293,7 @@ snapshots:
       jose: 6.2.2
       kysely: 0.29.4
       nanostores: 1.4.2
-      zod: 4.4.3
+      zod: 4.6.7
     optionalDependencies:
       '@opentelemetry/api': 1.10.0
 
@@ -5448,13 +5448,13 @@ snapshots:
       loupe: 3.2.1
       tinyrainbow: 2.0.0
 
-  '@wizeworks/lens-browser@0.3.0-alpha.9':
+  '@wizeworks/lens-browser@0.3.0-alpha.10':
     dependencies:
-      '@wizeworks/lens-core': 0.3.0-alpha.9
+      '@wizeworks/lens-core': 0.3.0-alpha.10
 
-  '@wizeworks/lens-core@0.3.0-alpha.9': {}
+  '@wizeworks/lens-core@0.3.0-alpha.10': {}
 
-  '@wizeworks/lens-node@0.3.0-alpha.9':
+  '@wizeworks/lens-node@0.3.0-alpha.10':
     dependencies:
       '@modelcontextprotocol/sdk': 1.32.1(zod@4.6.7)
       '@opentelemetry/api': 1.10.0
@@ -5463,21 +5463,21 @@ snapshots:
       '@opentelemetry/instrumentation-undici': 0.33.0(@opentelemetry/api@1.10.0)
       '@opentelemetry/resources': 2.12.0(@opentelemetry/api@1.10.0)
       '@opentelemetry/sdk-trace-base': 2.12.0(@opentelemetry/api@1.10.0)
-      '@wizeworks/lens-browser': 0.3.0-alpha.9
-      '@wizeworks/lens-core': 0.3.0-alpha.9
-      '@wizeworks/lens-ui': 0.3.0-alpha.9
+      '@wizeworks/lens-browser': 0.3.0-alpha.10
+      '@wizeworks/lens-core': 0.3.0-alpha.10
+      '@wizeworks/lens-ui': 0.3.0-alpha.10
       zod: 4.6.7
     transitivePeerDependencies:
       - '@cfworker/json-schema'
       - supports-color
 
-  '@wizeworks/lens-react@0.3.0-alpha.9(react@19.2.4)':
+  '@wizeworks/lens-react@0.3.0-alpha.10(react@19.2.4)':
     dependencies:
-      '@wizeworks/lens-browser': 0.3.0-alpha.9
-      '@wizeworks/lens-core': 0.3.0-alpha.9
+      '@wizeworks/lens-browser': 0.3.0-alpha.10
+      '@wizeworks/lens-core': 0.3.0-alpha.10
       react: 19.2.4
 
-  '@wizeworks/lens-ui@0.3.0-alpha.9': {}
+  '@wizeworks/lens-ui@0.3.0-alpha.10': {}
 
   abstract-logging@2.0.1: {}
 
@@ -5620,7 +5620,7 @@ snapshots:
 
   bcryptjs@3.0.3: {}
 
-  better-auth@1.6.26(@opentelemetry/api@1.10.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@opentelemetry/api@1.10.0)(gel@2.2.0)(kysely@0.29.4)(postgres@3.4.9))(next@15.5.15(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@3.2.4(@types/node@22.19.17)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)):
+  better-auth@1.6.26(@opentelemetry/api@1.10.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@opentelemetry/api@1.10.0)(gel@2.2.0)(kysely@0.29.4)(postgres@3.4.9))(next@15.5.15(@babel/core@7.29.0)(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@3.2.4(@types/node@22.19.17)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)):
     dependencies:
       '@better-auth/core': 1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.10.0)(better-call@1.3.7(zod@3.25.76))(jose@6.2.2)(kysely@0.29.4)(nanostores@1.4.2)
       '@better-auth/drizzle-adapter': 1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.10.0)(better-call@1.3.7(zod@3.25.76))(jose@6.2.2)(kysely@0.29.4)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@opentelemetry/api@1.10.0)(gel@2.2.0)(kysely@0.29.4)(postgres@3.4.9))
@@ -6082,8 +6082,8 @@ snapshots:
       '@next/eslint-plugin-next': 16.2.2
       eslint: 9.39.5(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.10
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.5(jiti@2.6.1))
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.5(jiti@2.6.1))
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.5(jiti@2.6.1)))(eslint@9.39.5(jiti@2.6.1))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.5(jiti@2.6.1)))(eslint@9.39.5(jiti@2.6.1)))(eslint@9.39.5(jiti@2.6.1))
       eslint-plugin-jsx-a11y: 6.10.2(eslint@9.39.5(jiti@2.6.1))
       eslint-plugin-react: 7.37.5(eslint@9.39.5(jiti@2.6.1))
       eslint-plugin-react-hooks: 7.0.1(eslint@9.39.5(jiti@2.6.1))
@@ -6105,7 +6105,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.5(jiti@2.6.1)):
+  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.5(jiti@2.6.1)))(eslint@9.39.5(jiti@2.6.1)):
     dependencies:
       '@nolyfill/is-core-module': 1.0.39
       debug: 4.4.3
@@ -6116,22 +6116,22 @@ snapshots:
       tinyglobby: 0.2.16
       unrs-resolver: 1.11.1
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.5(jiti@2.6.1))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.5(jiti@2.6.1)))(eslint@9.39.5(jiti@2.6.1)))(eslint@9.39.5(jiti@2.6.1))
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.58.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.5(jiti@2.6.1)):
+  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.58.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.5(jiti@2.6.1)))(eslint@9.39.5(jiti@2.6.1)))(eslint@9.39.5(jiti@2.6.1)):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
       '@typescript-eslint/parser': 8.58.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.3)
       eslint: 9.39.5(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.10
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.5(jiti@2.6.1))
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.5(jiti@2.6.1)))(eslint@9.39.5(jiti@2.6.1))
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.5(jiti@2.6.1)):
+  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.5(jiti@2.6.1)))(eslint@9.39.5(jiti@2.6.1)))(eslint@9.39.5(jiti@2.6.1)):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.9
@@ -6142,7 +6142,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.39.5(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.10
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.58.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.5(jiti@2.6.1))
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.58.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.5(jiti@2.6.1)))(eslint@9.39.5(jiti@2.6.1)))(eslint@9.39.5(jiti@2.6.1))
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3

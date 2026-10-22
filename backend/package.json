@@ -27,7 +27,7 @@
         "@fastify/rate-limit": "^10.0.0",
         "@fastify/websocket": "^11.0.0",
         "@kanninja/shared": "workspace:*",
-        "@wizeworks/lens-node": "0.3.0-alpha.9",
+        "@wizeworks/lens-node": "0.3.0-alpha.10",
         "bcryptjs": "^3.0.3",
         "better-auth": "^1.6.26",
         "dotenv": "^16.4.0",
