@@ -76,8 +76,9 @@ az keyvault secret set --vault-name kv-kanninja-prod-cus --name wizelens-key-mcp
 The keys are optional: a missing one leaves the app running, and only its
 traces are refused by the cloud. A new key reaches the pods on the next deploy.
 
-Database calls are not traced yet: Drizzle runs on postgres.js, which WizeLens
-does not support. In development each service has a local dashboard at
+The backend's SQL is traced too: every query of the Drizzle client
+(`backend/src/db/index.ts`, on postgres.js), inside the request that ran it.
+Scripts and the `reconcile-seats` CronJob stay untraced. In development each service has a local dashboard at
 `/_wizelens` (backend `:3001`, frontend `:3000`, MCP remote `:3002`).
 
 ## Migrations
