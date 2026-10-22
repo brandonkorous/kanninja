@@ -1,4 +1,6 @@
 import 'dotenv/config';
+// FIRST after the env: WizeLens hooks fetch before any other module uses it.
+import { wizelensPlugin } from './wizelens.js';
 import { createHash } from 'node:crypto';
 import Fastify, { type FastifyRequest } from 'fastify';
 import formbody from '@fastify/formbody';
@@ -55,6 +57,10 @@ async function start() {
   const fastify = Fastify({
     logger: { level: env.NODE_ENV === 'production' ? 'info' : 'debug' },
   });
+
+  // WizeLens goes first, so its request span wraps every other plugin's hooks.
+  // Development, or production with WIZELENS_ENABLED; see wizelens.ts.
+  await fastify.register(wizelensPlugin);
 
   // RFC 6749 §4.1.3 says /token MUST accept application/x-www-form-urlencoded.
   // Anthropic and OpenAI happen to send JSON, but other clients (Cursor, Zed,

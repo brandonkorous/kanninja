@@ -37,6 +37,16 @@ spec:
                 name: frontend-secrets
             - configMapRef:
                 name: frontend-config
+          # WizeLens ingest key: this app's own (vault `wizelens-key-frontend`), so it
+          # can be revoked alone. Optional: a missing key leaves the app running,
+          # only untraced in the cloud. The other WIZELENS_* are in frontend-config.
+          env:
+            - name: WIZELENS_HUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: frontend-secrets
+                  key: WIZELENS_KEY_FRONTEND
+                  optional: true
           resources:
             requests:
               cpu: '50m'

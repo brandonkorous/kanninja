@@ -20,3 +20,6 @@ coverage/
 
 # TypeScript incremental build cache — per-dev state, not shared
 *.tsbuildinfo
+
+# WizeLens local trace store (development dashboard at /_wizelens)
+.wizelens/

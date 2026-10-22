@@ -17,16 +17,17 @@
         "db:studio": "drizzle-kit studio",
         "create-api-key": "tsx src/scripts/create-api-key.ts",
         "reconcile-seats": "tsx src/scripts/reconcile-seats.ts",
-            "seed-auth-users": "tsx src/scripts/seed-auth-users-from-profiles.ts",
-    "preserve-clerk-avatars": "tsx src/scripts/preserve-clerk-avatars.ts",
+        "seed-auth-users": "tsx src/scripts/seed-auth-users-from-profiles.ts",
+        "preserve-clerk-avatars": "tsx src/scripts/preserve-clerk-avatars.ts",
         "backfill-profile-user-id": "tsx src/scripts/backfill-profile-user-id.ts"
     },
     "dependencies": {
         "@azure/storage-blob": "^12.33.0",
-            "@fastify/cors": "^10.0.0",
+        "@fastify/cors": "^10.0.0",
         "@fastify/rate-limit": "^10.0.0",
         "@fastify/websocket": "^11.0.0",
         "@kanninja/shared": "workspace:*",
+        "@wizeworks/lens-node": "0.3.0-alpha.9",
         "bcryptjs": "^3.0.3",
         "better-auth": "^1.6.26",
         "dotenv": "^16.4.0",
@@ -37,7 +38,7 @@
         "openai": "^6.34.0",
         "postgres": "^3.4.0",
         "stripe": "^17.0.0",
-            "zod": "^3.24.0"
+        "zod": "^3.24.0"
     },
     "devDependencies": {
         "@types/bcryptjs": "^3.0.0",

@@ -364,6 +364,21 @@ jobs:
                     fi
                   done
 
+                  # WizeLens ingest keys, one per Deployment, so each can be
+                  # revoked alone. Vault `wizelens-key-<app>`, each written into
+                  # that app's OWN Secret as WIZELENS_KEY_<APP> (Apply, below).
+                  # Optional: a missing key leaves the app running, and only its
+                  # traces are refused by WizeLens Cloud. An empty file means
+                  # no key; printf %s strips az's newline, as for the URL below.
+                  for app in backend frontend mcp; do
+                    printf '%s' "$(az keyvault secret show --vault-name "$VAULT" \
+                      --name "wizelens-key-$app" --query value -o tsv 2>/dev/null || true)" \
+                      > "/tmp/wizelens-$app"
+                    if [ -s "/tmp/wizelens-$app" ]; then
+                      echo "optional secret present: wizelens-key-$app"
+                    fi
+                  done
+
                   # The owner credential, for the Jobs only.
                   # printf %s with command substitution, NOT a plain redirect.
                   #
@@ -395,8 +410,16 @@ jobs:
                   set -euo pipefail
                   NS="$NAMESPACE"
 
+                  # The kubectl flag that adds an app's WizeLens key to its
+                  # Secret, or nothing when the vault holds none for it.
+                  wizelens_key() {
+                    if [ -s "/tmp/wizelens-$1" ]; then
+                      echo "--from-file=WIZELENS_KEY_${1^^}=/tmp/wizelens-$1"
+                    fi
+                  }
+
                   kubectl create secret generic backend-secrets -n "$NS" \
-                    --from-env-file=/tmp/backend.env \
+                    --from-env-file=/tmp/backend.env $(wizelens_key backend) \
                     --dry-run=client -o yaml | kubectl apply -f -
 
                   # Migration credentials, deliberately in a SEPARATE Secret
@@ -415,17 +438,17 @@ jobs:
                   MCP_S2S_TOKEN=$(grep '^MCP_S2S_TOKEN=' /tmp/backend.env | cut -d= -f2-)
                   kubectl create secret generic mcp-secrets -n "$NS" \
                     --from-literal=MCP_JWT_SECRET="$MCP_JWT_SECRET" \
-                    --from-literal=MCP_S2S_TOKEN="$MCP_S2S_TOKEN" \
+                    --from-literal=MCP_S2S_TOKEN="$MCP_S2S_TOKEN" $(wizelens_key mcp) \
                     --dry-run=client -o yaml | kubectl apply -f -
 
-                  # Frontend holds nothing: its middleware only checks that a
-                  # session cookie is PRESENT and the authoritative check is an
-                  # API call. Created empty rather than deleted so the
-                  # Deployment's envFrom keeps resolving.
-                  kubectl create secret generic frontend-secrets -n "$NS" \
+                  # Frontend holds nothing but its WizeLens ingest key: its
+                  # middleware only checks that a session cookie is PRESENT and
+                  # the authoritative check is an API call. Created even when
+                  # empty, so the Deployment's envFrom keeps resolving.
+                  kubectl create secret generic frontend-secrets -n "$NS" $(wizelens_key frontend) \
                     --dry-run=client -o yaml | kubectl apply -f -
 
-                  rm -f /tmp/backend.env /tmp/admin-url /tmp/app-password
+                  rm -f /tmp/backend.env /tmp/admin-url /tmp/app-password /tmp/wizelens-*
                   echo "Applied backend-secrets, db-admin, mcp-secrets, frontend-secrets."
 
             # -----------------------------------------------------------------

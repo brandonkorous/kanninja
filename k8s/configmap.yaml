@@ -62,6 +62,13 @@ data:
   # Baked into profiles.avatar_url by the avatar upload route, so it has
   # to be the public API origin — not the in-cluster service name.
   PUBLIC_API_URL: "https://api.kanninja.com"
+  # WizeLens: send-only tracing to WizeLens Cloud. With NODE_ENV=production the
+  # add-on serves no dashboard or read API; it only sends, a quarter of traces.
+  # The ingest key is this app's own WIZELENS_KEY_*, mapped to WIZELENS_HUB_TOKEN
+  # in its Deployment. Set WIZELENS_ENABLED to "false" to turn tracing off.
+  WIZELENS_ENABLED: "true"
+  WIZELENS_HUB: "https://app.wizelens.com"
+  WIZELENS_SAMPLE_RATE: "0.25"
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -72,6 +79,13 @@ data:
   NODE_ENV: "production"
   HOSTNAME: "0.0.0.0"
   PORT: "3000"
+  # WizeLens: send-only tracing to WizeLens Cloud. With NODE_ENV=production the
+  # add-on serves no dashboard or read API; it only sends, a quarter of traces.
+  # The ingest key is this app's own WIZELENS_KEY_*, mapped to WIZELENS_HUB_TOKEN
+  # in its Deployment. Set WIZELENS_ENABLED to "false" to turn tracing off.
+  WIZELENS_ENABLED: "true"
+  WIZELENS_HUB: "https://app.wizelens.com"
+  WIZELENS_SAMPLE_RATE: "0.25"
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -85,3 +99,10 @@ data:
   KANNINJA_API_URL: "https://api.kanninja.com"
   MCP_PUBLIC_URL: "https://mcp.kanninja.com"
   CONSENT_BASE_URL: "https://kanninja.com/oauth/consent"
+  # WizeLens: send-only tracing to WizeLens Cloud. With NODE_ENV=production the
+  # add-on serves no dashboard or read API; it only sends, a quarter of traces.
+  # The ingest key is this app's own WIZELENS_KEY_*, mapped to WIZELENS_HUB_TOKEN
+  # in its Deployment. Set WIZELENS_ENABLED to "false" to turn tracing off.
+  WIZELENS_ENABLED: "true"
+  WIZELENS_HUB: "https://app.wizelens.com"
+  WIZELENS_SAMPLE_RATE: "0.25"

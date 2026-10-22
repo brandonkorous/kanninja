@@ -35,3 +35,6 @@ docs
 fly.*.toml
 Dockerfile*
 .dockerignore
+
+# WizeLens local trace store (development only)
+**/.wizelens
