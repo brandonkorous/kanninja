@@ -642,6 +642,22 @@ jobs:
               working-directory: k8s
               run: kubectl apply -k .
 
+            # A pod reads its Secrets only when it starts, and a deploy whose image
+            # did not change leaves the pods alone, so a changed key went unread.
+            # A hash of the Secrets on the pod template changes exactly when they
+            # do, and that change rolls the pods.
+            - name: Restart pods when their Secrets change
+              run: |
+                  set -euo pipefail
+                  hash=$(for s in backend-secrets frontend-secrets mcp-secrets; do
+                    kubectl get secret "$s" -n "$NAMESPACE" \
+                      -o go-template='{{range $k, $v := .data}}{{$k}}={{$v}};{{end}}'
+                  done | sha256sum | cut -c1-16)
+                  patch="{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"wizeworks/secrets-hash\":\"$hash\"}}}}}"
+                  for d in backend frontend mcp; do
+                    kubectl patch deployment "$d" -n "$NAMESPACE" --type merge -p "$patch"
+                  done
+
             - name: Wait for rollout
               run: |
                   set -euo pipefail
