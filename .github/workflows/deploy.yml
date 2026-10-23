@@ -418,8 +418,13 @@ jobs:
                     fi
                   }
 
+                  # kubectl refuses --from-env-file with --from-file, so the
+                  # backend's key joins its env file as one more line.
+                  if [ -s /tmp/wizelens-backend ]; then
+                    printf 'WIZELENS_KEY_BACKEND=%s\n' "$(cat /tmp/wizelens-backend)" >> /tmp/backend.env
+                  fi
                   kubectl create secret generic backend-secrets -n "$NS" \
-                    --from-env-file=/tmp/backend.env $(wizelens_key backend) \
+                    --from-env-file=/tmp/backend.env \
                     --dry-run=client -o yaml | kubectl apply -f -
 
                   # Migration credentials, deliberately in a SEPARATE Secret
