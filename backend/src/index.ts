@@ -5,6 +5,7 @@ import rawBody from 'fastify-raw-body';
 import websocket from '@fastify/websocket';
 import { env } from './config/env.js';
 import { corsPlugin } from './plugins/cors.js';
+import { securityHeadersPlugin } from './plugins/security-headers.js';
 import { errorHandlerPlugin } from './plugins/error-handler.js';
 import { rateLimitPlugin } from './plugins/rate-limit.js';
 import { authPlugin } from './plugins/auth.js';
@@ -101,6 +102,7 @@ async function start() {
   await fastify.register(websocket);
 
   // Plugins
+  await fastify.register(securityHeadersPlugin);
   await fastify.register(corsPlugin);
   await fastify.register(errorHandlerPlugin);
   await fastify.register(rateLimitPlugin);

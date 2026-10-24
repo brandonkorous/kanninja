@@ -3,11 +3,25 @@ import type { NextConfig } from 'next';
 // Baseline response headers applied to every route. Aligned with the Anthropic
 // Connectors Directory technical requirements and the MCP spec's security
 // best-practices document.
+const cspReportOnly = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https://api.kanninja.com",
+  "font-src 'self' data:",
+  "connect-src 'self' https:",
+  "object-src 'none'",
+  "base-uri 'self'",
+].join('; ');
+
 const baselineSecurityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   // Marketing surfaces don't need to be iframed by anyone; default-deny is fine.
   { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+  { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+  // Report-only first: it logs violations in the browser without blocking anything.
+  { key: 'Content-Security-Policy-Report-Only', value: cspReportOnly },
 ];
 
 // Stricter set for the OAuth consent UI — per MCP spec, the consent page MUST
@@ -16,12 +30,14 @@ const consentSecurityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
   { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" },
 ];
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: 'standalone',
+  poweredByHeader: false,
   // WizeLens patches node:http and reads its own files: load it from node_modules, not a bundle.
   serverExternalPackages: ['@wizeworks/lens-node'],
   images: {
