@@ -11,6 +11,7 @@ import { authenticateRequest, AuthError } from './auth.js';
 import { oauthRoutes } from './oauth.js';
 import { enforceOrigin, isAllowedOrigin } from './origin.js';
 import { allTools } from 'kanninja-mcp/tools';
+import { addSecurityHeaders } from './security-headers.js';
 import { registerAllTools, serverInfo } from 'kanninja-mcp/registry';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
@@ -85,6 +86,7 @@ async function start() {
   // Reject any request carrying a disallowed Origin. No-Origin requests
   // (server-to-server, CLIs) pass — the bearer token is the real gate.
   fastify.addHook('onRequest', enforceOrigin);
+  addSecurityHeaders(fastify);
 
   fastify.get('/health', async () => ({ status: 'ok' }));
 
