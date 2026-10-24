@@ -3,6 +3,7 @@ import type { NextConfig } from 'next';
 // Baseline response headers applied to every route. Aligned with the Anthropic
 // Connectors Directory technical requirements and the MCP spec's security
 // best-practices document.
+// HSTS is sent by the ingress for every host, so it is not repeated here.
 const cspReportOnly = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
@@ -19,7 +20,6 @@ const baselineSecurityHeaders = [
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   // Marketing surfaces don't need to be iframed by anyone; default-deny is fine.
   { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-  { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
   // Report-only first: it logs violations in the browser without blocking anything.
   { key: 'Content-Security-Policy-Report-Only', value: cspReportOnly },
 ];
@@ -30,7 +30,6 @@ const consentSecurityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'X-Frame-Options', value: 'DENY' },
-  { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
   { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" },
 ];
 
