@@ -130,6 +130,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
                                             <li key={link.href}>
                                                 <Link
                                                     href={link.href}
+                                                    prefetch={false}
                                                     className="text-sm text-neutral-content/70 hover:text-neutral-content focus-visible:shadow-focus rounded-sm transition-colors"
                                                 >
                                                     {link.label}
