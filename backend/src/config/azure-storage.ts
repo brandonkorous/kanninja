@@ -140,7 +140,7 @@ export function buildAttachmentPath(cardId: string, fileName: string): string {
  *
  * The alternative was a public container, which would have meant enabling
  * anonymous blob access on the storage account. That is a Terraform change in
- * the sparx repo for a benefit we do not need: the API route is a dozen lines
+ * the wize-infrastructure repo for a benefit we do not need: the API route is a dozen lines
  * and keeps the account locked down.
  */
 export const AVATARS_CONTAINER = env.AZURE_AVATARS_CONTAINER;

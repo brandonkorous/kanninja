@@ -10,11 +10,17 @@
 | Profile pictures | Azure Blob Storage, container `avatars`, **private** — streamed through `GET /api/v1/avatars/…` |
 | Secrets | Azure Key Vault `kv-kanninja-prod-cus` |
 | Speech-to-text | Azure OpenAI `oai-kanninja-prod-eus2`, Whisper. The only model call in the product |
-| Ingress / TLS | Shared Caddy in the `sparx-prod` namespace, reserved IP `20.12.217.0` — config lives in the separate `sparx.works` repo |
+| Ingress / TLS | Shared Caddy in the `sparx-prod` namespace, reserved IP `20.12.217.0`. Config lives in the separate `wize-infrastructure` repo (`k8s/ingress/Caddyfile`), applied by its own release |
 | Authentication | Better Auth, in-process in the backend at `/api/auth/*`. No vendor |
 | Realtime | WebSocket on the backend (`/api/v1/realtime`). No vendor |
 
 Domains: `kanninja.com`, `www.kanninja.com`, `api.kanninja.com`, `mcp.kanninja.com`.
+
+The Azure resources above (database server, vault, storage, Azure OpenAI, the CI
+identity, DNS) are Terraform in the `wize-infrastructure` repo
+(`terraform/envs/azure/kanninja.tf`, `terraform/bootstrap-azure/kanninja.tf`),
+applied by that repo's own release. Release it first when a kanNINJA change
+needs new infrastructure.
 
 Compute is on Azure because the DATABASE is. The server sits behind a private
 endpoint in a delegated subnet, so nothing outside that VNet can reach it — not

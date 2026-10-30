@@ -13,7 +13,7 @@ import { AppError } from './../utils/errors.js';
 //
 // Resource: oai-kanninja-prod-eus2 (rg-sparx-prod-cus, eastus2), deployment
 // `kanninja-speech` -> whisper-001. Provisioned by
-// sparx.works/terraform/envs/azure/kanninja.tf; the endpoint, key, api version
+// wize-infrastructure/terraform/envs/azure/kanninja.tf; the endpoint, key, api version
 // and deployment name all arrive from Key Vault.
 //
 // IT USED TO BE jotDOJO'S. This pointed at `oai-jotdojo-prod-eus2` /

@@ -18,7 +18,8 @@ resources:
 # cluster has no nginx ingress controller and no cert-manager — HTTP(S) routing
 # and TLS for kanninja.com / api.kanninja.com / mcp.kanninja.com are handled by
 # the shared Caddy reverse proxy in the `sparx-prod` namespace (see
-# sparx.works/k8s/ingress/Caddyfile). Caddy reaches these Services
+# k8s/ingress/Caddyfile in wize-infrastructure, applied by that repo's own
+# release). Caddy reaches these Services
 # cross-namespace at <svc>.kanninja.svc.cluster.local.
 #
 # Those Caddy blocks use ON-DEMAND TLS, which means all four kanNINJA hostnames
