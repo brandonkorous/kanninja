@@ -44,7 +44,10 @@ There is **no nginx-ingress or cert-manager** on this cluster. Routing and TLS
 for `kanninja.com` / `www` / `api.kanninja.com` / `mcp.kanninja.com` are handled
 by the shared **Caddy** reverse proxy in the `sparx-prod` namespace (reserved IP
 **20.12.217.0**), which reaches these Services cross-namespace. The route blocks
-live in `sparx.works/k8s/ingress/Caddyfile`.
+live in wize-infrastructure's
+[`k8s/ingress/Caddyfile`](https://github.com/wizeworksllc/wize-infrastructure/blob/main/k8s/ingress/Caddyfile)
+(`wizeworksllc/wize-infrastructure`), and that repo's own release applies them.
+A routing change is a PR there; it no longer rides the sparx release.
 
 kanNINJA's blocks use **on-demand** TLS (`import tls_policy`), and all four
 hostnames are allow-listed in api-rest's `PLATFORM_HOSTNAMES`. An explicit
