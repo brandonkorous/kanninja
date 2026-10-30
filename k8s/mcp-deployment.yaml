@@ -25,7 +25,7 @@ spec:
       # No imagePullSecrets: the GHCR packages are public, pulled anonymously.
       containers:
         - name: mcp
-          image: ghcr.io/brandonkorous/kanninja-mcp-remote:latest
+          image: ghcr.io/wizeworksllc/kanninja-mcp-remote:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

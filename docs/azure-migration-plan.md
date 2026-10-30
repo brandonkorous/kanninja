@@ -119,7 +119,7 @@ Decisions taken 2026-08-25:
 | Auth | Clerk | Better Auth, in-process |
 | Attachments | Supabase Storage | `stkanninjaprodcus` / `card-attachments` |
 | Secrets | ~60 GitHub Actions secrets | `kv-kanninja-prod-cus` (own vault) |
-| Images | Artifact Registry | `ghcr.io/brandonkorous/kanninja/*` |
+| Images | Artifact Registry | `ghcr.io/wizeworksllc/kanninja/*` |
 | Ingress | shared Caddy (GKE) | shared Caddy (AKS) — **host blocks already written** |
 
 All application code lives uncommitted on `migrate/better-auth-azure`. It
@@ -218,7 +218,7 @@ hostnames with no certificate.
 >
 > Repo variables `AZURE_CLIENT_ID` / `AZURE_TENANT_ID` /
 > `AZURE_SUBSCRIPTION_ID` / `AZURE_KEY_VAULT_NAME` are set on
-> `brandonkorous/kanninja`.
+> `wizeworksllc/kanninja`.
 >
 > **DNS records are NOT applied** — `kanninja_dns_enabled` is still `false`.
 > That is the Phase 5 cutover switch. The AKS ingress they will point at is
@@ -275,13 +275,14 @@ bootstrap a role on a server jotDOJO does not own; that does not apply here.
 
 - `azuread_application` + `azuread_service_principal` — `gha-kanninja-prod`
 - Federated credentials: `:ref:refs/heads/main` and `:environment:prod`
-- **Subject prefix is `repo:brandonkorous/kanninja`** — the plain legacy form.
-  Verified 2026-08-25 via
-  `gh api repos/brandonkorous/kanninja/actions/oidc/customization/sub --jq .sub_claim_prefix`.
-  jotacular carries the newer numeric-qualified form
-  (`repo:owner@id/repo@id`) because it is a newer repository. **Do not copy
-  jotacular's.** A mismatch fails every run with AADSTS700213, and the error
-  names only the subject it received, never the one expected.
+- **Subject prefix is `repo:wizeworksllc@350084568/kanninja@1208384367`**, the
+  id-qualified form GitHub mints since the repository moved to wizeworksllc
+  (2026-10-30). Before the move it was the plain `repo:brandonkorous/kanninja`.
+  Verified 2026-10-30 via
+  `gh api repos/wizeworksllc/kanninja/actions/oidc/customization/sub --jq .sub_claim_prefix`.
+  Always read it; never copy another repository's. A mismatch fails every run
+  with AADSTS700213, and the error names only the subject it received, never
+  the one expected.
 - Role assignments: `Key Vault Secrets User` on `kv-kanninja-prod-cus` (scoped
   to the vault — this is the whole reason kanNINJA gets its own),
   `Azure Kubernetes Service Cluster User Role` at subscription scope,
@@ -349,7 +350,7 @@ operator would actually look.
 >    replaced it in the required list and is already in the vault, written by
 >    Terraform.
 > 2. ~~Make the GHCR packages public~~ — **already done.** The packages are
->    `ghcr.io/brandonkorous/kanninja-{backend,frontend,mcp-remote}` (HYPHEN),
+>    `ghcr.io/wizeworksllc/kanninja-{backend,frontend,mcp-remote}` (HYPHEN),
 >    public, with tag history back to the first AKS deployment. Verified by
 >    anonymous pull against ghcr.io, the same path the kubelet takes.
 >
@@ -364,7 +365,7 @@ operator would actually look.
 
 ### 2a. Registry: Artifact Registry → GHCR
 
-`ghcr.io/brandonkorous/kanninja/{backend,frontend,mcp-remote}`, published
+`ghcr.io/wizeworksllc/kanninja/{backend,frontend,mcp-remote}`, published
 **public** so no `imagePullSecrets` are needed — same as jotDOJO and sparx. The
 existing `build-mcp` job already logs into GHCR; reuse its pattern for the other
 three.

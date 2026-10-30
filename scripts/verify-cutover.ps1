@@ -97,7 +97,7 @@ Test-Step 'no pods stuck pulling or crashing' {
     }
     if ($bad) {
         if ($bad -match 'ImagePull') {
-            Warn 'ImagePullBackOff usually means the GHCR packages are still PRIVATE. Make ghcr.io/brandonkorous/kanninja/{backend,frontend,mcp-remote} public.'
+            Warn 'ImagePullBackOff usually means the GHCR packages are still PRIVATE. Make ghcr.io/wizeworksllc/kanninja/{backend,frontend,mcp-remote} public.'
         }
         throw ($bad -join '; ')
     }

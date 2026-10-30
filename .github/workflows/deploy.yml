@@ -13,7 +13,7 @@ name: Build & Deploy to AKS
 #
 # Auth model (mirrors jotDOJO, the other co-tenant on this cluster):
 #   - Workload identity federation, no stored credential. Azure trusts a GitHub
-#     OIDC token whose subject is `repo:brandonkorous/kanninja:ref:refs/heads/main`.
+#     OIDC token whose subject is `repo:wizeworksllc@350084568/kanninja@1208384367:ref:refs/heads/main`.
 #     The three AZURE_* values below are repository VARIABLES, not secrets —
 #     they are public identifiers, and treating them as secrets only makes them
 #     harder to read in a failed run.
@@ -48,8 +48,8 @@ env:
     # address a DIFFERENT, non-existent package, and the first deploy would fail
     # on a 401 that reads like a missing tag while the real images sat untouched
     # beside it.
-    REGISTRY: ghcr.io/brandonkorous
-    IMAGE_OWNER: brandonkorous
+    REGISTRY: ghcr.io/wizeworksllc
+    IMAGE_OWNER: wizeworksllc
 
 jobs:
     # ------------------------------------------------------------------

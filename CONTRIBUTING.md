@@ -43,4 +43,4 @@ docs: clarify fly.io deployment steps
 
 ## Questions
 
-Open a [Discussion](https://github.com/brandonkorous/kanninja/discussions) or an issue. We read everything.
+Open a [Discussion](https://github.com/wizeworksllc/kanninja/discussions) or an issue. We read everything.

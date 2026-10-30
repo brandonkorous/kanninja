@@ -89,7 +89,7 @@ kanNINJA is released under the **Functional Source License v1.1 with an Apache 2
 - You **cannot** offer kanNINJA — or a substantially similar service — as a commercial product that competes with the hosted kanninja.app.
 - After two years, each released version automatically relicenses to **Apache 2.0**. The FSL restrictions only apply to recent versions.
 
-If you want to build something commercial that touches this code, [open an issue](https://github.com/brandonkorous/kanninja/issues) or email the maintainer — we're happy to talk.
+If you want to build something commercial that touches this code, [open an issue](https://github.com/wizeworksllc/kanninja/issues) or email the maintainer — we're happy to talk.
 
 ## Contributing
 

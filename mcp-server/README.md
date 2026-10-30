@@ -31,7 +31,7 @@ Same shape. The path to the config file changes per client; the server entry is 
 ```bash
 docker run --rm -i \
   -e KANNINJA_API_KEY=ninja_live_... \
-  ghcr.io/brandonkorous/kanninja-mcp:latest
+  ghcr.io/wizeworksllc/kanninja-mcp:latest
 ```
 
 ## Get a key
@@ -86,8 +86,8 @@ If a key leaks, revoke it from the settings page. Active sessions lose access im
 
 ## License
 
-MIT. See the [repo](https://github.com/brandonkorous/kanninja).
+MIT. See the [repo](https://github.com/wizeworksllc/kanninja).
 
 ## Issues
 
-[github.com/brandonkorous/kanninja/issues](https://github.com/brandonkorous/kanninja/issues)
+[github.com/wizeworksllc/kanninja/issues](https://github.com/wizeworksllc/kanninja/issues)

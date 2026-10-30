@@ -33,13 +33,13 @@ typechecks, tests, builds three images, pushes them to **GHCR**, reads the
 secrets out of Key Vault, applies the manifests, runs the migration Jobs, and
 waits on the rollouts.
 
-Images are `ghcr.io/brandonkorous/kanninja-{backend,frontend,mcp-remote}` —
+Images are `ghcr.io/wizeworksllc/kanninja-{backend,frontend,mcp-remote}` —
 **hyphenated, and public**, so pods pull them anonymously with no
 `imagePullSecrets`. A slash (`kanninja/backend`) names a different package that
 does not exist.
 
 CI authenticates to Azure by **federated identity**, not a stored credential:
-app registration `gha-kanninja-prod`, subject `repo:brandonkorous/kanninja` in
+app registration `gha-kanninja-prod`, subject `repo:wizeworksllc@350084568/kanninja@1208384367` in
 the plain form (jotDOJO's numeric-qualified form does not resolve here).
 
 ### Secrets

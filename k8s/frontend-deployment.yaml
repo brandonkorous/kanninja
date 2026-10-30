@@ -25,7 +25,7 @@ spec:
       # No imagePullSecrets: the GHCR packages are public, pulled anonymously.
       containers:
         - name: frontend
-          image: ghcr.io/brandonkorous/kanninja-frontend:latest
+          image: ghcr.io/wizeworksllc/kanninja-frontend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

@@ -25,9 +25,9 @@ SilicaUI.
 `.github/workflows/deploy.yml` on push to `main`:
 
 1. **Auth** — federated identity to Entra (app registration `gha-kanninja-prod`,
-   subject `repo:brandonkorous/kanninja`). Keyless; no stored credential.
+   subject `repo:wizeworksllc@350084568/kanninja@1208384367`). Keyless; no stored credential.
 2. **Build** — backend / frontend / mcp-remote pushed to **GHCR** as
-   `ghcr.io/brandonkorous/kanninja-{backend,frontend,mcp-remote}`. Hyphenated,
+   `ghcr.io/wizeworksllc/kanninja-{backend,frontend,mcp-remote}`. Hyphenated,
    and public, so pods pull anonymously — no `imagePullSecrets`.
 3. **Secrets** — read from Key Vault `kv-kanninja-prod-cus` and written into
    `backend-secrets` / `frontend-secrets` / `mcp-secrets`. **The vault is the

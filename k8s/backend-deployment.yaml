@@ -28,11 +28,11 @@ spec:
         app.kubernetes.io/part-of: kanninja
     spec:
       # No imagePullSecrets: the GHCR packages are public, pulled anonymously
-      # (ghcr.io/brandonkorous/kanninja) and the Autopilot node
+      # (ghcr.io/wizeworksllc/kanninja) and the Autopilot node
       # SA pulls them natively. The old GHCR pull-token rotator is retired.
       containers:
         - name: backend
-          image: ghcr.io/brandonkorous/kanninja-backend:latest
+          image: ghcr.io/wizeworksllc/kanninja-backend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
